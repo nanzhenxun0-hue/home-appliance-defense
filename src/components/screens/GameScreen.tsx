@@ -236,7 +236,7 @@ const GameScreen = ({ diff, onHome }: GameScreenProps) => {
               transition={{ duration: 0.4 }}
               className="absolute inset-0 flex items-center justify-center pointer-events-none z-30"
             >
-              <span className="text-game-gold font-black text-4xl" style={{ textShadow: '0 0 30px rgba(255,215,0,0.6)' }}>
+              <span className="sf-title sf-glow-text text-game-purple font-black text-4xl">
                 {waveAnnounce}
               </span>
             </motion.div>
