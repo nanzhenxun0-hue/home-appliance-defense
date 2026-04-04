@@ -214,8 +214,8 @@ const GameScreen = ({ diff, onHome }: GameScreenProps) => {
       </AnimatePresence>
 
       {/* Canvas */}
-      <div className="relative rounded-xl overflow-visible border border-border w-full max-w-[860px] flex-1 min-h-0"
-        style={{ boxShadow: '0 0 40px rgba(0,0,0,0.95)' }}>
+      <div className="relative rounded-xl overflow-visible w-full max-w-[860px] flex-1 min-h-0 z-10"
+        style={{ boxShadow: '0 0 40px rgba(0,0,0,0.95), 0 0 80px rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)', animation: 'sf-border-glow 6s ease-in-out infinite' }}>
         <canvas
           ref={cvs} width={GW} height={GH}
           className="block w-full h-full rounded-xl"
