@@ -168,7 +168,24 @@ const GameScreen = ({ diff, onHome }: GameScreenProps) => {
   const lowPower = s.power <= 0 && s.waveActive;
 
   return (
-    <div className="bg-background h-screen flex flex-col items-center p-1.5 gap-1.5 select-none overflow-hidden">
+    <div className="bg-background h-screen flex flex-col items-center p-1.5 gap-1.5 select-none overflow-hidden relative">
+      {/* SF ambient particles */}
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full pointer-events-none z-0"
+          style={{
+            width: 1.5 + Math.random() * 2,
+            height: 1.5 + Math.random() * 2,
+            left: `${Math.random() * 100}%`,
+            bottom: '-2%',
+            background: i % 3 === 0 ? 'hsl(350 100% 60%)' : i % 3 === 1 ? 'hsl(210 100% 65%)' : 'hsl(270 100% 70%)',
+            animation: `sf-particle-float ${8 + Math.random() * 12}s linear infinite`,
+            animationDelay: `${Math.random() * 8}s`,
+            boxShadow: '0 0 4px currentColor',
+          }}
+        />
+      ))}
       {/* HUD */}
       <HUD ui={ui} diff={diff} grid={s.grid} onHome={onHome} onStartWave={startWave} />
 
@@ -197,8 +214,8 @@ const GameScreen = ({ diff, onHome }: GameScreenProps) => {
       </AnimatePresence>
 
       {/* Canvas */}
-      <div className="relative rounded-xl overflow-visible border border-border w-full max-w-[860px] flex-1 min-h-0"
-        style={{ boxShadow: '0 0 40px rgba(0,0,0,0.95)' }}>
+      <div className="relative rounded-xl overflow-visible w-full max-w-[860px] flex-1 min-h-0 z-10"
+        style={{ boxShadow: '0 0 40px rgba(0,0,0,0.95), 0 0 80px rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)', animation: 'sf-border-glow 6s ease-in-out infinite' }}>
         <canvas
           ref={cvs} width={GW} height={GH}
           className="block w-full h-full rounded-xl"
@@ -219,7 +236,7 @@ const GameScreen = ({ diff, onHome }: GameScreenProps) => {
               transition={{ duration: 0.4 }}
               className="absolute inset-0 flex items-center justify-center pointer-events-none z-30"
             >
-              <span className="text-game-gold font-black text-4xl" style={{ textShadow: '0 0 30px rgba(255,215,0,0.6)' }}>
+              <span className="sf-title sf-glow-text text-game-purple font-black text-4xl">
                 {waveAnnounce}
               </span>
             </motion.div>

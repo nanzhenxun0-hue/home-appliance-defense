@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,58 +6,62 @@
 
 @layer base {
   :root {
-    --background: 220 25% 5%;
-    --foreground: 210 20% 90%;
+    --background: 230 20% 4%;
+    --foreground: 220 20% 90%;
 
-    --card: 220 20% 8%;
-    --card-foreground: 210 20% 90%;
+    --card: 230 18% 7%;
+    --card-foreground: 220 20% 90%;
 
-    --popover: 220 20% 10%;
-    --popover-foreground: 210 20% 90%;
+    --popover: 230 18% 9%;
+    --popover-foreground: 220 20% 90%;
 
-    --primary: 48 100% 50%;
-    --primary-foreground: 30 100% 8%;
+    --primary: 270 80% 65%;
+    --primary-foreground: 270 100% 98%;
 
-    --secondary: 150 60% 50%;
-    --secondary-foreground: 150 30% 95%;
+    --secondary: 210 90% 55%;
+    --secondary-foreground: 210 30% 95%;
 
-    --muted: 220 15% 15%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 230 15% 13%;
+    --muted-foreground: 230 10% 50%;
 
-    --accent: 210 60% 50%;
-    --accent-foreground: 210 100% 95%;
+    --accent: 340 80% 55%;
+    --accent-foreground: 340 100% 95%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 48 100% 50%;
+    --border: 250 15% 18%;
+    --input: 250 15% 18%;
+    --ring: 270 80% 65%;
 
     --radius: 0.75rem;
 
-    /* Game-specific tokens */
-    --game-bg: 220 30% 5%;
-    --game-surface: 220 20% 8%;
-    --game-surface-hover: 220 20% 12%;
-    --game-gold: 48 100% 50%;
-    --game-green: 150 80% 60%;
-    --game-green-dark: 150 40% 12%;
-    --game-red: 0 72% 51%;
-    --game-blue: 210 80% 60%;
-    --game-orange: 30 100% 50%;
-    --game-power-glow: 48 100% 50%;
-    --game-glass: 220 20% 12%;
-    --game-glass-border: 220 15% 22%;
+    /* Game-specific SF tokens */
+    --game-bg: 230 25% 3%;
+    --game-surface: 230 18% 8%;
+    --game-surface-hover: 230 18% 12%;
+    --game-gold: 48 100% 55%;
+    --game-green: 150 80% 55%;
+    --game-green-dark: 150 40% 10%;
+    --game-red: 350 80% 55%;
+    --game-blue: 210 90% 60%;
+    --game-purple: 270 80% 65%;
+    --game-orange: 30 100% 55%;
+    --game-power-glow: 270 80% 65%;
+    --game-glass: 230 18% 10%;
+    --game-glass-border: 260 20% 22%;
+    --game-neon-red: 350 100% 60%;
+    --game-neon-blue: 210 100% 65%;
+    --game-neon-purple: 270 100% 70%;
 
-    --sidebar-background: 220 25% 7%;
-    --sidebar-foreground: 210 20% 80%;
-    --sidebar-primary: 48 100% 50%;
-    --sidebar-primary-foreground: 30 100% 8%;
-    --sidebar-accent: 220 20% 12%;
-    --sidebar-accent-foreground: 210 20% 80%;
-    --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 48 100% 50%;
+    --sidebar-background: 230 25% 5%;
+    --sidebar-foreground: 220 20% 80%;
+    --sidebar-primary: 270 80% 65%;
+    --sidebar-primary-foreground: 270 100% 98%;
+    --sidebar-accent: 230 18% 12%;
+    --sidebar-accent-foreground: 220 20% 80%;
+    --sidebar-border: 250 15% 18%;
+    --sidebar-ring: 270 80% 65%;
   }
 }
 
@@ -67,46 +71,55 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Nunito', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
   }
 }
 
 @layer components {
   .glass-panel {
-    @apply bg-game-glass/80 backdrop-blur-xl border border-game-glass-border rounded-xl;
+    @apply backdrop-blur-xl rounded-xl;
+    background: linear-gradient(135deg, hsl(var(--game-glass) / 0.85), hsl(var(--game-glass) / 0.6));
+    border: 1px solid hsl(var(--game-glass-border));
+    box-shadow: inset 0 1px 0 hsl(var(--game-neon-purple) / 0.05), 0 4px 16px rgba(0,0,0,0.4);
   }
   .glass-panel-strong {
-    @apply bg-game-glass/95 backdrop-blur-2xl border border-game-glass-border rounded-xl shadow-2xl;
+    @apply backdrop-blur-2xl rounded-xl shadow-2xl;
+    background: linear-gradient(135deg, hsl(var(--game-glass) / 0.95), hsl(var(--game-glass) / 0.8));
+    border: 1px solid hsl(var(--game-glass-border));
+    box-shadow: inset 0 1px 0 hsl(var(--game-neon-purple) / 0.08), 0 8px 32px rgba(0,0,0,0.6);
   }
   .game-btn-primary {
-    @apply px-5 py-3 rounded-2xl border-none font-black text-lg cursor-pointer transition-transform duration-150 hover:scale-[1.03];
-    background: linear-gradient(135deg, hsl(var(--game-gold)), hsl(var(--game-orange)));
-    color: hsl(var(--primary-foreground));
+    @apply px-5 py-3 rounded-2xl border-none font-black text-lg cursor-pointer transition-all duration-200 hover:scale-[1.03];
+    background: linear-gradient(135deg, hsl(var(--game-neon-red)), hsl(var(--game-neon-purple)), hsl(var(--game-neon-blue)));
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255,255,255,0.3);
+    font-family: 'Orbitron', sans-serif;
   }
   .game-btn-secondary {
-    @apply px-5 py-3 rounded-xl border cursor-pointer font-bold text-sm transition-all duration-150 hover:brightness-125;
-    background: hsl(var(--game-green-dark));
-    border-color: hsl(var(--game-green) / 0.3);
-    color: hsl(var(--game-green));
+    @apply px-5 py-3 rounded-xl cursor-pointer font-bold text-sm transition-all duration-150 hover:brightness-125;
+    background: hsl(var(--game-surface));
+    border: 1px solid hsl(var(--game-neon-blue) / 0.3);
+    color: hsl(var(--game-neon-blue));
+    font-family: 'Orbitron', sans-serif;
   }
   .game-btn-ghost {
-    @apply px-4 py-2 rounded-xl border cursor-pointer font-bold text-sm transition-all duration-150 hover:brightness-125;
+    @apply px-4 py-2 rounded-xl cursor-pointer font-bold text-sm transition-all duration-150 hover:brightness-125;
     background: hsl(var(--game-surface));
-    border-color: hsl(var(--border));
+    border: 1px solid hsl(var(--border));
     color: hsl(var(--muted-foreground));
   }
   .game-badge {
     @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold;
     background: hsl(var(--game-surface));
-    border: 1px solid hsl(var(--border));
+    border: 1px solid hsl(var(--game-glass-border));
   }
   .shop-card {
-    @apply glass-panel p-2 text-center cursor-pointer transition-all duration-150 select-none min-w-[82px];
+    @apply glass-panel p-2 text-center cursor-pointer transition-all duration-200 select-none min-w-[82px];
   }
   .shop-card-active {
-    @apply border-accent shadow-lg -translate-y-1 scale-105;
-    border-color: hsl(var(--accent));
-    box-shadow: 0 6px 20px hsl(var(--accent) / 0.3);
+    @apply -translate-y-1 scale-105;
+    border-color: hsl(var(--game-neon-purple));
+    box-shadow: 0 6px 24px hsl(var(--game-neon-purple) / 0.4), inset 0 0 20px hsl(var(--game-neon-purple) / 0.05);
   }
   .hud-chip {
     @apply glass-panel px-3 py-1 rounded-full flex items-center gap-1.5 text-xs font-bold;
@@ -118,10 +131,17 @@
     z-index: 20;
     border-radius: inherit;
     animation: power-flicker 0.8s ease-in-out infinite;
-    background: radial-gradient(ellipse at center, transparent 40%, hsl(var(--game-red) / 0.15) 100%);
+    background: radial-gradient(ellipse at center, transparent 40%, hsl(var(--game-neon-red) / 0.2) 100%);
   }
   .screen-shake {
     animation: shake 0.3s ease-in-out;
+  }
+  .sf-title {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 0.08em;
+  }
+  .sf-glow-text {
+    text-shadow: 0 0 20px hsl(var(--game-neon-purple) / 0.6), 0 0 60px hsl(var(--game-neon-blue) / 0.3);
   }
 }
 
@@ -131,6 +151,7 @@
   .text-game-red { color: hsl(var(--game-red)); }
   .text-game-blue { color: hsl(var(--game-blue)); }
   .text-game-orange { color: hsl(var(--game-orange)); }
+  .text-game-purple { color: hsl(var(--game-purple)); }
   .bg-game-glass { background-color: hsl(var(--game-glass)); }
   .bg-game-surface { background-color: hsl(var(--game-surface)); }
   .border-game-glass-border { border-color: hsl(var(--game-glass-border)); }
@@ -158,10 +179,25 @@
   50% { transform: translateY(-24px) rotate(-8deg); }
 }
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px hsl(var(--game-gold) / 0.3), 0 4px 24px rgba(0,0,0,0.6); }
-  50% { box-shadow: 0 0 40px hsl(var(--game-gold) / 0.6); }
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--game-neon-purple) / 0.4), 0 0 40px hsl(var(--game-neon-red) / 0.2), 0 4px 24px rgba(0,0,0,0.6); }
+  50% { box-shadow: 0 0 40px hsl(var(--game-neon-purple) / 0.7), 0 0 80px hsl(var(--game-neon-blue) / 0.3); }
 }
 @keyframes green-glow {
   0%, 100% { box-shadow: 0 0 8px hsl(var(--game-green) / 0.5); }
   50% { box-shadow: 0 0 22px hsl(var(--game-green)); }
+}
+@keyframes sf-scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+@keyframes sf-particle-float {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+}
+@keyframes sf-border-glow {
+  0%, 100% { border-color: hsl(var(--game-neon-purple) / 0.3); }
+  33% { border-color: hsl(var(--game-neon-blue) / 0.3); }
+  66% { border-color: hsl(var(--game-neon-red) / 0.3); }
 }
