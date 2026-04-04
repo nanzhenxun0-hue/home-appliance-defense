@@ -1,16 +1,26 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import type { DifficultyKey } from '@/game/types';
+import HomeScreen from '@/components/screens/HomeScreen';
+import HowToScreen from '@/components/screens/HowToScreen';
+import DifficultyScreen from '@/components/screens/DifficultyScreen';
+import GameScreen from '@/components/screens/GameScreen';
+import ScoreScreen from '@/components/screens/ScoreScreen';
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
-  return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
-  );
+type Screen = 'home' | 'howto' | 'diff' | 'game' | 'scores';
+
+const Index = () => {
+  const [screen, setScreen] = useState<Screen>('home');
+  const [diff, setDiff] = useState<DifficultyKey>('normal');
+
+  if (screen === 'home') {
+    return <HomeScreen onPlay={() => setScreen('diff')} onHowTo={() => setScreen('howto')} onScores={() => setScreen('scores')} />;
+  }
+  if (screen === 'howto') return <HowToScreen onBack={() => setScreen('home')} />;
+  if (screen === 'diff') {
+    return <DifficultyScreen onSelect={(d) => { setDiff(d); setScreen('game'); }} onBack={() => setScreen('home')} />;
+  }
+  if (screen === 'scores') return <ScoreScreen onBack={() => setScreen('home')} />;
+  return <GameScreen key={diff} diff={diff} onHome={() => setScreen('home')} />;
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
