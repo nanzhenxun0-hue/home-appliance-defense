@@ -168,7 +168,24 @@ const GameScreen = ({ diff, onHome }: GameScreenProps) => {
   const lowPower = s.power <= 0 && s.waveActive;
 
   return (
-    <div className="bg-background h-screen flex flex-col items-center p-1.5 gap-1.5 select-none overflow-hidden">
+    <div className="bg-background h-screen flex flex-col items-center p-1.5 gap-1.5 select-none overflow-hidden relative">
+      {/* SF ambient particles */}
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full pointer-events-none z-0"
+          style={{
+            width: 1.5 + Math.random() * 2,
+            height: 1.5 + Math.random() * 2,
+            left: `${Math.random() * 100}%`,
+            bottom: '-2%',
+            background: i % 3 === 0 ? 'hsl(350 100% 60%)' : i % 3 === 1 ? 'hsl(210 100% 65%)' : 'hsl(270 100% 70%)',
+            animation: `sf-particle-float ${8 + Math.random() * 12}s linear infinite`,
+            animationDelay: `${Math.random() * 8}s`,
+            boxShadow: '0 0 4px currentColor',
+          }}
+        />
+      ))}
       {/* HUD */}
       <HUD ui={ui} diff={diff} grid={s.grid} onHome={onHome} onStartWave={startWave} />
 
