@@ -63,8 +63,12 @@ export default {
         "game-green": "hsl(var(--game-green))",
         "game-red": "hsl(var(--game-red))",
         "game-blue": "hsl(var(--game-blue))",
+        "game-purple": "hsl(var(--game-purple))",
         "game-orange": "hsl(var(--game-orange))",
         "game-glass-border": "hsl(var(--game-glass-border))",
+        "game-neon-red": "hsl(var(--game-neon-red))",
+        "game-neon-blue": "hsl(var(--game-neon-blue))",
+        "game-neon-purple": "hsl(var(--game-neon-purple))",
       },
       borderRadius: {
         lg: "var(--radius)",
