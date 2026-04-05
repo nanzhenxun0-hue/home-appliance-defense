@@ -34,7 +34,7 @@ const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, volts }: HomeScreenPro
 
     <motion.div initial={{ opacity: 0, scale: 0.85, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.7, type: 'spring', bounce: 0.4 }} className="text-center mb-4 relative z-10">
-      <div className="text-5xl mb-2">⚡</div>
+      <img src={logoImg} alt="KADEN TD" width={100} height={100} className="mx-auto mb-2" style={{ filter: 'drop-shadow(0 0 20px hsl(270 80% 65% / 0.5))' }} />
       <h1 className="font-black text-2xl text-purple-300 tracking-tight">家電タワーディフェンス</h1>
       <p className="text-muted-foreground text-[10px] tracking-[0.3em] mt-1">KADEN TOWER DEFENSE</p>
     </motion.div>
