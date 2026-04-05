@@ -4,20 +4,22 @@ import { COLS, ROWS, CELL, GW, GH, DIFF, TDEFS, UPS, WAVES, PS, st, sellVal } fr
 import { mkState, buildQ, tickGame, getEnabled, canPlace, resetUid, calcPowerBalance } from '@/game/logic';
 import { drawFrame } from '@/game/renderer';
 import type { DifficultyKey, TowerID, UIState, GameState } from '@/game/types';
+import { WAVE_VOLT_REWARD, RARITY_COLOR } from '@/game/types';
 import { useSound } from '@/hooks/useSound';
 import { useHighScore } from '@/hooks/useHighScore';
 import HUD from '@/components/game/HUD';
-import Shop from '@/components/game/Shop';
 import InspectPanel from '@/components/game/InspectPanel';
 
 interface GameScreenProps {
   diff: DifficultyKey;
+  team: TowerID[];
   onHome: () => void;
+  onVoltEarned?: (amount: number) => void;
 }
 
-const GameScreen = ({ diff, onHome }: GameScreenProps) => {
+const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
   const cvs = useRef<HTMLCanvasElement>(null);
-  const gs = useRef<GameState>(mkState(diff));
+  const gs = useRef<GameState>(mkState(diff, team));
   const raf = useRef<number>(0);
   const pmRef = useRef<TowerID | null>(null);
   const hcRef = useRef({ c: -1, r: -1 });
@@ -32,7 +34,6 @@ const GameScreen = ({ diff, onHome }: GameScreenProps) => {
     wActive: false, over: false, win: false,
   }));
   const [placeMode, setPlaceMode] = useState<TowerID | null>(null);
-  const [hoverCell, setHoverCell] = useState<{ c: number; r: number } | null>(null);
   const [pinKey, setPinKey] = useState<string | null>(null);
   const [waveAnnounce, setWaveAnnounce] = useState<string | null>(null);
 
@@ -42,27 +43,21 @@ const GameScreen = ({ diff, onHome }: GameScreenProps) => {
   useEffect(() => { pmRef.current = placeMode; }, [placeMode]);
   useEffect(() => { pinRef.current = pinKey; }, [pinKey]);
 
-  const getCell = (ev: React.MouseEvent) => {
+  // Touch/click handler for canvas
+  const getCell = useCallback((clientX: number, clientY: number) => {
     const el = cvs.current; if (!el) return { c: -1, r: -1 };
     const rc = el.getBoundingClientRect();
-    const c = Math.floor((ev.clientX - rc.left) / rc.width * GW / CELL);
-    const r = Math.floor((ev.clientY - rc.top) / rc.height * GH / CELL);
+    const scaleX = GW / rc.width;
+    const scaleY = GH / rc.height;
+    const c = Math.floor((clientX - rc.left) * scaleX / CELL);
+    const r = Math.floor((clientY - rc.top) * scaleY / CELL);
     return (c < 0 || c >= COLS || r < 0 || r >= ROWS) ? { c: -1, r: -1 } : { c, r };
-  };
+  }, []);
 
-  const onMM = (ev: React.MouseEvent) => {
-    const { c, r } = getCell(ev);
-    if (c !== hcRef.current.c || r !== hcRef.current.r) {
-      hcRef.current = { c, r };
-      setHoverCell(c < 0 ? null : { c, r });
-    }
-  };
-  const onML = () => { hcRef.current = { c: -1, r: -1 }; setHoverCell(null); };
-
-  const onClick = (ev: React.MouseEvent) => {
+  const handleTap = useCallback((clientX: number, clientY: number) => {
     initSound();
     const s = gs.current; if (s.over || s.win) return;
-    const { c, r } = getCell(ev); if (c < 0) return;
+    const { c, r } = getCell(clientX, clientY); if (c < 0) return;
     const key = `${c},${r}`;
     if (pmRef.current) {
       const tid = pmRef.current;
@@ -73,15 +68,23 @@ const GameScreen = ({ diff, onHome }: GameScreenProps) => {
       s.power -= def.baseCost;
       s.grid[key] = { tid, lv: 0 };
       s.timers[key] = 0;
+      setPlaceMode(null);
       playSound('place');
     } else {
       if (s.grid[key]) setPinKey(pk => pk === key ? null : key);
       else setPinKey(null);
     }
-  };
+  }, [getCell, initSound, playSound]);
 
-  const onRC = (ev: React.MouseEvent) => {
-    ev.preventDefault(); setPlaceMode(null); setPinKey(null);
+  const onCanvasClick = (ev: React.MouseEvent) => handleTap(ev.clientX, ev.clientY);
+  const onCanvasTouch = (ev: React.TouchEvent) => {
+    ev.preventDefault();
+    const t = ev.touches[0];
+    if (t) handleTap(t.clientX, t.clientY);
+  };
+  const onMM = (ev: React.MouseEvent) => {
+    const { c, r } = getCell(ev.clientX, ev.clientY);
+    hcRef.current = { c, r };
   };
 
   const doUpgrade = () => {
@@ -92,7 +95,6 @@ const GameScreen = ({ diff, onHome }: GameScreenProps) => {
     const cost = UPS[tid][lv + 1].c; if (s.power < cost) return;
     s.power -= cost; cell.lv++;
     playSound('upgrade');
-    setUi(u => ({ ...u, power: Math.floor(s.power) }));
   };
 
   const doSell = () => {
@@ -117,23 +119,29 @@ const GameScreen = ({ diff, onHome }: GameScreenProps) => {
 
   const doRestart = () => {
     resetUid();
-    gs.current = mkState(diff);
+    gs.current = mkState(diff, team);
     scoreSaved.current = false;
     const d2 = DIFF[diff];
     setUi({ power: d2.sp, wave: 0, baseHP: d2.shp, maxHP: d2.shp, wActive: false, over: false, win: false });
-    setPlaceMode(null); setPinKey(null); setHoverCell(null);
+    setPlaceMode(null); setPinKey(null);
     hcRef.current = { c: -1, r: -1 };
   };
+
+  // Wave clear → earn volts
+  const prevWaveActive = useRef(false);
+  useEffect(() => {
+    if (prevWaveActive.current && !ui.wActive && !ui.over && !ui.win && ui.wave > 0) {
+      const reward = WAVE_VOLT_REWARD(ui.wave);
+      onVoltEarned?.(reward);
+    }
+    prevWaveActive.current = ui.wActive;
+  }, [ui.wActive, ui.wave, ui.over, ui.win, onVoltEarned]);
 
   // Save score on game end
   useEffect(() => {
     if ((ui.over || ui.win) && !scoreSaved.current) {
       scoreSaved.current = true;
-      addScore({
-        diff, wave: ui.wave, won: ui.win,
-        date: new Date().toLocaleDateString('ja-JP'),
-        power: ui.power,
-      });
+      addScore({ diff, wave: ui.wave, won: ui.win, date: new Date().toLocaleDateString('ja-JP'), power: ui.power });
       playSound(ui.win ? 'victory' : 'game_over');
     }
   }, [ui.over, ui.win]);
@@ -164,93 +172,46 @@ const GameScreen = ({ diff, onHome }: GameScreenProps) => {
   }, []);
 
   const s = gs.current;
-  const hovKey = hoverCell ? `${hoverCell.c},${hoverCell.r}` : null;
-  const lowPower = s.power <= 0 && s.waveActive;
 
   return (
-    <div className="bg-background h-screen flex flex-col items-center p-1.5 gap-1.5 select-none overflow-hidden relative">
-      {/* SF ambient particles */}
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div
-          key={i}
-          className="absolute rounded-full pointer-events-none z-0"
-          style={{
-            width: 1.5 + Math.random() * 2,
-            height: 1.5 + Math.random() * 2,
-            left: `${Math.random() * 100}%`,
-            bottom: '-2%',
-            background: i % 3 === 0 ? 'hsl(350 100% 60%)' : i % 3 === 1 ? 'hsl(210 100% 65%)' : 'hsl(270 100% 70%)',
-            animation: `sf-particle-float ${8 + Math.random() * 12}s linear infinite`,
-            animationDelay: `${Math.random() * 8}s`,
-            boxShadow: '0 0 4px currentColor',
-          }}
-        />
-      ))}
-      {/* HUD */}
+    <div className="bg-background h-[100dvh] flex flex-col select-none overflow-hidden relative">
+      {/* HUD - compact mobile */}
       <HUD ui={ui} diff={diff} grid={s.grid} onHome={onHome} onStartWave={startWave} />
 
-      {/* Place mode banner */}
-      <AnimatePresence>
-        {placeMode && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="glass-panel px-3 py-1 flex gap-2 items-center flex-wrap justify-center w-full max-w-[860px] text-[11px] font-bold"
-            style={{ borderColor: '#4299e122', color: '#90caf9' }}
-          >
-            <span className="text-base">{TDEFS[placeMode].em}</span>
-            <b className="text-foreground">{TDEFS[placeMode].n}</b>設置モード
-            <span className="text-game-green text-[10px]">✅ 緑マスをクリックで配置</span>
-            <button
-              onClick={() => setPlaceMode(null)}
-              className="game-btn-ghost text-[10px] px-2 py-0.5 text-game-red"
-              style={{ borderColor: '#f4433644', background: '#2a0a0a' }}
-            >
-              ✕ キャンセル
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Canvas */}
-      <div className="relative rounded-xl overflow-visible w-full max-w-[860px] flex-1 min-h-0 z-10"
-        style={{ boxShadow: '0 0 40px rgba(0,0,0,0.95), 0 0 80px rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)', animation: 'sf-border-glow 6s ease-in-out infinite' }}>
+      {/* Canvas - fills available space */}
+      <div className="flex-1 min-h-0 relative mx-1 rounded-lg overflow-hidden"
+        style={{ border: '1px solid rgba(168,85,247,0.15)' }}>
         <canvas
           ref={cvs} width={GW} height={GH}
-          className="block w-full h-full rounded-xl"
-          style={{ objectFit: 'contain', cursor: placeMode ? 'crosshair' : 'default' }}
-          onMouseMove={onMM} onMouseLeave={onML} onClick={onClick} onContextMenu={onRC}
+          className="block w-full h-full"
+          style={{ objectFit: 'contain', touchAction: 'none', cursor: placeMode ? 'crosshair' : 'default' }}
+          onMouseMove={onMM}
+          onClick={onCanvasClick}
+          onTouchStart={onCanvasTouch}
+          onContextMenu={e => { e.preventDefault(); setPlaceMode(null); setPinKey(null); }}
         />
 
-        {/* Low power warning overlay */}
-        {lowPower && <div className="power-warning-overlay" />}
+        {/* Low power overlay */}
+        {s.power <= 0 && s.waveActive && <div className="absolute inset-0 pointer-events-none bg-red-900/5 animate-pulse" />}
 
         {/* Wave announce */}
         <AnimatePresence>
           {waveAnnounce && (
-            <motion.div
-              initial={{ opacity: 0, scale: 2 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.5 }}
-              transition={{ duration: 0.4 }}
-              className="absolute inset-0 flex items-center justify-center pointer-events-none z-30"
-            >
-              <span className="sf-title sf-glow-text text-game-purple font-black text-4xl">
-                {waveAnnounce}
-              </span>
+            <motion.div initial={{ opacity: 0, scale: 2 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}
+              transition={{ duration: 0.4 }} className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+              <span className="text-purple-400 font-black text-3xl drop-shadow-lg">{waveAnnounce}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Game over / Win overlay */}
+        {/* Game over / Win */}
         {(ui.over || ui.win) && (
-          <div className="absolute inset-0 bg-background/90 backdrop-blur-lg flex flex-col items-center justify-center gap-4 z-30 rounded-xl">
+          <div className="absolute inset-0 bg-background/90 backdrop-blur-lg flex flex-col items-center justify-center gap-3 z-30 rounded-lg">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', bounce: 0.5 }} className="text-4xl">
               {ui.win ? '🎉' : '💀'}
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <div className="text-xl font-black" style={{ color: ui.win ? '#ffd700' : '#ef5350' }}>
+              <div className="text-lg font-black text-center" style={{ color: ui.win ? '#ffd700' : '#ef5350' }}>
                 {ui.win ? '全ウェーブクリア！' : 'ゲームオーバー'}
               </div>
               <div className="text-muted-foreground text-xs text-center mt-1">
@@ -258,44 +219,63 @@ const GameScreen = ({ diff, onHome }: GameScreenProps) => {
               </div>
             </motion.div>
             <div className="flex gap-2">
-              <button onClick={doRestart} className="game-btn-primary text-sm px-5 py-2">🔄 再挑戦</button>
-              <button onClick={onHome} className="game-btn-ghost">🏠 ホーム</button>
+              <button onClick={doRestart} className="game-btn-primary text-sm px-4 py-1.5">🔄 再挑戦</button>
+              <button onClick={onHome} className="game-btn-ghost text-sm px-3 py-1.5">🏠 ホーム</button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Shop */}
-      <Shop grid={s.grid} power={ui.power} placeMode={placeMode} onSelect={(tid) => { setPlaceMode(tid); setPinKey(null); }} />
+      {/* Bottom bar - Team placement */}
+      <div className="px-1 py-1.5 flex flex-col gap-1">
+        {/* Place mode banner */}
+        <AnimatePresence>
+          {placeMode && (
+            <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
+              className="glass-panel px-2 py-1 flex gap-2 items-center justify-center text-[10px]"
+              style={{ borderColor: RARITY_COLOR[TDEFS[placeMode].r] + '33' }}>
+              <span>{TDEFS[placeMode].em} {TDEFS[placeMode].n} 設置中</span>
+              <button onClick={() => setPlaceMode(null)} className="text-red-400 font-bold px-2">✕</button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Inspect panel */}
-      {pinKey && s.grid[pinKey] && (
-        <div className="w-full max-w-[860px]">
+        {/* Team bar */}
+        <div className="flex gap-1 justify-center overflow-x-auto">
+          {team.map(tid => {
+            const def = TDEFS[tid];
+            const isSel = placeMode === tid;
+            const canAff = ui.power >= def.baseCost;
+            const chainOk = canPlace(tid, s.grid);
+            const ok = canAff && chainOk;
+
+            return (
+              <button
+                key={tid}
+                onClick={() => ok && setPlaceMode(isSel ? null : tid)}
+                className="flex flex-col items-center px-2 py-1 rounded-lg transition-all min-w-[56px]"
+                style={{
+                  background: isSel ? RARITY_COLOR[def.r] + '22' : 'rgba(255,255,255,0.03)',
+                  border: `1.5px solid ${isSel ? RARITY_COLOR[def.r] : RARITY_COLOR[def.r] + '33'}`,
+                  opacity: ok ? 1 : 0.35,
+                  boxShadow: isSel ? `0 0 12px ${RARITY_COLOR[def.r]}44` : 'none',
+                }}
+                disabled={!ok}
+              >
+                <span className="text-lg leading-none">{def.em}</span>
+                <span className="text-[8px] font-bold mt-0.5" style={{ color: RARITY_COLOR[def.r] }}>{def.r}</span>
+                <span className="text-[9px] text-foreground/70 font-medium">{def.n.slice(0, 4)}</span>
+                <span className="text-[9px] text-yellow-400 font-bold">{def.baseCost}W</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Inspect panel */}
+        {pinKey && s.grid[pinKey] && (
           <InspectPanel cellKey={pinKey} grid={s.grid} power={ui.power} onUpgrade={doUpgrade} onSell={doSell} onClose={() => setPinKey(null)} />
-        </div>
-      )}
-
-      {/* Hover info */}
-      {!pinKey && hovKey && s.grid[hovKey] && !placeMode && (() => {
-        const { tid, lv } = s.grid[hovKey];
-        const def = TDEFS[tid]; const S = st(tid, lv);
-        return (
-          <div className="text-muted-foreground text-[10px] flex gap-2 items-center flex-wrap justify-center">
-            <span style={{ color: def.rc }}>{def.em}{S.lbl}</span>
-            {S.dmg > 0 && <span>⚔️{S.dmg}</span>}
-            {S.rng > 0 && <span>📏{S.rng}</span>}
-            {S.pg > 0 && <span className="text-game-green">+{S.pg}W</span>}
-            <span className="text-muted-foreground/50">クリックで詳細・強化・売却</span>
-          </div>
-        );
-      })()}
-
-      {!pinKey && (!hovKey || !s.grid[hovKey!]) && (
-        <div className="text-muted-foreground/30 text-[9px] flex gap-3 flex-wrap justify-center">
-          <span>🔗 緑の線＝連携中　赤の線＝連携切れ　💤＝停止</span>
-          <span>クリックでタワー選択→強化・売却</span>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
