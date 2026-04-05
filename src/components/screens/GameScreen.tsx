@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { COLS, ROWS, CELL, GW, GH, DIFF, TDEFS, UPS, WAVES, PS, st, sellVal } from '@/game/constants';
 import { mkState, buildQ, tickGame, getEnabled, canPlace, resetUid, calcPowerBalance } from '@/game/logic';
 import { drawFrame } from '@/game/renderer';
+import { preloadSprites, getTowerSprite } from '@/game/sprites';
+import { ABILITIES } from '@/game/abilities';
 import type { DifficultyKey, TowerID, UIState, GameState } from '@/game/types';
 import { WAVE_VOLT_REWARD, RARITY_COLOR } from '@/game/types';
 import { useSound } from '@/hooks/useSound';
@@ -16,6 +18,22 @@ interface GameScreenProps {
   onHome: () => void;
   onVoltEarned?: (amount: number) => void;
 }
+
+const SpriteBtn = ({ tid, size = 28 }: { tid: TowerID; size?: number }) => {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const cvs = ref.current; if (!cvs) return;
+    const ctx = cvs.getContext('2d'); if (!ctx) return;
+    const sprite = getTowerSprite(tid);
+    const draw = () => {
+      ctx.clearRect(0, 0, size, size);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(sprite, 0, 0, size, size);
+    };
+    if (sprite.complete) draw(); else sprite.onload = draw;
+  }, [tid, size]);
+  return <canvas ref={ref} width={size} height={size} className="block mx-auto" style={{ imageRendering: 'pixelated' }} />;
+};
 
 const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
   const cvs = useRef<HTMLCanvasElement>(null);
@@ -36,14 +54,15 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
   const [placeMode, setPlaceMode] = useState<TowerID | null>(null);
   const [pinKey, setPinKey] = useState<string | null>(null);
   const [waveAnnounce, setWaveAnnounce] = useState<string | null>(null);
+  const [voltReward, setVoltReward] = useState<number | null>(null);
 
   const { play: playSound, init: initSound } = useSound();
   const { addScore } = useHighScore();
 
+  useEffect(() => { preloadSprites(); }, []);
   useEffect(() => { pmRef.current = placeMode; }, [placeMode]);
   useEffect(() => { pinRef.current = pinKey; }, [pinKey]);
 
-  // Touch/click handler for canvas
   const getCell = useCallback((clientX: number, clientY: number) => {
     const el = cvs.current; if (!el) return { c: -1, r: -1 };
     const rc = el.getBoundingClientRect();
@@ -133,11 +152,12 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
     if (prevWaveActive.current && !ui.wActive && !ui.over && !ui.win && ui.wave > 0) {
       const reward = WAVE_VOLT_REWARD(ui.wave);
       onVoltEarned?.(reward);
+      setVoltReward(reward);
+      setTimeout(() => setVoltReward(null), 2000);
     }
     prevWaveActive.current = ui.wActive;
   }, [ui.wActive, ui.wave, ui.over, ui.win, onVoltEarned]);
 
-  // Save score on game end
   useEffect(() => {
     if ((ui.over || ui.win) && !scoreSaved.current) {
       scoreSaved.current = true;
@@ -175,24 +195,33 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
 
   return (
     <div className="bg-background h-[100dvh] flex flex-col select-none overflow-hidden relative">
-      {/* HUD - compact mobile */}
       <HUD ui={ui} diff={diff} grid={s.grid} onHome={onHome} onStartWave={startWave} />
 
-      {/* Canvas - fills available space */}
       <div className="flex-1 min-h-0 relative mx-1 rounded-lg overflow-hidden"
         style={{ border: '1px solid rgba(168,85,247,0.15)' }}>
         <canvas
           ref={cvs} width={GW} height={GH}
           className="block w-full h-full"
-          style={{ objectFit: 'contain', touchAction: 'none', cursor: placeMode ? 'crosshair' : 'default' }}
+          style={{ objectFit: 'contain', touchAction: 'none', cursor: placeMode ? 'crosshair' : 'default', imageRendering: 'pixelated' }}
           onMouseMove={onMM}
           onClick={onCanvasClick}
           onTouchStart={onCanvasTouch}
           onContextMenu={e => { e.preventDefault(); setPlaceMode(null); setPinKey(null); }}
         />
 
-        {/* Low power overlay */}
         {s.power <= 0 && s.waveActive && <div className="absolute inset-0 pointer-events-none bg-red-900/5 animate-pulse" />}
+
+        {/* Volt reward popup */}
+        <AnimatePresence>
+          {voltReward && (
+            <motion.div initial={{ opacity: 0, y: 20, scale: 0.5 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20 }} transition={{ type: 'spring', bounce: 0.4 }}
+              className="absolute top-3 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-xl font-black text-yellow-400 text-lg"
+              style={{ background: 'rgba(0,0,0,0.8)', border: '1px solid #ffd70044', boxShadow: '0 0 20px #ffd70033' }}>
+              ⚡ +{voltReward}V GET!
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Wave announce */}
         <AnimatePresence>
@@ -226,21 +255,20 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
         )}
       </div>
 
-      {/* Bottom bar - Team placement */}
+      {/* Bottom bar */}
       <div className="px-1 py-1.5 flex flex-col gap-1">
-        {/* Place mode banner */}
         <AnimatePresence>
           {placeMode && (
             <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
               className="glass-panel px-2 py-1 flex gap-2 items-center justify-center text-[10px]"
               style={{ borderColor: RARITY_COLOR[TDEFS[placeMode].r] + '33' }}>
-              <span>{TDEFS[placeMode].em} {TDEFS[placeMode].n} 設置中</span>
+              <SpriteBtn tid={placeMode} size={20} />
+              <span>{TDEFS[placeMode].n} 設置中 - タップして配置</span>
               <button onClick={() => setPlaceMode(null)} className="text-red-400 font-bold px-2">✕</button>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Team bar */}
         <div className="flex gap-1 justify-center overflow-x-auto">
           {team.map(tid => {
             const def = TDEFS[tid];
@@ -253,7 +281,7 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
               <button
                 key={tid}
                 onClick={() => ok && setPlaceMode(isSel ? null : tid)}
-                className="flex flex-col items-center px-2 py-1 rounded-lg transition-all min-w-[56px]"
+                className="flex flex-col items-center px-1.5 py-1 rounded-lg transition-all min-w-[52px]"
                 style={{
                   background: isSel ? RARITY_COLOR[def.r] + '22' : 'rgba(255,255,255,0.03)',
                   border: `1.5px solid ${isSel ? RARITY_COLOR[def.r] : RARITY_COLOR[def.r] + '33'}`,
@@ -262,16 +290,15 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
                 }}
                 disabled={!ok}
               >
-                <span className="text-lg leading-none">{def.em}</span>
-                <span className="text-[8px] font-bold mt-0.5" style={{ color: RARITY_COLOR[def.r] }}>{def.r}</span>
-                <span className="text-[9px] text-foreground/70 font-medium">{def.n.slice(0, 4)}</span>
-                <span className="text-[9px] text-yellow-400 font-bold">{def.baseCost}W</span>
+                <SpriteBtn tid={tid} size={24} />
+                <span className="text-[7px] font-bold mt-0.5" style={{ color: RARITY_COLOR[def.r] }}>{def.r}</span>
+                <span className="text-[8px] text-foreground/70 font-medium">{def.n.slice(0, 4)}</span>
+                <span className="text-[8px] text-yellow-400 font-bold">{def.baseCost}W</span>
               </button>
             );
           })}
         </div>
 
-        {/* Inspect panel */}
         {pinKey && s.grid[pinKey] && (
           <InspectPanel cellKey={pinKey} grid={s.grid} power={ui.power} onUpgrade={doUpgrade} onSell={doSell} onClose={() => setPinKey(null)} />
         )}
