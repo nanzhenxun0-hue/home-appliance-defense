@@ -1,6 +1,5 @@
-import type { GameState, DifficultyKey, Enemy, SpawnItem } from './types';
+import type { GameState, DifficultyKey, Enemy, SpawnItem, TowerID } from './types';
 import { DIFF, TDEFS, UPS, EDEFS, WAVES, PATH, CELL, PS, st } from './constants';
-import type { TowerID } from './types';
 
 let _eid = 1;
 export const uid = (): number => _eid++;
@@ -53,13 +52,14 @@ export const canPlace = (tid: TowerID, grid: GameState['grid']): boolean => {
   return Object.entries(grid).some(([k, c]) => c.tid === req && en.has(k));
 };
 
-export const mkState = (diff: DifficultyKey): GameState => {
+export const mkState = (diff: DifficultyKey, team: TowerID[]): GameState => {
   const d = DIFF[diff];
   return {
     grid: {}, timers: {}, enemies: [], projs: [], effs: [], particles: [],
     power: d.sp, wave: 0, baseHP: d.shp, maxHP: d.shp,
     waveActive: false, spawnQ: [], waveT: 0, powerT: 0,
     over: false, win: false, diff, screenShake: 0,
+    team: [...team],
   };
 };
 
@@ -72,7 +72,6 @@ export const buildQ = (wi: number, diff: DifficultyKey): SpawnItem[] => {
   return q.sort((a, b) => a.at - b.at);
 };
 
-// Power balance calculation
 export const calcPowerBalance = (grid: GameState['grid']) => {
   const en = getEnabled(grid);
   const gen = Object.entries(grid).reduce((a, [k, c]) => en.has(k) ? a + (st(c.tid, c.lv).pg || 0) : a, 0) + 2;
@@ -84,10 +83,8 @@ export const tickGame = (s: GameState, dt: number): void => {
   const dc = DIFF[s.diff];
   const en = getEnabled(s.grid);
 
-  // Screen shake decay
   if (s.screenShake > 0) s.screenShake = Math.max(0, s.screenShake - dt);
 
-  // Power flow during wave
   if (s.waveActive) {
     s.powerT += dt;
     if (s.powerT >= 1) {
@@ -95,7 +92,6 @@ export const tickGame = (s: GameState, dt: number): void => {
       const { gen, drain } = calcPowerBalance(s.grid);
       s.power = Math.min(Math.max(s.power + gen - drain, 0), 999);
     }
-    // Spawn
     s.waveT += dt;
     while (s.spawnQ.length && s.waveT >= s.spawnQ[0].at) {
       const it = s.spawnQ.shift()!;
@@ -109,11 +105,9 @@ export const tickGame = (s: GameState, dt: number): void => {
     }
   }
 
-  // Low-power slowdown factor
   const lowPower = s.power <= 0 && s.waveActive;
   const towerSpeedMult = lowPower ? 0.4 : 1;
 
-  // Enemy movement
   const dead = new Set<number>();
   for (const e of s.enemies) {
     if (e.hitFlash > 0) e.hitFlash -= dt;
@@ -130,7 +124,7 @@ export const tickGame = (s: GameState, dt: number): void => {
     if (e.pi >= PATH.length - 1) {
       dead.add(e.id);
       s.baseHP = Math.max(0, s.baseHP - e.dmg);
-      s.screenShake = 0.3; // trigger screen shake
+      s.screenShake = 0.3;
       const { x, y } = pxy(e.pi, e.pr);
       s.effs.push({ id: uid(), x, y, txt: `-${e.dmg}HP`, life: 1.5, ml: 1.5, col: '#f44336' });
       if (s.baseHP <= 0) s.over = true;
@@ -141,7 +135,6 @@ export const tickGame = (s: GameState, dt: number): void => {
     }
   }
 
-  // Tower attacks (enabled only)
   for (const [key, cell] of Object.entries(s.grid)) {
     if (!en.has(key)) continue;
     const S = st(cell.tid, cell.lv);
@@ -152,9 +145,10 @@ export const tickGame = (s: GameState, dt: number): void => {
     const cx = c * CELL + CELL / 2, cy = r * CELL + CELL / 2, range = S.rng * CELL;
     let rm = 1;
     for (const [k2, c2] of Object.entries(s.grid)) {
-      if (c2.tid !== 'router' || !en.has(k2)) continue;
+      if (c2.tid !== 'router' && c2.tid !== 'theater') continue;
+      if (!en.has(k2)) continue;
       const [rc, rr] = k2.split(',').map(Number);
-      const rs = st('router', c2.lv);
+      const rs = st(c2.tid, c2.lv);
       if (Math.hypot(rc - c, rr - r) <= rs.rng) rm *= (rs.bf || 1.2);
     }
     let tgt: Enemy | null = null, best = -1;
@@ -168,13 +162,17 @@ export const tickGame = (s: GameState, dt: number): void => {
     if (tgt) {
       s.timers[key] = 1 / (S.spd * rm);
       tgt.hp -= S.dmg;
-      tgt.hitFlash = 0.1; // hit flash
+      tgt.hitFlash = 0.1;
       const { x: ex, y: ey } = pxy(tgt.pi, tgt.pr);
-      const projCol: Record<string, string> = { fridge:'#80deea', kettle:'#ff7043', fan:'#b3e5fc', vacuum:'#ce93d8' };
+      const projCol: Record<string, string> = {
+        fridge:'#80deea', aircon:'#4fc3f7', kettle:'#ff7043', microwave:'#ff5722',
+        fan:'#b3e5fc', vacuum:'#ce93d8', washer:'#26c6da', lamp:'#fff176',
+        superpc:'#00e5ff', plasma:'#ffd700', theater:'#e91e63',
+      };
       s.projs.push({ id: uid(), sx: cx, sy: cy, ex, ey, life: 0.18, col: projCol[cell.tid] || '#fff' });
-      if (cell.tid === 'kettle') { tgt.burning = 3; tgt.burnT = 0.5; }
-      if (cell.tid === 'fridge') tgt.frozen = 1.5;
-      if (cell.tid === 'fan' || cell.tid === 'vacuum') {
+      if (cell.tid === 'kettle' || cell.tid === 'microwave') { tgt.burning = 3; tgt.burnT = 0.5; }
+      if (cell.tid === 'fridge' || cell.tid === 'aircon') tgt.frozen = 1.5;
+      if (cell.tid === 'fan' || cell.tid === 'vacuum' || cell.tid === 'washer') {
         const bk = cell.tid === 'fan' ? 0.45 : 0.22;
         tgt.pr -= bk;
         while (tgt.pr < 0 && tgt.pi > 0) { tgt.pi--; tgt.pr += 1; }
@@ -185,7 +183,6 @@ export const tickGame = (s: GameState, dt: number): void => {
         s.power = Math.min(s.power + tgt.rew, 999);
         const { x, y } = pxy(tgt.pi, tgt.pr);
         s.effs.push({ id: uid(), x, y, txt: `+${tgt.rew}W`, life: 1.0, ml: 1.0, col: '#ffd700' });
-        // Spawn death particles
         for (let i = 0; i < 8; i++) {
           const angle = (Math.PI * 2 / 8) * i + Math.random() * 0.5;
           const speed = 40 + Math.random() * 60;
@@ -205,7 +202,6 @@ export const tickGame = (s: GameState, dt: number): void => {
   s.projs = s.projs.filter(p => p.life > 0);
   s.effs.forEach(e => e.life -= dt);
   s.effs = s.effs.filter(e => e.life > 0);
-  // Particles
   s.particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 80 * dt; p.life -= dt; });
   s.particles = s.particles.filter(p => p.life > 0);
 

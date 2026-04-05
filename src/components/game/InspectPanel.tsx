@@ -1,4 +1,5 @@
-import { TDEFS, UPS, RCOLOR, st, sellVal } from '@/game/constants';
+import { TDEFS, UPS, st, sellVal, RCOLOR } from '@/game/constants';
+import { RARITY_COLOR } from '@/game/types';
 import { getEnabled } from '@/game/logic';
 import type { GameState } from '@/game/types';
 

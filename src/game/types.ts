@@ -15,8 +15,34 @@ export interface DifficultyDef {
   wg: number;
 }
 
-export type TowerID = 'cord' | 'kettle' | 'fan' | 'vacuum' | 'router' | 'fridge';
-export type Rarity = 'C' | 'U' | 'R';
+export type TowerID =
+  | 'cord' | 'kettle'         // C
+  | 'fan' | 'lamp'            // U
+  | 'vacuum' | 'router'       // R
+  | 'fridge' | 'aircon'       // E
+  | 'microwave' | 'washer'    // L
+  | 'theater'                 // M
+  | 'superpc'                 // G
+  | 'plasma';                 // OD
+
+export type Rarity = 'C' | 'U' | 'R' | 'E' | 'L' | 'M' | 'G' | 'OD';
+
+export const RARITY_ORDER: Rarity[] = ['C', 'U', 'R', 'E', 'L', 'M', 'G', 'OD'];
+
+export const RARITY_LABEL: Record<Rarity, string> = {
+  C: 'コモン', U: 'アンコモン', R: 'レア', E: 'エピック',
+  L: 'レジェンド', M: 'ミシック', G: 'ギャラクシー', OD: 'オーバードライブ',
+};
+
+export const RARITY_COLOR: Record<Rarity, string> = {
+  C: '#9e9e9e', U: '#4caf50', R: '#2196f3', E: '#ab47bc',
+  L: '#ff9800', M: '#e91e63', G: '#00e5ff', OD: '#ffd700',
+};
+
+export const RARITY_BG: Record<Rarity, string> = {
+  C: '#1a1a1a', U: '#0d2a12', R: '#0a1f3a', E: '#1f0a2a',
+  L: '#2a1a00', M: '#2a0a1a', G: '#002a2a', OD: '#2a2200',
+};
 
 export interface TowerDef {
   n: string;
@@ -43,7 +69,7 @@ export interface TowerStats extends TowerDef, UpgradeLevel {
   lv: number;
 }
 
-export type EnemyType = 'dust' | 'slime' | 'magnet';
+export type EnemyType = 'dust' | 'slime' | 'magnet' | 'virus' | 'boss';
 
 export interface EnemyDef {
   em: string;
@@ -79,7 +105,7 @@ export interface Enemy {
   frozen: number;
   burning: number;
   burnT: number;
-  hitFlash: number; // hit flash timer
+  hitFlash: number;
 }
 
 export interface Projectile {
@@ -138,6 +164,7 @@ export interface GameState {
   win: boolean;
   diff: DifficultyKey;
   screenShake: number;
+  team: TowerID[];
 }
 
 export interface UIState {
@@ -157,3 +184,19 @@ export interface HighScoreEntry {
   date: string;
   power: number;
 }
+
+// Gacha
+export interface GachaInventory {
+  owned: TowerID[];
+  volts: number;
+}
+
+export const GACHA_COST = 100;
+export const GACHA_COST_10 = 900;
+
+export const GACHA_RATES: Record<Rarity, number> = {
+  C: 0.35, U: 0.25, R: 0.15, E: 0.12,
+  L: 0.06, M: 0.04, G: 0.02, OD: 0.01,
+};
+
+export const WAVE_VOLT_REWARD = (wave: number): number => 40 + wave * 20;
