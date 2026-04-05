@@ -12,9 +12,11 @@ interface HomeScreenProps {
 
 const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, volts }: HomeScreenProps) => (
   <div className="min-h-[100dvh] flex flex-col items-center justify-center p-5 relative overflow-hidden bg-background">
-    {/* BG gradient */}
-    <div className="absolute inset-0 z-0"
-      style={{ background: 'radial-gradient(ellipse at 50% 20%, hsl(270 60% 15%), hsl(220 40% 5%) 70%)' }} />
+    {/* BG image */}
+    <div className="absolute inset-0 z-0">
+      <img src={bgHome} alt="" className="w-full h-full object-cover opacity-40" />
+      <div className="absolute inset-0 bg-background/70" />
+    </div>
 
     {/* Particles */}
     {Array.from({ length: 15 }).map((_, i) => (
