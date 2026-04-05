@@ -1,4 +1,6 @@
 import { motion } from 'framer-motion';
+import bgHome from '@/assets/bg-home.jpg';
+import logoImg from '@/assets/logo.png';
 
 interface HomeScreenProps {
   onPlay: () => void;
