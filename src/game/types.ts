@@ -106,6 +106,8 @@ export interface Enemy {
   burning: number;
   burnT: number;
   hitFlash: number;
+  marked: boolean;
+  slowed: boolean;
 }
 
 export interface Projectile {
