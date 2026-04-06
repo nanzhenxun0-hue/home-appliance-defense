@@ -95,7 +95,7 @@ export const tickGame = (s: GameState, dt: number): void => {
     s.powerT += dt;
     if (s.powerT >= 1) {
       s.powerT -= 1;
-      const { gen, drain } = calcPowerBalance(s.grid);
+      const { gen, drain } = calcPowerBalance(s.grid, s.team);
       s.power = Math.min(Math.max(s.power + gen - drain, 0), 999);
     }
     s.waveT += dt;
