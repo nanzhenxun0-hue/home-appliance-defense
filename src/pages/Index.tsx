@@ -10,6 +10,8 @@ import TeamScreen from '@/components/screens/TeamScreen';
 import { useGacha } from '@/hooks/useGacha';
 import { useTeam } from '@/hooks/useTeam';
 import { useSound } from '@/hooks/useSound';
+import { useBGM } from '@/hooks/useBGM';
+import { useEffect } from 'react';
 
 type Screen = 'home' | 'howto' | 'diff' | 'game' | 'scores' | 'gacha' | 'team';
 
@@ -19,12 +21,21 @@ const Index = () => {
   const gacha = useGacha();
   const { team, toggle, MAX_TEAM } = useTeam();
   const { play, toggle: toggleSound, init: initSound } = useSound();
+  const bgm = useBGM();
 
   const onVoltEarned = useCallback((amount: number) => {
     gacha.addVolts(amount);
   }, [gacha]);
 
-  // Init audio on first user interaction
+  // BGM management based on screen
+  useEffect(() => {
+    if (screen === 'game') {
+      bgm.play('battle');
+    } else if (screen === 'home' || screen === 'gacha' || screen === 'team' || screen === 'howto' || screen === 'scores' || screen === 'diff') {
+      bgm.play('home');
+    }
+  }, [screen]);
+
   const handleScreenChange = (s: Screen) => {
     initSound();
     play('ui_tap');
