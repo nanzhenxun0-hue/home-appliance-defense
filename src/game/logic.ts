@@ -140,6 +140,12 @@ export const tickGame = (s: GameState, dt: number): void => {
     if (!en.has(key)) continue;
     const S = st(cell.tid, cell.lv);
     if (!S.spd || !S.dmg) continue;
+
+    // Apply synergy effects
+    const synFx = getSynergyEffects(s.team, cell.tid);
+    const synDmg = Math.ceil(S.dmg * synFx.dmgMult);
+    const synSpd = S.spd * synFx.spdMult;
+
     s.timers[key] = (s.timers[key] || 0) - dt * towerSpeedMult;
     if (s.timers[key] > 0) continue;
     const [c, r] = key.split(',').map(Number);
@@ -161,8 +167,8 @@ export const tickGame = (s: GameState, dt: number): void => {
       if (sc > best) { best = sc; tgt = e; }
     }
     if (tgt) {
-      s.timers[key] = 1 / (S.spd * rm);
-      tgt.hp -= S.dmg;
+      s.timers[key] = 1 / (synSpd * rm);
+      tgt.hp -= synDmg;
       tgt.hitFlash = 0.1;
       const { x: ex, y: ey } = pxy(tgt.pi, tgt.pr);
       const projCol: Record<string, string> = {
