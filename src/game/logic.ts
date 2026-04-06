@@ -73,10 +73,15 @@ export const buildQ = (wi: number, diff: DifficultyKey): SpawnItem[] => {
   return q.sort((a, b) => a.at - b.at);
 };
 
-export const calcPowerBalance = (grid: GameState['grid']) => {
+export const calcPowerBalance = (grid: GameState['grid'], team: TowerID[] = []) => {
   const en = getEnabled(grid);
   const gen = Object.entries(grid).reduce((a, [k, c]) => en.has(k) ? a + (st(c.tid, c.lv).pg || 0) : a, 0) + 2;
-  const drain = Object.entries(grid).reduce((a, [k, c]) => en.has(k) ? a + (st(c.tid, c.lv).pc || 0) : a, 0);
+  const drain = Object.entries(grid).reduce((a, [k, c]) => {
+    if (!en.has(k)) return a;
+    const base = st(c.tid, c.lv).pc || 0;
+    const synFx = getSynergyEffects(team, c.tid);
+    return a + Math.ceil(base * (1 - synFx.powerDiscount));
+  }, 0);
   return { gen, drain, net: gen - drain };
 };
 
