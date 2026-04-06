@@ -1,5 +1,6 @@
 import type { GameState, DifficultyKey, Enemy, SpawnItem, TowerID } from './types';
 import { DIFF, TDEFS, UPS, EDEFS, WAVES, PATH, CELL, PS, st } from './constants';
+import { getSynergyEffects } from './synergy';
 
 let _eid = 1;
 export const uid = (): number => _eid++;
