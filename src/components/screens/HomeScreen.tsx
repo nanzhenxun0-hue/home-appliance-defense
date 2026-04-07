@@ -7,6 +7,7 @@ interface HomeScreenProps {
   onHowTo: () => void;
   onScores: () => void;
   onGacha: () => void;
+  onCombo: () => void;
   volts: number;
 }
 
