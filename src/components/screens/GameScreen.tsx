@@ -7,7 +7,6 @@ import type { DifficultyKey, TowerID, UIState, GameState } from '@/game/types';
 import { WAVE_VOLT_REWARD, RARITY_COLOR } from '@/game/types';
 import { useSound } from '@/hooks/useSound';
 import { useHighScore } from '@/hooks/useHighScore';
-import { getActiveChainCombos } from '@/game/chainCombo';
 import HUD from '@/components/game/HUD';
 import InspectPanel from '@/components/game/InspectPanel';
 
@@ -37,8 +36,6 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
   const [placeMode, setPlaceMode] = useState<TowerID | null>(null);
   const [pinKey, setPinKey] = useState<string | null>(null);
   const [waveAnnounce, setWaveAnnounce] = useState<string | null>(null);
-  const [comboAnnounce, setComboAnnounce] = useState<string | null>(null);
-  const prevComboCount = useRef(0);
 
   const { play: playSound, init: initSound } = useSound();
   const { addScore } = useHighScore();
@@ -73,16 +70,6 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
       s.timers[key] = 0;
       setPlaceMode(null);
       playSound('place');
-      // Check for new chain combos
-      const placed = [...new Set(Object.values(s.grid).map(c => c.tid))];
-      const newCombos = getActiveChainCombos(placed);
-      if (newCombos.length > prevComboCount.current) {
-        const latest = newCombos[newCombos.length - 1];
-        setComboAnnounce(`${latest.em} ${latest.name}`);
-        playSound('upgrade');
-        setTimeout(() => setComboAnnounce(null), 2000);
-      }
-      prevComboCount.current = newCombos.length;
     } else {
       if (s.grid[key]) setPinKey(pk => pk === key ? null : key);
       else setPinKey(null);
@@ -189,7 +176,7 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
   return (
     <div className="bg-background h-[100dvh] flex flex-col select-none overflow-hidden relative">
       {/* HUD - compact mobile */}
-      <HUD ui={ui} diff={diff} grid={s.grid} placedTowers={[...new Set(Object.values(s.grid).map(c => c.tid))]} onHome={onHome} onStartWave={startWave} />
+      <HUD ui={ui} diff={diff} grid={s.grid} onHome={onHome} onStartWave={startWave} />
 
       {/* Canvas - fills available space */}
       <div className="flex-1 min-h-0 relative mx-1 rounded-lg overflow-hidden"
@@ -213,31 +200,6 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
             <motion.div initial={{ opacity: 0, scale: 2 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}
               transition={{ duration: 0.4 }} className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
               <span className="text-purple-400 font-black text-3xl drop-shadow-lg">{waveAnnounce}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Combo activation */}
-        <AnimatePresence>
-          {comboAnnounce && (
-            <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.8 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 1.2 }}
-              transition={{ duration: 0.5, type: 'spring', bounce: 0.4 }}
-              className="absolute inset-x-0 top-8 flex items-center justify-center pointer-events-none z-40"
-            >
-              <div className="px-4 py-2 rounded-xl font-black text-sm text-center"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,100,0,0.25))',
-                  border: '2px solid rgba(255,215,0,0.5)',
-                  color: '#ffd700',
-                  boxShadow: '0 0 30px rgba(255,215,0,0.3), 0 0 60px rgba(255,100,0,0.15)',
-                  textShadow: '0 0 10px rgba(255,215,0,0.5)',
-                }}>
-                ⛓️ CHAIN COMBO!
-                <div className="text-[11px] font-bold mt-0.5 opacity-90">{comboAnnounce}</div>
-              </div>
             </motion.div>
           )}
         </AnimatePresence>
