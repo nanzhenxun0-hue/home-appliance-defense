@@ -189,7 +189,7 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
   return (
     <div className="bg-background h-[100dvh] flex flex-col select-none overflow-hidden relative">
       {/* HUD - compact mobile */}
-      <HUD ui={ui} diff={diff} grid={s.grid} onHome={onHome} onStartWave={startWave} />
+      <HUD ui={ui} diff={diff} grid={s.grid} placedTowers={[...new Set(Object.values(s.grid).map(c => c.tid))]} onHome={onHome} onStartWave={startWave} />
 
       {/* Canvas - fills available space */}
       <div className="flex-1 min-h-0 relative mx-1 rounded-lg overflow-hidden"
