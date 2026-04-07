@@ -73,6 +73,16 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
       s.timers[key] = 0;
       setPlaceMode(null);
       playSound('place');
+      // Check for new chain combos
+      const placed = [...new Set(Object.values(s.grid).map(c => c.tid))];
+      const newCombos = getActiveChainCombos(placed);
+      if (newCombos.length > prevComboCount.current) {
+        const latest = newCombos[newCombos.length - 1];
+        setComboAnnounce(`${latest.em} ${latest.name}`);
+        playSound('upgrade');
+        setTimeout(() => setComboAnnounce(null), 2000);
+      }
+      prevComboCount.current = newCombos.length;
     } else {
       if (s.grid[key]) setPinKey(pk => pk === key ? null : key);
       else setPinKey(null);
