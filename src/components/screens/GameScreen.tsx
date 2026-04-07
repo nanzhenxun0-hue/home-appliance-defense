@@ -37,6 +37,8 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
   const [placeMode, setPlaceMode] = useState<TowerID | null>(null);
   const [pinKey, setPinKey] = useState<string | null>(null);
   const [waveAnnounce, setWaveAnnounce] = useState<string | null>(null);
+  const [comboAnnounce, setComboAnnounce] = useState<string | null>(null);
+  const prevComboCount = useRef(0);
 
   const { play: playSound, init: initSound } = useSound();
   const { addScore } = useHighScore();
