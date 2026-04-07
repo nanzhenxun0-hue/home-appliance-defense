@@ -7,6 +7,7 @@ import type { DifficultyKey, TowerID, UIState, GameState } from '@/game/types';
 import { WAVE_VOLT_REWARD, RARITY_COLOR } from '@/game/types';
 import { useSound } from '@/hooks/useSound';
 import { useHighScore } from '@/hooks/useHighScore';
+import { getActiveChainCombos } from '@/game/chainCombo';
 import HUD from '@/components/game/HUD';
 import InspectPanel from '@/components/game/InspectPanel';
 
