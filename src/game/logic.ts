@@ -147,10 +147,12 @@ export const tickGame = (s: GameState, dt: number): void => {
     const S = st(cell.tid, cell.lv);
     if (!S.spd || !S.dmg) continue;
 
-    // Apply synergy effects
+    // Apply synergy + chain combo effects
     const synFx = getSynergyEffects(s.team, cell.tid);
-    const synDmg = Math.ceil(S.dmg * synFx.dmgMult);
-    const synSpd = S.spd * synFx.spdMult;
+    const placedTypes = [...new Set(Object.values(s.grid).map(c => c.tid))];
+    const chainFx = getChainComboEffects(placedTypes, cell.tid);
+    const synDmg = Math.ceil(S.dmg * synFx.dmgMult * chainFx.dmgMult);
+    const synSpd = S.spd * synFx.spdMult * chainFx.spdMult;
 
     s.timers[key] = (s.timers[key] || 0) - dt * towerSpeedMult;
     if (s.timers[key] > 0) continue;
