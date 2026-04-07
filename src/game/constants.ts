@@ -28,26 +28,26 @@ export const DIFF: Record<DifficultyKey, DifficultyDef> = {
 };
 
 export const TDEFS: Record<TowerID, TowerDef> = {
-  // C - Common
+  // C - Common  ── 2つの起点
   cord:      { n:'延長コード',     em:'🔌', r:'C',  rc:'#9e9e9e', baseCost:30,  req:null },
   kettle:    { n:'電気ケトル',     em:'♨️',  r:'C',  rc:'#ffb74d', baseCost:50,  req:null },
-  // U - Uncommon
-  fan:       { n:'扇風機',         em:'🌀', r:'U',  rc:'#81d4fa', baseCost:60,  req:null },
-  lamp:      { n:'デスクライト',   em:'💡', r:'U',  rc:'#fff176', baseCost:55,  req:null },
-  // R - Rare
+  // U - Uncommon  ── cordから分岐 / kettleから分岐
+  fan:       { n:'扇風機',         em:'🌀', r:'U',  rc:'#81d4fa', baseCost:60,  req:'cord' },
+  lamp:      { n:'デスクライト',   em:'💡', r:'U',  rc:'#fff176', baseCost:55,  req:'kettle' },
+  // R - Rare  ── fan/lampからさらに分岐
   vacuum:    { n:'掃除機',         em:'🌪️', r:'R',  rc:'#a5d6a7', baseCost:90,  req:'cord' },
-  router:    { n:'ルーター',       em:'📡', r:'R',  rc:'#80cbc4', baseCost:100, req:'cord' },
-  // E - Epic
+  router:    { n:'ルーター',       em:'📡', r:'R',  rc:'#80cbc4', baseCost:100, req:'lamp' },
+  // E - Epic  ── チェーンが深くなる
   fridge:    { n:'冷蔵庫',         em:'🧊', r:'E',  rc:'#64b5f6', baseCost:140, req:'vacuum' },
   aircon:    { n:'エアコン',       em:'❄️', r:'E',  rc:'#4fc3f7', baseCost:150, req:'fan' },
-  // L - Legend
+  // L - Legend  ── 複数経路が合流
   microwave: { n:'電子レンジ',     em:'🔥', r:'L',  rc:'#ff7043', baseCost:200, req:'kettle' },
-  washer:    { n:'洗濯機',         em:'🌊', r:'L',  rc:'#26c6da', baseCost:220, req:'vacuum' },
-  // M - Mythic
+  washer:    { n:'洗濯機',         em:'🌊', r:'L',  rc:'#26c6da', baseCost:220, req:'fridge' },
+  // M - Mythic  ── routerチェーンの先
   theater:   { n:'ホームシアター', em:'🎬', r:'M',  rc:'#e91e63', baseCost:300, req:'router' },
-  // G - Galaxy
-  superpc:   { n:'スーパーPC',     em:'💻', r:'G',  rc:'#00e5ff', baseCost:400, req:'router' },
-  // OD - Overdrive
+  // G - Galaxy  ── airconチェーンの先
+  superpc:   { n:'スーパーPC',     em:'💻', r:'G',  rc:'#00e5ff', baseCost:400, req:'theater' },
+  // OD - Overdrive  ── 最長チェーンの頂点
   plasma:    { n:'プラズマキャノン', em:'⚡', r:'OD', rc:'#ffd700', baseCost:500, req:'superpc' },
 };
 
