@@ -66,6 +66,7 @@ const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, volts }: Home
         }}>
         🎰 ガチャ
       </button>
+      <button onClick={onCombo} className="game-btn-secondary w-full text-sm">⛓️ コンボレシピ</button>
       <button onClick={onHowTo} className="game-btn-secondary w-full text-sm">📖 遊び方</button>
       <button onClick={onScores} className="game-btn-ghost w-full text-xs">🏆 ハイスコア</button>
     </motion.div>
