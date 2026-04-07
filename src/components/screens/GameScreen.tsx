@@ -217,6 +217,31 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
           )}
         </AnimatePresence>
 
+        {/* Combo activation */}
+        <AnimatePresence>
+          {comboAnnounce && (
+            <motion.div
+              initial={{ opacity: 0, y: 30, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 1.2 }}
+              transition={{ duration: 0.5, type: 'spring', bounce: 0.4 }}
+              className="absolute inset-x-0 top-8 flex items-center justify-center pointer-events-none z-40"
+            >
+              <div className="px-4 py-2 rounded-xl font-black text-sm text-center"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,100,0,0.25))',
+                  border: '2px solid rgba(255,215,0,0.5)',
+                  color: '#ffd700',
+                  boxShadow: '0 0 30px rgba(255,215,0,0.3), 0 0 60px rgba(255,100,0,0.15)',
+                  textShadow: '0 0 10px rgba(255,215,0,0.5)',
+                }}>
+                ⛓️ CHAIN COMBO!
+                <div className="text-[11px] font-bold mt-0.5 opacity-90">{comboAnnounce}</div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Game over / Win */}
         {(ui.over || ui.win) && (
           <div className="absolute inset-0 bg-background/90 backdrop-blur-lg flex flex-col items-center justify-center gap-3 z-30 rounded-lg">
