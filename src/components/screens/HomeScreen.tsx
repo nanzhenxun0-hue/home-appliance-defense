@@ -7,10 +7,11 @@ interface HomeScreenProps {
   onHowTo: () => void;
   onScores: () => void;
   onGacha: () => void;
+  onCombo: () => void;
   volts: number;
 }
 
-const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, volts }: HomeScreenProps) => (
+const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, volts }: HomeScreenProps) => (
   <div className="min-h-[100dvh] flex flex-col items-center justify-center p-5 relative overflow-hidden bg-background">
     {/* BG image */}
     <div className="absolute inset-0 z-0">
@@ -65,6 +66,7 @@ const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, volts }: HomeScreenPro
         }}>
         🎰 ガチャ
       </button>
+      <button onClick={onCombo} className="game-btn-secondary w-full text-sm">⛓️ コンボレシピ</button>
       <button onClick={onHowTo} className="game-btn-secondary w-full text-sm">📖 遊び方</button>
       <button onClick={onScores} className="game-btn-ghost w-full text-xs">🏆 ハイスコア</button>
     </motion.div>
