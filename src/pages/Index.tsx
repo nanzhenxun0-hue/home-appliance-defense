@@ -7,13 +7,14 @@ import GameScreen from '@/components/screens/GameScreen';
 import ScoreScreen from '@/components/screens/ScoreScreen';
 import GachaScreen from '@/components/screens/GachaScreen';
 import TeamScreen from '@/components/screens/TeamScreen';
+import ComboRecipeScreen from '@/components/screens/ComboRecipeScreen';
 import { useGacha } from '@/hooks/useGacha';
 import { useTeam } from '@/hooks/useTeam';
 import { useSound } from '@/hooks/useSound';
 import { useBGM } from '@/hooks/useBGM';
 import { useEffect } from 'react';
 
-type Screen = 'home' | 'howto' | 'diff' | 'game' | 'scores' | 'gacha' | 'team';
+type Screen = 'home' | 'howto' | 'diff' | 'game' | 'scores' | 'gacha' | 'team' | 'combo';
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>('home');
@@ -27,11 +28,10 @@ const Index = () => {
     gacha.addVolts(amount);
   }, [gacha]);
 
-  // BGM management based on screen
   useEffect(() => {
     if (screen === 'game') {
       bgm.play('battle');
-    } else if (screen === 'home' || screen === 'gacha' || screen === 'team' || screen === 'howto' || screen === 'scores' || screen === 'diff') {
+    } else {
       bgm.play('home');
     }
   }, [screen]);
@@ -48,6 +48,7 @@ const Index = () => {
       onHowTo={() => handleScreenChange('howto')}
       onScores={() => handleScreenChange('scores')}
       onGacha={() => handleScreenChange('gacha')}
+      onCombo={() => handleScreenChange('combo')}
       volts={gacha.inv.volts}
     />;
   }
@@ -68,6 +69,9 @@ const Index = () => {
       onStart={() => handleScreenChange('diff')}
       onBack={() => handleScreenChange('home')}
     />;
+  }
+  if (screen === 'combo') {
+    return <ComboRecipeScreen owned={gacha.inv.owned} onBack={() => handleScreenChange('home')} />;
   }
   return <GameScreen key={diff} diff={diff} team={team} onHome={() => handleScreenChange('home')} onVoltEarned={onVoltEarned} />;
 };
