@@ -11,7 +11,7 @@ interface HomeScreenProps {
   volts: number;
 }
 
-const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, volts }: HomeScreenProps) => (
+const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, volts }: HomeScreenProps) => (
   <div className="min-h-[100dvh] flex flex-col items-center justify-center p-5 relative overflow-hidden bg-background">
     {/* BG image */}
     <div className="absolute inset-0 z-0">
