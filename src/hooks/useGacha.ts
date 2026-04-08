@@ -1,21 +1,19 @@
 import { useState, useCallback } from 'react';
-import type { TowerID, Rarity, GachaInventory } from '@/game/types';
-import { GACHA_COST, GACHA_COST_10, GACHA_RATES, RARITY_ORDER } from '@/game/types';
+import type { TowerID, Rarity, GachaInventory, GachaBannerType } from '@/game/types';
+import { GACHA_RATES, RARITY_ORDER, GACHA_BANNERS } from '@/game/types';
 import { TDEFS } from '@/game/constants';
 
 const STORAGE_KEY = 'kaden-td-gacha';
+const DEFAULT_OWNED: TowerID[] = ['cord', 'kettle'];
 
-const DEFAULT_OWNED: TowerID[] = ['cord', 'kettle']; // starter units
-
-// Pity: guaranteed high rarity at certain pull counts
-const PITY_SOFT = 50;  // soft pity starts (increased OD rate)
-const PITY_HARD = 80;  // guaranteed OD
-const PICKUP_RATE = 0.5; // 50% chance the OD/G is the pickup unit
+const PITY_SOFT = 50;
+const PITY_HARD = 80;
+const PICKUP_RATE = 0.5;
 
 export interface GachaState extends GachaInventory {
-  pity: number;          // pulls since last OD
+  pity: number;
   totalPulls: number;
-  pickup: TowerID | null; // current pickup unit
+  pickup: TowerID | null;
   pickupBanner: string;
 }
 
@@ -26,7 +24,7 @@ const loadInventory = (): GachaState => {
       const parsed = JSON.parse(raw);
       return {
         owned: parsed.owned || [...DEFAULT_OWNED],
-        volts: parsed.volts ?? 300,
+        volts: parsed.volts ?? 500,
         pity: parsed.pity ?? 0,
         totalPulls: parsed.totalPulls ?? 0,
         pickup: parsed.pickup ?? 'plasma',
@@ -34,7 +32,7 @@ const loadInventory = (): GachaState => {
       };
     }
   } catch {}
-  return { owned: [...DEFAULT_OWNED], volts: 300, pity: 0, totalPulls: 0, pickup: 'plasma', pickupBanner: 'プラズマキャノン ピックアップ' };
+  return { owned: [...DEFAULT_OWNED], volts: 500, pity: 0, totalPulls: 0, pickup: 'plasma', pickupBanner: 'プラズマキャノン ピックアップ' };
 };
 
 const saveInventory = (inv: GachaState) => {
@@ -46,34 +44,30 @@ const towersOfRarity = (rarity: Rarity): TowerID[] =>
     .filter(([, d]) => d.r === rarity)
     .map(([id]) => id);
 
-const pickRarity = (pity: number): Rarity => {
-  // Hard pity
+const pickRarity = (pity: number, rateOverride?: Partial<Record<Rarity, number>>): Rarity => {
   if (pity >= PITY_HARD) return 'OD';
 
-  // Soft pity: increase OD rate linearly from 1% to ~30%
-  let odRate = GACHA_RATES['OD'];
+  const rates = { ...GACHA_RATES, ...(rateOverride || {}) };
+  let odRate = rates['OD'];
   if (pity >= PITY_SOFT) {
     odRate += (pity - PITY_SOFT) / (PITY_HARD - PITY_SOFT) * 0.29;
   }
 
   let r = Math.random();
-  // OD first (boosted)
   r -= odRate;
   if (r <= 0) return 'OD';
-  // Then other rarities (adjusted)
   const others: Rarity[] = ['G', 'M', 'L', 'E', 'R', 'U', 'C'];
   for (const rarity of others) {
-    r -= GACHA_RATES[rarity];
+    r -= rates[rarity];
     if (r <= 0) return rarity;
   }
   return 'C';
 };
 
-const pullOne = (pity: number, pickup: TowerID | null): { tid: TowerID; rarity: Rarity } => {
-  const rarity = pickRarity(pity);
+const pullOne = (pity: number, pickup: TowerID | null, rateOverride?: Partial<Record<Rarity, number>>): { tid: TowerID; rarity: Rarity } => {
+  const rarity = pickRarity(pity, rateOverride);
   const pool = towersOfRarity(rarity);
 
-  // Pickup: 50% chance to get pickup unit if rarity matches
   if (pickup && (rarity === 'OD' || rarity === 'G')) {
     const pickupDef = TDEFS[pickup];
     if (pickupDef && pickupDef.r === rarity && Math.random() < PICKUP_RATE) {
@@ -96,25 +90,29 @@ export const useGacha = () => {
     });
   }, []);
 
-  const pull1 = useCallback((): TowerID | null => {
-    if (inv.volts < GACHA_COST) return null;
-    const { tid, rarity } = pullOne(inv.pity, inv.pickup);
+  const pull1 = useCallback((bannerType: GachaBannerType = 'normal'): TowerID | null => {
+    const banner = GACHA_BANNERS.find(b => b.id === bannerType) || GACHA_BANNERS[0];
+    if (inv.volts < banner.cost1) return null;
+    const pickup = banner.pickup || inv.pickup;
+    const { tid, rarity } = pullOne(inv.pity, pickup, banner.rateBoost);
     update(prev => ({
       ...prev,
       owned: prev.owned.includes(tid) ? prev.owned : [...prev.owned, tid],
-      volts: prev.volts - GACHA_COST,
+      volts: prev.volts - banner.cost1,
       pity: rarity === 'OD' ? 0 : prev.pity + 1,
       totalPulls: prev.totalPulls + 1,
     }));
     return tid;
   }, [inv.volts, inv.pity, inv.pickup, update]);
 
-  const pull10 = useCallback((): TowerID[] | null => {
-    if (inv.volts < GACHA_COST_10) return null;
+  const pull10 = useCallback((bannerType: GachaBannerType = 'normal'): TowerID[] | null => {
+    const banner = GACHA_BANNERS.find(b => b.id === bannerType) || GACHA_BANNERS[0];
+    if (inv.volts < banner.cost10) return null;
     const results: TowerID[] = [];
     let tempPity = inv.pity;
+    const pickup = banner.pickup || inv.pickup;
     for (let i = 0; i < 10; i++) {
-      const { tid, rarity } = pullOne(tempPity, inv.pickup);
+      const { tid, rarity } = pullOne(tempPity, pickup, banner.rateBoost);
       results.push(tid);
       tempPity = rarity === 'OD' ? 0 : tempPity + 1;
     }
@@ -126,7 +124,7 @@ export const useGacha = () => {
       return {
         ...prev,
         owned: newOwned,
-        volts: prev.volts - GACHA_COST_10,
+        volts: prev.volts - banner.cost10,
         pity: tempPity,
         totalPulls: prev.totalPulls + 10,
       };
@@ -139,7 +137,7 @@ export const useGacha = () => {
   }, [update]);
 
   const resetGacha = useCallback(() => {
-    const fresh: GachaState = { owned: [...DEFAULT_OWNED], volts: 300, pity: 0, totalPulls: 0, pickup: 'plasma', pickupBanner: 'プラズマキャノン ピックアップ' };
+    const fresh: GachaState = { owned: [...DEFAULT_OWNED], volts: 500, pity: 0, totalPulls: 0, pickup: 'plasma', pickupBanner: 'プラズマキャノン ピックアップ' };
     saveInventory(fresh);
     setInv(fresh);
   }, []);
