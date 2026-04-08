@@ -1,5 +1,5 @@
-import type { GameState, DifficultyKey, Enemy, SpawnItem, TowerID } from './types';
-import { DIFF, TDEFS, UPS, EDEFS, WAVES, PATH, CELL, PS, st } from './constants';
+import type { GameState, DifficultyKey, Enemy, SpawnItem, TowerID, AreaKey, FireTrap } from './types';
+import { DIFF, TDEFS, UPS, EDEFS, PATH, CELL, PS, st, AREA_WAVES } from './constants';
 import { getSynergyEffects } from './synergy';
 import { getChainComboEffects } from './chainCombo';
 
@@ -54,21 +54,29 @@ export const canPlace = (tid: TowerID, grid: GameState['grid']): boolean => {
   return Object.entries(grid).some(([k, c]) => c.tid === req && en.has(k));
 };
 
-export const mkState = (diff: DifficultyKey, team: TowerID[]): GameState => {
+export const getWaves = (area: AreaKey) => AREA_WAVES[area] || AREA_WAVES['suburb'];
+
+export const mkState = (diff: DifficultyKey, team: TowerID[], area: AreaKey = 'suburb'): GameState => {
   const d = DIFF[diff];
   return {
-    grid: {}, timers: {}, enemies: [], projs: [], effs: [], particles: [],
+    grid: {}, timers: {}, abilityTimers: {}, enemies: [], projs: [], effs: [], particles: [],
+    fireTraps: [],
     power: d.sp, wave: 0, baseHP: d.shp, maxHP: d.shp,
     waveActive: false, spawnQ: [], waveT: 0, powerT: 0,
-    over: false, win: false, diff, screenShake: 0,
+    over: false, win: false, diff, area,
+    screenShake: 0,
     team: [...team],
+    disabledTowers: new Set(),
+    bossWallActive: false,
+    bossWallTimer: 0,
   };
 };
 
-export const buildQ = (wi: number, diff: DifficultyKey): SpawnItem[] => {
+export const buildQ = (wi: number, diff: DifficultyKey, area: AreaKey = 'suburb'): SpawnItem[] => {
   const d = DIFF[diff];
+  const waves = getWaves(area);
   const q: SpawnItem[] = [];
-  WAVES[wi].forEach(g => {
+  waves[wi].forEach(g => {
     for (let i = 0; i < g.n; i++) q.push({ type: g.t, at: i * g.gap * d.wg });
   });
   return q.sort((a, b) => a.at - b.at);
@@ -86,11 +94,65 @@ export const calcPowerBalance = (grid: GameState['grid'], team: TowerID[] = []) 
   return { gen, drain, net: gen - drain };
 };
 
+// Boss ability execution
+const executeBossAbility = (s: GameState, e: Enemy) => {
+  const def = EDEFS[e.type];
+  if (!def.bossAbility) return;
+
+  switch (def.bossAbility) {
+    case 'warp': {
+      // Teleport forward on the path
+      const jump = Math.min(3, PATH.length - 1 - e.pi);
+      if (jump > 0) {
+        e.pi += jump;
+        e.pr = 0;
+        const { x, y } = pxy(e.pi, e.pr);
+        s.effs.push({ id: uid(), x, y, txt: '⚡ワープ！', life: 1.5, ml: 1.5, col: '#00bcd4' });
+      }
+      break;
+    }
+    case 'wall': {
+      s.bossWallActive = true;
+      s.bossWallTimer = 3; // 3 seconds of immunity
+      const { x, y } = pxy(e.pi, e.pr);
+      s.effs.push({ id: uid(), x, y, txt: '🛡️バリア！', life: 1.5, ml: 1.5, col: '#ff3d00' });
+      break;
+    }
+    case 'speed_buff': {
+      for (const en of s.enemies) {
+        en.speedBuff = 3; // 3 seconds
+        en.spd *= 1.5;
+      }
+      s.effs.push({ id: uid(), x: 168, y: 210, txt: '💨全体加速！', life: 2, ml: 2, col: '#ff9800' });
+      break;
+    }
+    case 'unit_disable': {
+      // Randomly disable a tower for 5 seconds
+      const keys = Object.keys(s.grid);
+      if (keys.length > 0) {
+        const rk = keys[Math.floor(Math.random() * keys.length)];
+        s.disabledTowers.add(rk);
+        setTimeout(() => s.disabledTowers.delete(rk), 5000);
+        const [c, r] = rk.split(',').map(Number);
+        s.effs.push({ id: uid(), x: c * CELL + CELL / 2, y: r * CELL + CELL / 2, txt: '⚠️無効化！', life: 2, ml: 2, col: '#9c27b0' });
+      }
+      break;
+    }
+  }
+};
+
 export const tickGame = (s: GameState, dt: number): void => {
   const dc = DIFF[s.diff];
   const en = getEnabled(s.grid);
+  const waves = getWaves(s.area);
 
   if (s.screenShake > 0) s.screenShake = Math.max(0, s.screenShake - dt);
+
+  // Boss wall timer
+  if (s.bossWallActive) {
+    s.bossWallTimer -= dt;
+    if (s.bossWallTimer <= 0) s.bossWallActive = false;
+  }
 
   if (s.waveActive) {
     s.powerT += dt;
@@ -119,6 +181,12 @@ export const tickGame = (s: GameState, dt: number): void => {
   for (const e of s.enemies) {
     if (e.hitFlash > 0) e.hitFlash -= dt;
     if (e.frozen > 0) { e.frozen -= dt; continue; }
+    if (e.speedBuff && e.speedBuff > 0) {
+      e.speedBuff -= dt;
+      if (e.speedBuff <= 0) {
+        e.spd = EDEFS[e.type].spd * dc.spdM;
+      }
+    }
     let rem = e.spd * dt;
     while (rem > 0 && e.pi < PATH.length - 1) {
       const [c1, r1] = PATH[e.pi];
@@ -140,14 +208,77 @@ export const tickGame = (s: GameState, dt: number): void => {
       e.burning -= dt; e.burnT -= dt;
       if (e.burnT <= 0) { e.hp -= 5; e.burnT = 0.5; if (e.hp <= 0) dead.add(e.id); }
     }
+
+    // Boss abilities (random trigger every ~8 seconds)
+    if (EDEFS[e.type].bossAbility) {
+      const abilityKey = `boss_${e.id}`;
+      s.abilityTimers[abilityKey] = (s.abilityTimers[abilityKey] || (5 + Math.random() * 5)) - dt;
+      if (s.abilityTimers[abilityKey] <= 0) {
+        s.abilityTimers[abilityKey] = 6 + Math.random() * 6;
+        executeBossAbility(s, e);
+      }
+    }
   }
+
+  // Fire traps damage
+  for (const trap of s.fireTraps) {
+    trap.life -= dt;
+    for (const e of s.enemies) {
+      if (dead.has(e.id)) continue;
+      const { x, y } = pxy(e.pi, e.pr);
+      if (Math.hypot(x - trap.x, y - trap.y) < CELL * 0.8) {
+        e.burning = 2;
+        e.burnT = 0.5;
+        e.hp -= trap.dmg * dt;
+        if (e.hp <= 0) dead.add(e.id);
+      }
+    }
+  }
+  s.fireTraps = s.fireTraps.filter(t => t.life > 0);
 
   for (const [key, cell] of Object.entries(s.grid)) {
     if (!en.has(key)) continue;
+    if (s.disabledTowers.has(key)) continue; // boss disabled
     const S = st(cell.tid, cell.lv);
+
+    // Fan Lv3 ability: push enemy to start every 10 seconds
+    if (cell.tid === 'fan' && cell.lv >= 2 && S.abilityUnlock) {
+      const abKey = `ability_${key}`;
+      s.abilityTimers[abKey] = (s.abilityTimers[abKey] || 10) - dt;
+      if (s.abilityTimers[abKey] <= 0) {
+        s.abilityTimers[abKey] = 10;
+        const [c, r] = key.split(',').map(Number);
+        const cx = c * CELL + CELL / 2, cy = r * CELL + CELL / 2;
+        const range = S.rng * CELL;
+        for (const e of s.enemies) {
+          if (dead.has(e.id)) continue;
+          const { x, y } = pxy(e.pi, e.pr);
+          if (Math.hypot(x - cx, y - cy) <= range) {
+            e.pi = 0; e.pr = 0;
+            s.effs.push({ id: uid(), x, y, txt: '🌀戻される！', life: 1.5, ml: 1.5, col: '#81d4fa' });
+            break; // one target per activation
+          }
+        }
+      }
+    }
+
+    // Toaster Lv3 ability: drop fire traps
+    if (cell.tid === 'toaster' && cell.lv >= 2 && S.abilityUnlock) {
+      const abKey = `ability_${key}`;
+      s.abilityTimers[abKey] = (s.abilityTimers[abKey] || 5) - dt;
+      if (s.abilityTimers[abKey] <= 0) {
+        s.abilityTimers[abKey] = 5;
+        // Place fire on a random path cell
+        const pathIdx = Math.floor(Math.random() * PATH.length);
+        const [pc, pr] = PATH[pathIdx];
+        const fx = pc * CELL + CELL / 2, fy = pr * CELL + CELL / 2;
+        s.fireTraps.push({ id: uid(), x: fx, y: fy, life: 4, dmg: S.dmg * 0.3 });
+        s.effs.push({ id: uid(), x: fx, y: fy, txt: '🔥', life: 0.8, ml: 0.8, col: '#ff5722' });
+      }
+    }
+
     if (!S.spd || !S.dmg) continue;
 
-    // Apply synergy + chain combo effects
     const synFx = getSynergyEffects(s.team, cell.tid);
     const placedTypes = [...new Set(Object.values(s.grid).map(c => c.tid))];
     const chainFx = getChainComboEffects(placedTypes, cell.tid);
@@ -169,6 +300,7 @@ export const tickGame = (s: GameState, dt: number): void => {
     let tgt: Enemy | null = null, best = -1;
     for (const e of s.enemies) {
       if (dead.has(e.id)) continue;
+      if (s.bossWallActive && EDEFS[e.type].bossAbility) continue; // wall protects boss
       const { x, y } = pxy(e.pi, e.pr);
       if (Math.hypot(x - cx, y - cy) > range) continue;
       const sc = e.pi + e.pr;
@@ -183,16 +315,46 @@ export const tickGame = (s: GameState, dt: number): void => {
         fridge:'#80deea', aircon:'#4fc3f7', kettle:'#ff7043', microwave:'#ff5722',
         fan:'#b3e5fc', vacuum:'#ce93d8', washer:'#26c6da', lamp:'#fff176',
         superpc:'#00e5ff', plasma:'#ffd700', theater:'#e91e63',
+        toaster:'#ff8a65', dryer:'#ef9a9a', speaker:'#ce93d8', projector:'#ba68c8',
+        tesla:'#7c4dff',
       };
       s.projs.push({ id: uid(), sx: cx, sy: cy, ex, ey, life: 0.18, col: projCol[cell.tid] || '#fff' });
-      if (cell.tid === 'kettle' || cell.tid === 'microwave') { tgt.burning = 3; tgt.burnT = 0.5; }
+      if (cell.tid === 'kettle' || cell.tid === 'microwave' || cell.tid === 'toaster' || cell.tid === 'dryer') {
+        tgt.burning = 3; tgt.burnT = 0.5;
+      }
       if (cell.tid === 'fridge' || cell.tid === 'aircon') tgt.frozen = 1.5;
+      if (cell.tid === 'speaker' && cell.lv >= 2) tgt.frozen = 0.5; // slow field
       if (cell.tid === 'fan' || cell.tid === 'vacuum' || cell.tid === 'washer') {
         const bk = cell.tid === 'fan' ? 0.45 : 0.22;
         tgt.pr -= bk;
         while (tgt.pr < 0 && tgt.pi > 0) { tgt.pi--; tgt.pr += 1; }
         if (tgt.pr < 0) tgt.pr = 0;
       }
+
+      // Chain lightning for tesla
+      if (cell.tid === 'tesla' && cell.lv >= 2) {
+        let chainTarget = tgt;
+        for (let chain = 0; chain < 3; chain++) {
+          const { x: cx2, y: cy2 } = pxy(chainTarget.pi, chainTarget.pr);
+          let nextTarget: Enemy | null = null;
+          let nd = Infinity;
+          for (const e of s.enemies) {
+            if (dead.has(e.id) || e.id === chainTarget.id) continue;
+            const { x, y } = pxy(e.pi, e.pr);
+            const d = Math.hypot(x - cx2, y - cy2);
+            if (d < nd && d < CELL * 3) { nd = d; nextTarget = e; }
+          }
+          if (nextTarget) {
+            nextTarget.hp -= Math.ceil(synDmg * 0.5);
+            nextTarget.hitFlash = 0.1;
+            const { x: nx, y: ny } = pxy(nextTarget.pi, nextTarget.pr);
+            s.projs.push({ id: uid(), sx: cx2, sy: cy2, ex: nx, ey: ny, life: 0.12, col: '#7c4dff' });
+            if (nextTarget.hp <= 0) dead.add(nextTarget.id);
+            chainTarget = nextTarget;
+          } else break;
+        }
+      }
+
       if (tgt.hp <= 0) {
         dead.add(tgt.id);
         s.power = Math.min(s.power + tgt.rew, 999);
@@ -222,6 +384,6 @@ export const tickGame = (s: GameState, dt: number): void => {
 
   if (s.waveActive && s.spawnQ.length === 0 && s.enemies.length === 0) {
     s.waveActive = false;
-    if (s.wave >= WAVES.length) s.win = true;
+    if (s.wave >= waves.length) s.win = true;
   }
 };

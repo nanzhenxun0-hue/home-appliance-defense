@@ -1,7 +1,5 @@
 import type { TowerID } from './types';
-import { TDEFS } from './constants';
 
-/** A chain combo: a sequence of towers connected by dependency */
 export interface ChainCombo {
   id: string;
   name: string;
@@ -9,23 +7,11 @@ export interface ChainCombo {
   chain: TowerID[];
   desc: string;
   bonus: {
-    dmgMult: number;   // multiplier for all towers in chain
+    dmgMult: number;
     spdMult: number;
   };
 }
 
-// Build the full dependency tree upward: tower → its req → req's req → ...
-const buildChainUp = (tid: TowerID): TowerID[] => {
-  const chain: TowerID[] = [tid];
-  let cur = tid;
-  while (TDEFS[cur]?.req) {
-    cur = TDEFS[cur].req!;
-    chain.unshift(cur);
-  }
-  return chain;
-};
-
-// All defined chain combos (length ≥ 3 chains get bonuses)
 export const CHAIN_COMBOS: ChainCombo[] = [
   {
     id: 'power_surge',
@@ -87,16 +73,55 @@ export const CHAIN_COMBOS: ChainCombo[] = [
     id: 'heat_wave',
     name: '♨️ ヒートウェーブ',
     em: '♨️',
-    chain: ['kettle', 'microwave'],
-    desc: 'ケトル→レンジの灼熱コンボ',
+    chain: ['kettle', 'toaster', 'microwave'],
+    desc: 'ケトル→トースター→レンジの灼熱コンボ',
     bonus: { dmgMult: 1.25, spdMult: 1.0 },
+  },
+  {
+    id: 'wind_tunnel',
+    name: '🌬️ ウィンドトンネル',
+    em: '🌬️',
+    chain: ['cord', 'fan', 'dryer'],
+    desc: 'コード→扇風機→ドライヤーの風チェーン',
+    bonus: { dmgMult: 1.15, spdMult: 1.20 },
+  },
+  {
+    id: 'thunder_path',
+    name: '⚡ サンダーパス',
+    em: '⚡',
+    chain: ['cord', 'fan', 'dryer', 'tesla'],
+    desc: '風→雷の4段チェーン',
+    bonus: { dmgMult: 1.35, spdMult: 1.15 },
+  },
+  {
+    id: 'sound_system',
+    name: '🔊 サウンドシステム',
+    em: '🔊',
+    chain: ['kettle', 'lamp', 'router', 'speaker'],
+    desc: '情報→音波の4段チェーン',
+    bonus: { dmgMult: 1.15, spdMult: 1.25 },
+  },
+  {
+    id: 'cinema_deluxe',
+    name: '📽️ シネマデラックス',
+    em: '📽️',
+    chain: ['kettle', 'lamp', 'router', 'speaker', 'projector'],
+    desc: '音響→映像の5段メディアチェーン',
+    bonus: { dmgMult: 1.25, spdMult: 1.30 },
   },
 ];
 
-/** Get chain depth for a placed tower (how long its dependency chain is) */
-export const getChainDepth = (tid: TowerID): number => buildChainUp(tid).length;
+export const getChainDepth = (tid: TowerID): number => {
+  const chain: TowerID[] = [tid];
+  let cur = tid;
+  const { TDEFS } = require('./constants');
+  while (TDEFS[cur]?.req) {
+    cur = TDEFS[cur].req!;
+    chain.unshift(cur);
+  }
+  return chain.length;
+};
 
-/** Get all active chain combos based on towers placed on grid */
 export const getActiveChainCombos = (placedTowers: TowerID[]): ChainCombo[] => {
   const placed = new Set(placedTowers);
   return CHAIN_COMBOS.filter(combo =>
@@ -104,7 +129,6 @@ export const getActiveChainCombos = (placedTowers: TowerID[]): ChainCombo[] => {
   );
 };
 
-/** Get chain combo effects for a specific tower */
 export const getChainComboEffects = (placedTowers: TowerID[], tid: TowerID) => {
   const active = getActiveChainCombos(placedTowers);
   let dmgMult = 1;
@@ -117,7 +141,6 @@ export const getChainComboEffects = (placedTowers: TowerID[], tid: TowerID) => {
   return { dmgMult, spdMult };
 };
 
-/** Check which combos a player can potentially make with owned towers */
 export const getAvailableCombos = (owned: TowerID[]): { combo: ChainCombo; ready: boolean; missing: TowerID[] }[] => {
   const ownedSet = new Set(owned);
   return CHAIN_COMBOS.map(combo => {

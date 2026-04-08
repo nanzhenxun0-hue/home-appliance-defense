@@ -9,7 +9,7 @@ export interface Synergy {
   effect: {
     dmgMult?: number;
     spdMult?: number;
-    powerDiscount?: number; // reduce pc by this %
+    powerDiscount?: number;
   };
 }
 
@@ -17,15 +17,15 @@ export const SYNERGIES: Synergy[] = [
   {
     id: 'kitchen',
     name: '🍳 キッチン連合',
-    members: ['kettle', 'fridge', 'microwave'],
+    members: ['kettle', 'toaster', 'fridge', 'microwave'],
     minCount: 2,
-    desc: '火力系ユニットの攻撃力+25%',
+    desc: '火力系の攻撃力+25%',
     effect: { dmgMult: 1.25 },
   },
   {
     id: 'airflow',
     name: '🌬️ エアフロー',
-    members: ['fan', 'aircon', 'washer'],
+    members: ['fan', 'aircon', 'washer', 'dryer'],
     minCount: 2,
     desc: '冷却・吸引系の攻速+20%',
     effect: { spdMult: 1.20 },
@@ -33,15 +33,15 @@ export const SYNERGIES: Synergy[] = [
   {
     id: 'network',
     name: '📶 ネットワーク',
-    members: ['router', 'superpc', 'theater'],
+    members: ['router', 'superpc', 'theater', 'speaker'],
     minCount: 2,
-    desc: 'バフ系ユニットの消費電力-30%',
+    desc: 'バフ系の消費電力-30%',
     effect: { powerDiscount: 0.30 },
   },
   {
     id: 'powerline',
     name: '🔌 電源ライン',
-    members: ['cord', 'lamp', 'vacuum'],
+    members: ['cord', 'lamp', 'vacuum', 'tesla'],
     minCount: 2,
     desc: '基盤ユニットの攻速+15%',
     effect: { spdMult: 1.15 },
@@ -49,7 +49,7 @@ export const SYNERGIES: Synergy[] = [
   {
     id: 'overdrive',
     name: '⚡ オーバードライブ',
-    members: ['plasma', 'superpc', 'microwave'],
+    members: ['plasma', 'superpc', 'tesla', 'microwave'],
     minCount: 2,
     desc: '超火力ユニットの攻撃力+40%',
     effect: { dmgMult: 1.40 },
@@ -59,8 +59,24 @@ export const SYNERGIES: Synergy[] = [
     name: '🏠 フルハウス',
     members: ['fridge', 'aircon', 'washer', 'microwave', 'theater'],
     minCount: 3,
-    desc: '高級家電3体以上で全体攻撃力+15%・消費電力-15%',
+    desc: '高級家電3体以上で攻撃力+15%・消費-15%',
     effect: { dmgMult: 1.15, powerDiscount: 0.15 },
+  },
+  {
+    id: 'media',
+    name: '🎵 メディアセット',
+    members: ['speaker', 'projector', 'theater'],
+    minCount: 2,
+    desc: '娯楽系の攻速+25%',
+    effect: { spdMult: 1.25 },
+  },
+  {
+    id: 'heatwave',
+    name: '🔥 ヒートウェーブ',
+    members: ['toaster', 'dryer', 'microwave'],
+    minCount: 2,
+    desc: '熱系の攻撃力+30%',
+    effect: { dmgMult: 1.30 },
   },
 ];
 

@@ -1,6 +1,6 @@
 // ── Core Game Types ──
 
-export type DifficultyKey = 'easy' | 'normal' | 'hard' | 'lunatic';
+export type DifficultyKey = 'easy' | 'normal' | 'hard' | 'vhard' | 'extreme';
 
 export interface DifficultyDef {
   label: string;
@@ -16,14 +16,14 @@ export interface DifficultyDef {
 }
 
 export type TowerID =
-  | 'cord' | 'kettle'         // C
-  | 'fan' | 'lamp'            // U
-  | 'vacuum' | 'router'       // R
-  | 'fridge' | 'aircon'       // E
-  | 'microwave' | 'washer'    // L
-  | 'theater'                 // M
-  | 'superpc'                 // G
-  | 'plasma';                 // OD
+  | 'cord' | 'kettle'                     // C
+  | 'fan' | 'lamp' | 'toaster'            // U
+  | 'vacuum' | 'router' | 'dryer'         // R
+  | 'fridge' | 'aircon' | 'speaker'       // E
+  | 'microwave' | 'washer'                // L
+  | 'theater' | 'projector'               // M
+  | 'superpc' | 'tesla'                   // G
+  | 'plasma';                             // OD
 
 export type Rarity = 'C' | 'U' | 'R' | 'E' | 'L' | 'M' | 'G' | 'OD';
 
@@ -51,6 +51,7 @@ export interface TowerDef {
   rc: string;
   baseCost: number;
   req: TowerID | null;
+  ability?: 'pushback' | 'firetrap' | 'slowfield' | 'chainlightning' | 'energyshield';
 }
 
 export interface UpgradeLevel {
@@ -63,13 +64,14 @@ export interface UpgradeLevel {
   lbl: string;
   eff: string;
   bf?: number;
+  abilityUnlock?: boolean; // Lv3 unlocks special ability
 }
 
 export interface TowerStats extends TowerDef, UpgradeLevel {
   lv: number;
 }
 
-export type EnemyType = 'dust' | 'slime' | 'magnet' | 'virus' | 'boss';
+export type EnemyType = 'dust' | 'fast_dust' | 'slime' | 'tank_slime' | 'magnet' | 'virus' | 'boss' | 'boss_ice' | 'boss_fire' | 'final_boss';
 
 export interface EnemyDef {
   em: string;
@@ -78,6 +80,8 @@ export interface EnemyDef {
   rew: number;
   dmg: number;
   col: string;
+  name?: string;
+  bossAbility?: 'warp' | 'wall' | 'speed_buff' | 'unit_disable';
 }
 
 export interface WaveGroup {
@@ -89,6 +93,14 @@ export interface WaveGroup {
 export interface GridCell {
   tid: TowerID;
   lv: number;
+}
+
+export interface FireTrap {
+  id: number;
+  x: number;
+  y: number;
+  life: number;
+  dmg: number;
 }
 
 export interface Enemy {
@@ -106,6 +118,8 @@ export interface Enemy {
   burning: number;
   burnT: number;
   hitFlash: number;
+  shielded?: boolean;
+  speedBuff?: number;
 }
 
 export interface Projectile {
@@ -145,13 +159,29 @@ export interface SpawnItem {
   at: number;
 }
 
+// Area system
+export type AreaKey = 'suburb' | 'factory' | 'downtown' | 'volcano' | 'glacier';
+
+export interface AreaDef {
+  name: string;
+  em: string;
+  desc: string;
+  col: string;
+  waves: WaveGroup[][];
+  unlockArea?: AreaKey; // must clear this area first
+  hasBoss: boolean;
+  bossType?: EnemyType;
+}
+
 export interface GameState {
   grid: Record<string, GridCell>;
   timers: Record<string, number>;
+  abilityTimers: Record<string, number>;
   enemies: Enemy[];
   projs: Projectile[];
   effs: FloatEffect[];
   particles: Particle[];
+  fireTraps: FireTrap[];
   power: number;
   wave: number;
   baseHP: number;
@@ -163,8 +193,12 @@ export interface GameState {
   over: boolean;
   win: boolean;
   diff: DifficultyKey;
+  area: AreaKey;
   screenShake: number;
   team: TowerID[];
+  disabledTowers: Set<string>; // temporarily disabled by boss
+  bossWallActive: boolean;
+  bossWallTimer: number;
 }
 
 export interface UIState {
@@ -175,10 +209,12 @@ export interface UIState {
   wActive: boolean;
   over: boolean;
   win: boolean;
+  area: AreaKey;
 }
 
 export interface HighScoreEntry {
   diff: DifficultyKey;
+  area?: AreaKey;
   wave: number;
   won: boolean;
   date: string;
@@ -186,6 +222,20 @@ export interface HighScoreEntry {
 }
 
 // Gacha
+export type GachaBannerType = 'normal' | 'premium' | 'limited';
+
+export interface GachaBanner {
+  id: GachaBannerType;
+  name: string;
+  em: string;
+  cost1: number;
+  cost10: number;
+  desc: string;
+  col: string;
+  rateBoost?: Partial<Record<Rarity, number>>; // override rates
+  pickup?: TowerID;
+}
+
 export interface GachaInventory {
   owned: TowerID[];
   volts: number;
@@ -198,5 +248,38 @@ export const GACHA_RATES: Record<Rarity, number> = {
   C: 0.35, U: 0.25, R: 0.15, E: 0.12,
   L: 0.06, M: 0.04, G: 0.02, OD: 0.01,
 };
+
+export const GACHA_BANNERS: GachaBanner[] = [
+  {
+    id: 'normal',
+    name: 'ノーマルガチャ',
+    em: '🎰',
+    cost1: 100,
+    cost10: 900,
+    desc: '標準的な排出率のガチャ',
+    col: '#7c3aed',
+  },
+  {
+    id: 'premium',
+    name: 'プレミアムガチャ',
+    em: '💎',
+    cost1: 200,
+    cost10: 1800,
+    desc: 'レア以上の確率2倍！',
+    col: '#c026d3',
+    rateBoost: { R: 0.30, E: 0.24, L: 0.12, M: 0.08, G: 0.04, OD: 0.02, C: 0.10, U: 0.10 },
+  },
+  {
+    id: 'limited',
+    name: '限定ガチャ',
+    em: '🌟',
+    cost1: 300,
+    cost10: 2700,
+    desc: 'OD確率5倍！ピックアップ付き',
+    col: '#ffd700',
+    rateBoost: { OD: 0.05, G: 0.05, M: 0.08, L: 0.10, E: 0.15, R: 0.20, U: 0.20, C: 0.17 },
+    pickup: 'plasma',
+  },
+];
 
 export const WAVE_VOLT_REWARD = (wave: number): number => 40 + wave * 20;

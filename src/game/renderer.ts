@@ -14,29 +14,26 @@ const rrect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h
 
 const drawTower = (
   ctx: CanvasRenderingContext2D, tid: TowerID, lv: number, c: number, r: number,
-  opts: { alpha?: number; tint?: string | null; disabled?: boolean; selected?: boolean } = {}
+  opts: { alpha?: number; tint?: string | null; disabled?: boolean; selected?: boolean; bossDisabled?: boolean } = {}
 ) => {
-  const { alpha = 1, tint = null, disabled = false, selected = false } = opts;
+  const { alpha = 1, tint = null, disabled = false, selected = false, bossDisabled = false } = opts;
   const def = TDEFS[tid];
   const rColor = RARITY_COLOR[def.r];
   const pad = 3, x = c * CELL, y = r * CELL;
-  ctx.globalAlpha = alpha * (disabled ? 0.38 : 1);
+  ctx.globalAlpha = alpha * (disabled ? 0.38 : bossDisabled ? 0.25 : 1);
 
-  // Base plate with rarity gradient
   const grad = ctx.createLinearGradient(x, y, x + CELL, y + CELL);
   grad.addColorStop(0, (tint || rColor) + '18');
   grad.addColorStop(1, (tint || rColor) + '08');
   ctx.fillStyle = grad;
   rrect(ctx, x + pad, y + pad, CELL - pad * 2, CELL - pad * 2, 5); ctx.fill();
 
-  // Border
-  ctx.strokeStyle = selected ? '#c084fc' : disabled ? '#333' : (tint || rColor);
+  ctx.strokeStyle = selected ? '#c084fc' : disabled ? '#333' : bossDisabled ? '#9c27b0' : (tint || rColor);
   ctx.lineWidth = selected ? 2.5 : 1.5;
   if (selected) { ctx.shadowBlur = 10; ctx.shadowColor = '#c084fc'; }
   rrect(ctx, x + pad, y + pad, CELL - pad * 2, CELL - pad * 2, 5); ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // Emoji
   ctx.font = `${CELL * 0.48}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = '#fff';
   ctx.fillText(def.em, x + CELL / 2, y + CELL / 2 + 1);
@@ -47,6 +44,12 @@ const drawTower = (
     ctx.font = '10px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('💤', x + CELL - pad, y + pad + 5);
   }
+  if (bossDisabled) {
+    ctx.fillStyle = 'rgba(128,0,128,0.4)';
+    rrect(ctx, x + pad, y + pad, CELL - pad * 2, CELL - pad * 2, 5); ctx.fill();
+    ctx.font = '10px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('⚠️', x + CELL - pad, y + pad + 5);
+  }
   if (lv > 0 && !disabled) {
     ctx.fillStyle = rColor;
     ctx.shadowBlur = 4; ctx.shadowColor = rColor;
@@ -54,6 +57,10 @@ const drawTower = (
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#fff'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(String(lv + 1), x + CELL - pad - 2, y + CELL - pad - 2);
+  }
+  // Show ability star on Lv3
+  if (lv >= 2 && def.ability) {
+    ctx.font = '8px serif'; ctx.fillText('★', x + pad + 5, y + pad + 5);
   }
   ctx.globalAlpha = 1;
 };
@@ -81,21 +88,21 @@ export const drawFrame = (
 
   ctx.clearRect(-10, -10, GW + 20, GH + 20);
 
-  // Grid tiles
+  // Grid tiles - brighter
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const onP = PS.has(`${c},${r}`);
       if (onP) {
-        ctx.fillStyle = '#1a1225';
+        ctx.fillStyle = '#1e1830';
         ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
-        ctx.strokeStyle = 'rgba(168,85,247,0.12)';
+        ctx.strokeStyle = 'rgba(168,85,247,0.18)';
         ctx.lineWidth = 0.5;
         ctx.strokeRect(c * CELL, r * CELL, CELL, CELL);
       } else {
-        const shade = (c + r) % 2 ? '#0f1118' : '#111520';
+        const shade = (c + r) % 2 ? '#161a28' : '#181d2e';
         ctx.fillStyle = shade;
         ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
-        ctx.strokeStyle = 'rgba(99,102,241,0.04)';
+        ctx.strokeStyle = 'rgba(99,102,241,0.06)';
         ctx.lineWidth = 0.5;
         ctx.strokeRect(c * CELL, r * CELL, CELL, CELL);
       }
@@ -105,7 +112,7 @@ export const drawFrame = (
   // Path glow
   PATH.forEach(([c, r], i) => {
     const pulse = Math.sin(time * 2 + i * 0.3) * 0.5 + 0.5;
-    ctx.fillStyle = `rgba(168,85,247,${0.02 + pulse * 0.03})`;
+    ctx.fillStyle = `rgba(168,85,247,${0.03 + pulse * 0.04})`;
     ctx.fillRect(c * CELL + 1, r * CELL + 1, CELL - 2, CELL - 2);
     if (i < PATH.length - 1) {
       const [nc, nr] = PATH[i + 1];
@@ -200,19 +207,51 @@ export const drawFrame = (
     drawTower(ctx, pm, 0, hc, hr, { alpha: 0.5, tint: valid ? '#a855f7' : '#ef4444' });
   }
 
+  // Fire traps
+  for (const trap of s.fireTraps) {
+    const pulse = Math.sin(time * 4) * 0.2 + 0.8;
+    ctx.globalAlpha = pulse * Math.min(1, trap.life);
+    ctx.beginPath(); ctx.arc(trap.x, trap.y, CELL * 0.35, 0, Math.PI * 2);
+    const fireGrad = ctx.createRadialGradient(trap.x, trap.y, 0, trap.x, trap.y, CELL * 0.35);
+    fireGrad.addColorStop(0, 'rgba(255,87,34,0.6)');
+    fireGrad.addColorStop(1, 'rgba(255,87,34,0)');
+    ctx.fillStyle = fireGrad; ctx.fill();
+    ctx.font = '12px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('🔥', trap.x, trap.y);
+    ctx.globalAlpha = 1;
+  }
+
+  // Boss wall indicator
+  if (s.bossWallActive) {
+    ctx.globalAlpha = 0.3 + Math.sin(time * 6) * 0.15;
+    ctx.fillStyle = 'rgba(255,61,0,0.08)';
+    ctx.fillRect(0, 0, GW, GH);
+    ctx.globalAlpha = 1;
+    ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#ff3d00';
+    ctx.fillText(`🛡️ ボスバリア中 ${s.bossWallTimer.toFixed(1)}s`, GW / 2, 15);
+  }
+
   // Towers
   for (const [key, cell] of Object.entries(s.grid)) {
     const [c, r] = key.split(',').map(Number);
     const disabled = !en.has(key);
+    const bossDisabled = s.disabledTowers.has(key);
     const selected = key === pinKey;
     const hov = c === hc && r === hr;
-    drawTower(ctx, cell.tid, cell.lv, c, r, { disabled, selected, tint: hov && !pm && !selected ? '#c084fc' : null });
+    drawTower(ctx, cell.tid, cell.lv, c, r, {
+      disabled, selected, bossDisabled,
+      tint: hov && !pm && !selected ? '#c084fc' : null,
+    });
   }
 
   // Enemies
   for (const e of s.enemies) {
     const { x, y } = pxy(e.pi, e.pr);
-    const eRadius = 12;
+    const isBoss = e.type.startsWith('boss') || e.type === 'final_boss';
+    const eRadius = isBoss ? 16 : e.type === 'tank_slime' ? 14 : 12;
+
     ctx.fillStyle = 'rgba(168,85,247,0.1)';
     ctx.beginPath(); ctx.ellipse(x, y + 10, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
 
@@ -223,16 +262,26 @@ export const drawFrame = (
     grd.addColorStop(0, isFlashing ? '#ffffff' : '#fff8');
     grd.addColorStop(1, col);
     ctx.fillStyle = grd; ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 0.8; ctx.stroke();
+    ctx.strokeStyle = isBoss ? '#ffd700' : 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = isBoss ? 1.5 : 0.8; ctx.stroke();
+
+    if (isBoss) {
+      ctx.shadowBlur = 8; ctx.shadowColor = EDEFS[e.type].col;
+      ctx.beginPath(); ctx.arc(x, y, eRadius + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = EDEFS[e.type].col + '55'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
     if (!isFlashing) {
-      ctx.font = '11px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `${isBoss ? 14 : 11}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(e.em, x, y + 1);
     }
-    if (e.frozen > 0) { ctx.font = '8px serif'; ctx.fillText('❄️', x + 11, y - 9); }
-    else if (e.burning > 0) { ctx.font = '8px serif'; ctx.fillText('🔥', x + 11, y - 9); }
+    if (e.frozen > 0) { ctx.font = '8px serif'; ctx.fillText('❄️', x + eRadius - 1, y - eRadius + 1); }
+    else if (e.burning > 0) { ctx.font = '8px serif'; ctx.fillText('🔥', x + eRadius - 1, y - eRadius + 1); }
 
     // HP bar
-    const bw = 22, bh = 2.5, bx = x - bw / 2, by = y - eRadius - 5, hp = Math.max(0, e.hp / e.mhp);
+    const bw = isBoss ? 30 : 22, bh = isBoss ? 3.5 : 2.5;
+    const bx = x - bw / 2, by = y - eRadius - 5, hp = Math.max(0, e.hp / e.mhp);
     ctx.fillStyle = '#0a0a15'; ctx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
     const hpGrad = ctx.createLinearGradient(bx, by, bx + bw, by);
     if (hp > 0.5) { hpGrad.addColorStop(0, '#a855f7'); hpGrad.addColorStop(1, '#6366f1'); }
@@ -240,6 +289,13 @@ export const drawFrame = (
     else { hpGrad.addColorStop(0, '#ef4444'); hpGrad.addColorStop(1, '#dc2626'); }
     ctx.fillStyle = hpGrad;
     ctx.fillRect(bx, by, bw * hp, bh);
+
+    // Boss name
+    if (isBoss && EDEFS[e.type].name) {
+      ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffd700';
+      ctx.fillText(EDEFS[e.type].name!.slice(0, 8), x, by - 4);
+    }
   }
 
   // Projectiles
@@ -283,12 +339,6 @@ export const drawFrame = (
   if (s.power <= 0 && s.waveActive) {
     ctx.fillStyle = 'rgba(239,68,68,0.03)';
     ctx.fillRect(0, 0, GW, GH);
-    ctx.globalAlpha = 0.03;
-    for (let y = 0; y < GH; y += 3) {
-      ctx.fillStyle = y % 6 < 3 ? '#ef4444' : '#a855f7';
-      ctx.fillRect(0, y, GW, 1);
-    }
-    ctx.globalAlpha = 1;
   }
 
   ctx.restore();
