@@ -1,24 +1,29 @@
 import { useState, useCallback } from 'react';
-import type { DifficultyKey, TowerID } from '@/game/types';
+import type { DifficultyKey, TowerID, AreaKey } from '@/game/types';
 import HomeScreen from '@/components/screens/HomeScreen';
 import HowToScreen from '@/components/screens/HowToScreen';
-import DifficultyScreen from '@/components/screens/DifficultyScreen';
 import GameScreen from '@/components/screens/GameScreen';
 import ScoreScreen from '@/components/screens/ScoreScreen';
 import GachaScreen from '@/components/screens/GachaScreen';
 import TeamScreen from '@/components/screens/TeamScreen';
 import ComboRecipeScreen from '@/components/screens/ComboRecipeScreen';
+import AreaSelectScreen from '@/components/screens/AreaSelectScreen';
+import TutorialScreen from '@/components/screens/TutorialScreen';
 import { useGacha } from '@/hooks/useGacha';
 import { useTeam } from '@/hooks/useTeam';
 import { useSound } from '@/hooks/useSound';
 import { useBGM } from '@/hooks/useBGM';
 import { useEffect } from 'react';
 
-type Screen = 'home' | 'howto' | 'diff' | 'game' | 'scores' | 'gacha' | 'team' | 'combo';
+type Screen = 'home' | 'howto' | 'area' | 'game' | 'scores' | 'gacha' | 'team' | 'combo' | 'tutorial';
 
 const Index = () => {
-  const [screen, setScreen] = useState<Screen>('home');
+  const [screen, setScreen] = useState<Screen>(() => {
+    const seen = localStorage.getItem('kaden-td-tutorial');
+    return seen ? 'home' : 'tutorial';
+  });
   const [diff, setDiff] = useState<DifficultyKey>('normal');
+  const [area, setArea] = useState<AreaKey>('suburb');
   const gacha = useGacha();
   const { team, toggle, MAX_TEAM } = useTeam();
   const { play, toggle: toggleSound, init: initSound } = useSound();
@@ -42,6 +47,12 @@ const Index = () => {
     setScreen(s);
   };
 
+  if (screen === 'tutorial') {
+    return <TutorialScreen onComplete={() => {
+      localStorage.setItem('kaden-td-tutorial', '1');
+      handleScreenChange('home');
+    }} />;
+  }
   if (screen === 'home') {
     return <HomeScreen
       onPlay={() => handleScreenChange('team')}
@@ -49,12 +60,16 @@ const Index = () => {
       onScores={() => handleScreenChange('scores')}
       onGacha={() => handleScreenChange('gacha')}
       onCombo={() => handleScreenChange('combo')}
+      onTutorial={() => handleScreenChange('tutorial')}
       volts={gacha.inv.volts}
     />;
   }
   if (screen === 'howto') return <HowToScreen onBack={() => handleScreenChange('home')} />;
-  if (screen === 'diff') {
-    return <DifficultyScreen onSelect={(d) => { setDiff(d); play('wave_start'); setScreen('game'); }} onBack={() => handleScreenChange('team')} />;
+  if (screen === 'area') {
+    return <AreaSelectScreen
+      onSelect={(a, d) => { setArea(a); setDiff(d); play('wave_start'); setScreen('game'); }}
+      onBack={() => handleScreenChange('team')}
+    />;
   }
   if (screen === 'scores') return <ScoreScreen onBack={() => handleScreenChange('home')} />;
   if (screen === 'gacha') {
@@ -66,14 +81,14 @@ const Index = () => {
       team={team}
       maxTeam={MAX_TEAM}
       onToggle={(tid) => { play('ui_tap'); toggle(tid); }}
-      onStart={() => handleScreenChange('diff')}
+      onStart={() => handleScreenChange('area')}
       onBack={() => handleScreenChange('home')}
     />;
   }
   if (screen === 'combo') {
     return <ComboRecipeScreen owned={gacha.inv.owned} onBack={() => handleScreenChange('home')} />;
   }
-  return <GameScreen key={diff} diff={diff} team={team} onHome={() => handleScreenChange('home')} onVoltEarned={onVoltEarned} />;
+  return <GameScreen key={`${diff}-${area}`} diff={diff} team={team} area={area} onHome={() => handleScreenChange('home')} onVoltEarned={onVoltEarned} />;
 };
 
 export default Index;

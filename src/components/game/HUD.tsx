@@ -1,5 +1,7 @@
-import { DIFF, TDEFS, WAVES, st } from '@/game/constants';
+import { DIFF, TDEFS, st } from '@/game/constants';
 import { calcPowerBalance } from '@/game/logic';
+import { getWaves } from '@/game/logic';
+import { AREAS } from '@/game/areas';
 import type { DifficultyKey, GameState, UIState } from '@/game/types';
 
 interface HUDProps {
@@ -14,16 +16,21 @@ const HUD = ({ ui, diff, grid, onHome, onStartWave }: HUDProps) => {
   const dc = DIFF[diff];
   const hpPct = ui.baseHP / ui.maxHP;
   const { net } = calcPowerBalance(grid);
+  const waves = getWaves(ui.area);
+  const area = AREAS[ui.area];
 
   return (
     <div className="flex gap-1 items-center flex-wrap justify-center px-1.5 py-1">
       <button onClick={onHome} className="hud-chip cursor-pointer text-xs">🏠</button>
 
+      <div className="hud-chip text-[10px]" style={{ borderColor: area.col + '33', color: area.col }}>
+        {area.em}{area.name}
+      </div>
+
       <div className="hud-chip text-[10px]" style={{ borderColor: dc.col + '33', color: dc.col }}>
         {dc.em}{dc.label}
       </div>
 
-      {/* HP */}
       <div className="hud-chip text-[10px]">
         ❤️
         <div className="w-10 h-1.5 bg-muted rounded-full overflow-hidden">
@@ -36,7 +43,6 @@ const HUD = ({ ui, diff, grid, onHome, onStartWave }: HUDProps) => {
         <span style={{ color: hpPct <= 0.25 ? '#f44336' : '#ff8a80' }}>{ui.baseHP}</span>
       </div>
 
-      {/* Power */}
       <div className="hud-chip text-[10px]">
         ⚡<span className="text-yellow-400 mx-0.5">{ui.power}W</span>
         {ui.wActive && (
@@ -46,13 +52,11 @@ const HUD = ({ ui, diff, grid, onHome, onStartWave }: HUDProps) => {
         )}
       </div>
 
-      {/* Wave */}
       <div className="hud-chip text-[10px]">
-        🌊<span className="text-blue-300">{ui.wave}</span>/{WAVES.length}
+        🌊<span className="text-blue-300">{ui.wave}</span>/{waves.length}
       </div>
 
-      {/* Wave button */}
-      {!ui.wActive && !ui.over && !ui.win && ui.wave < WAVES.length && (
+      {!ui.wActive && !ui.over && !ui.win && ui.wave < waves.length && (
         <button onClick={onStartWave}
           className="hud-chip cursor-pointer font-black text-[10px]"
           style={{

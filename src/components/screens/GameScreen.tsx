@@ -1,25 +1,26 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { COLS, ROWS, CELL, GW, GH, DIFF, TDEFS, UPS, WAVES, PS, st, sellVal } from '@/game/constants';
-import { mkState, buildQ, tickGame, getEnabled, canPlace, resetUid, calcPowerBalance } from '@/game/logic';
+import { COLS, ROWS, CELL, GW, GH, DIFF, TDEFS, UPS, PS, st, sellVal, AREA_WAVES } from '@/game/constants';
+import { mkState, buildQ, tickGame, getEnabled, canPlace, resetUid, calcPowerBalance, getWaves } from '@/game/logic';
 import { drawFrame } from '@/game/renderer';
-import type { DifficultyKey, TowerID, UIState, GameState } from '@/game/types';
+import type { DifficultyKey, TowerID, UIState, GameState, AreaKey } from '@/game/types';
 import { WAVE_VOLT_REWARD, RARITY_COLOR } from '@/game/types';
 import { useSound } from '@/hooks/useSound';
 import { useHighScore } from '@/hooks/useHighScore';
 import HUD from '@/components/game/HUD';
-import InspectPanel from '@/components/game/InspectPanel';
+import UpgradeWindow from '@/components/game/UpgradeWindow';
 
 interface GameScreenProps {
   diff: DifficultyKey;
   team: TowerID[];
+  area: AreaKey;
   onHome: () => void;
   onVoltEarned?: (amount: number) => void;
 }
 
-const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
+const GameScreen = ({ diff, team, area, onHome, onVoltEarned }: GameScreenProps) => {
   const cvs = useRef<HTMLCanvasElement>(null);
-  const gs = useRef<GameState>(mkState(diff, team));
+  const gs = useRef<GameState>(mkState(diff, team, area));
   const raf = useRef<number>(0);
   const pmRef = useRef<TowerID | null>(null);
   const hcRef = useRef({ c: -1, r: -1 });
@@ -29,9 +30,10 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
   const scoreSaved = useRef(false);
 
   const d = DIFF[diff];
+  const waves = getWaves(area);
   const [ui, setUi] = useState<UIState>(() => ({
     power: d.sp, wave: 0, baseHP: d.shp, maxHP: d.shp,
-    wActive: false, over: false, win: false,
+    wActive: false, over: false, win: false, area,
   }));
   const [placeMode, setPlaceMode] = useState<TowerID | null>(null);
   const [pinKey, setPinKey] = useState<string | null>(null);
@@ -43,7 +45,6 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
   useEffect(() => { pmRef.current = placeMode; }, [placeMode]);
   useEffect(() => { pinRef.current = pinKey; }, [pinKey]);
 
-  // Touch/click handler for canvas
   const getCell = useCallback((clientX: number, clientY: number) => {
     const el = cvs.current; if (!el) return { c: -1, r: -1 };
     const rc = el.getBoundingClientRect();
@@ -109,8 +110,8 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
   const startWave = () => {
     initSound();
     const s = gs.current;
-    if (s.waveActive || s.wave >= WAVES.length) return;
-    s.spawnQ = buildQ(s.wave, diff);
+    if (s.waveActive || s.wave >= waves.length) return;
+    s.spawnQ = buildQ(s.wave, diff, area);
     s.waveT = 0; s.powerT = 0; s.wave++; s.waveActive = true;
     playSound('wave_start');
     setWaveAnnounce(`Wave ${s.wave}`);
@@ -119,15 +120,14 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
 
   const doRestart = () => {
     resetUid();
-    gs.current = mkState(diff, team);
+    gs.current = mkState(diff, team, area);
     scoreSaved.current = false;
     const d2 = DIFF[diff];
-    setUi({ power: d2.sp, wave: 0, baseHP: d2.shp, maxHP: d2.shp, wActive: false, over: false, win: false });
+    setUi({ power: d2.sp, wave: 0, baseHP: d2.shp, maxHP: d2.shp, wActive: false, over: false, win: false, area });
     setPlaceMode(null); setPinKey(null);
     hcRef.current = { c: -1, r: -1 };
   };
 
-  // Wave clear → earn volts
   const prevWaveActive = useRef(false);
   useEffect(() => {
     if (prevWaveActive.current && !ui.wActive && !ui.over && !ui.win && ui.wave > 0) {
@@ -137,16 +137,14 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
     prevWaveActive.current = ui.wActive;
   }, [ui.wActive, ui.wave, ui.over, ui.win, onVoltEarned]);
 
-  // Save score on game end
   useEffect(() => {
     if ((ui.over || ui.win) && !scoreSaved.current) {
       scoreSaved.current = true;
-      addScore({ diff, wave: ui.wave, won: ui.win, date: new Date().toLocaleDateString('ja-JP'), power: ui.power });
+      addScore({ diff, wave: ui.wave, won: ui.win, date: new Date().toLocaleDateString('ja-JP'), power: ui.power, area });
       playSound(ui.win ? 'victory' : 'game_over');
     }
   }, [ui.over, ui.win]);
 
-  // Game loop
   useEffect(() => {
     let lastTs: number | null = null;
     const loop = (ts: number) => {
@@ -163,7 +161,7 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
         uiT.current = 0;
         setUi({
           power: Math.floor(s.power), wave: s.wave, baseHP: s.baseHP, maxHP: s.maxHP,
-          wActive: s.waveActive, over: s.over, win: s.win,
+          wActive: s.waveActive, over: s.over, win: s.win, area,
         });
       }
     };
@@ -175,10 +173,8 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
 
   return (
     <div className="bg-background h-[100dvh] flex flex-col select-none overflow-hidden relative">
-      {/* HUD - compact mobile */}
       <HUD ui={ui} diff={diff} grid={s.grid} onHome={onHome} onStartWave={startWave} />
 
-      {/* Canvas - fills available space */}
       <div className="flex-1 min-h-0 relative mx-1 rounded-lg overflow-hidden"
         style={{ border: '1px solid rgba(168,85,247,0.15)' }}>
         <canvas
@@ -191,10 +187,8 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
           onContextMenu={e => { e.preventDefault(); setPlaceMode(null); setPinKey(null); }}
         />
 
-        {/* Low power overlay */}
         {s.power <= 0 && s.waveActive && <div className="absolute inset-0 pointer-events-none bg-red-900/5 animate-pulse" />}
 
-        {/* Wave announce */}
         <AnimatePresence>
           {waveAnnounce && (
             <motion.div initial={{ opacity: 0, scale: 2 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}
@@ -204,7 +198,6 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
           )}
         </AnimatePresence>
 
-        {/* Game over / Win */}
         {(ui.over || ui.win) && (
           <div className="absolute inset-0 bg-background/90 backdrop-blur-lg flex flex-col items-center justify-center gap-3 z-30 rounded-lg">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', bounce: 0.5 }} className="text-4xl">
@@ -226,9 +219,7 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
         )}
       </div>
 
-      {/* Bottom bar - Team placement */}
       <div className="px-1 py-1.5 flex flex-col gap-1">
-        {/* Place mode banner */}
         <AnimatePresence>
           {placeMode && (
             <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
@@ -240,7 +231,6 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
           )}
         </AnimatePresence>
 
-        {/* Team bar */}
         <div className="flex gap-1 justify-center overflow-x-auto">
           {team.map(tid => {
             const def = TDEFS[tid];
@@ -270,12 +260,12 @@ const GameScreen = ({ diff, team, onHome, onVoltEarned }: GameScreenProps) => {
             );
           })}
         </div>
-
-        {/* Inspect panel */}
-        {pinKey && s.grid[pinKey] && (
-          <InspectPanel cellKey={pinKey} grid={s.grid} power={ui.power} onUpgrade={doUpgrade} onSell={doSell} onClose={() => setPinKey(null)} />
-        )}
       </div>
+
+      {/* Upgrade Window (modal) */}
+      {pinKey && s.grid[pinKey] && (
+        <UpgradeWindow cellKey={pinKey} grid={s.grid} power={ui.power} onUpgrade={doUpgrade} onSell={doSell} onClose={() => setPinKey(null)} />
+      )}
     </div>
   );
 };

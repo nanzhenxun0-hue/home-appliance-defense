@@ -1,15 +1,15 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { TowerID, Rarity } from '@/game/types';
-import { RARITY_COLOR, RARITY_LABEL, RARITY_ORDER, GACHA_COST, GACHA_COST_10, GACHA_RATES } from '@/game/types';
+import type { TowerID, Rarity, GachaBannerType } from '@/game/types';
+import { RARITY_COLOR, RARITY_LABEL, RARITY_ORDER, GACHA_RATES, GACHA_BANNERS } from '@/game/types';
 import { TDEFS } from '@/game/constants';
 import ScreenCrackEffect from '@/components/game/ScreenCrackEffect';
 
 interface GachaScreenProps {
   gacha: {
     inv: { owned: TowerID[]; volts: number; pity: number; totalPulls: number; pickup: TowerID | null; pickupBanner: string };
-    pull1: () => TowerID | null;
-    pull10: () => TowerID[] | null;
+    pull1: (banner?: GachaBannerType) => TowerID | null;
+    pull10: (banner?: GachaBannerType) => TowerID[] | null;
   };
   onBack: () => void;
   playSound?: (name: string) => void;
@@ -22,6 +22,9 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
   const [revealing, setRevealing] = useState(false);
   const [revealIdx, setRevealIdx] = useState(0);
   const [odActive, setOdActive] = useState(false);
+  const [activeBanner, setActiveBanner] = useState<GachaBannerType>('normal');
+
+  const banner = GACHA_BANNERS.find(b => b.id === activeBanner) || GACHA_BANNERS[0];
 
   const hasOD = (ids: TowerID[]) => ids.some(id => TDEFS[id]?.r === 'OD');
   const hasHighRare = (ids: TowerID[]) => ids.some(id => {
@@ -33,7 +36,6 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
     setResults(ids);
     setRevealing(true);
     setRevealIdx(0);
-
     if (hasOD(ids)) {
       playSound?.('gacha_od');
       setOdActive(true);
@@ -63,12 +65,12 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
   }, [playSound]);
 
   const doPull1 = () => {
-    const r = gacha.pull1();
+    const r = gacha.pull1(activeBanner);
     if (r) startReveal([r]);
   };
 
   const doPull10 = () => {
-    const r = gacha.pull10();
+    const r = gacha.pull10(activeBanner);
     if (r) startReveal(r);
   };
 
@@ -83,7 +85,6 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
   };
 
   const pityPct = Math.min((gacha.inv.pity / PITY_HARD) * 100, 100);
-  const pickupDef = gacha.inv.pickup ? TDEFS[gacha.inv.pickup] : null;
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col items-center p-4 relative overflow-hidden">
@@ -93,7 +94,6 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
         style={{ background: 'radial-gradient(ellipse at 50% 30%, hsl(270 80% 30%), transparent 70%)' }} />
 
       <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-3">
-        {/* Header */}
         <div className="flex items-center justify-between w-full">
           <button onClick={() => { playSound?.('ui_back'); onBack(); }} className="game-btn-ghost text-sm">← 戻る</button>
           <div className="flex items-center gap-2">
@@ -101,34 +101,36 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
           </div>
         </div>
 
-        <h1 className="text-2xl font-black text-game-purple sf-title tracking-tight">⚡ ガチャ</h1>
+        <h1 className="text-2xl font-black text-game-purple sf-title tracking-tight">🎰 ガチャ</h1>
 
-        {/* Pickup Banner */}
-        {pickupDef && (
-          <motion.div
-            className="w-full rounded-xl p-3 relative overflow-hidden"
-            style={{
-              background: `linear-gradient(135deg, ${RARITY_COLOR[pickupDef.r]}15, ${RARITY_COLOR[pickupDef.r]}08)`,
-              border: `2px solid ${RARITY_COLOR[pickupDef.r]}55`,
-            }}
-            animate={{ boxShadow: [`0 0 8px ${RARITY_COLOR[pickupDef.r]}33`, `0 0 16px ${RARITY_COLOR[pickupDef.r]}55`, `0 0 8px ${RARITY_COLOR[pickupDef.r]}33`] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">{pickupDef.em}</span>
-              <div className="flex-1">
-                <div className="text-xs font-bold text-game-gold">🎯 ピックアップ</div>
-                <div className="text-sm font-black text-foreground">{pickupDef.n}</div>
-                <div className="text-[9px] text-muted-foreground">
-                  {RARITY_LABEL[pickupDef.r]}排出時50%でピックアップ対象
-                </div>
-              </div>
-              <span className="text-xs font-bold px-2 py-1 rounded" style={{ background: RARITY_COLOR[pickupDef.r] + '22', color: RARITY_COLOR[pickupDef.r] }}>
-                {RARITY_LABEL[pickupDef.r]}
-              </span>
-            </div>
-          </motion.div>
-        )}
+        {/* Banner tabs */}
+        <div className="flex gap-1.5 w-full">
+          {GACHA_BANNERS.map(b => (
+            <button
+              key={b.id}
+              onClick={() => setActiveBanner(b.id)}
+              className="flex-1 py-2 px-2 rounded-lg text-[10px] font-bold transition-all"
+              style={{
+                background: activeBanner === b.id ? `${b.col}22` : 'rgba(255,255,255,0.03)',
+                border: `1.5px solid ${activeBanner === b.id ? b.col : '#333'}`,
+                color: activeBanner === b.id ? b.col : '#888',
+                boxShadow: activeBanner === b.id ? `0 0 10px ${b.col}33` : 'none',
+              }}
+            >
+              {b.em} {b.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Banner info */}
+        <div className="w-full glass-panel rounded-lg p-2.5"
+          style={{ borderColor: banner.col + '44' }}>
+          <div className="text-xs font-bold" style={{ color: banner.col }}>{banner.em} {banner.name}</div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">{banner.desc}</div>
+          {banner.pickup && (
+            <div className="text-[9px] text-game-gold mt-1">🎯 ピックアップ: {TDEFS[banner.pickup]?.em} {TDEFS[banner.pickup]?.n}</div>
+          )}
+        </div>
 
         {/* Pity Counter */}
         <div className="w-full glass-panel rounded-lg p-2">
@@ -139,8 +141,7 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
             </span>
           </div>
           <div className="w-full h-2 rounded-full bg-muted/30 overflow-hidden">
-            <motion.div
-              className="h-full rounded-full"
+            <motion.div className="h-full rounded-full"
               style={{
                 background: pityPct > 80 ? 'linear-gradient(90deg, #ff9800, #f44336)' :
                   pityPct > 60 ? 'linear-gradient(90deg, #ffd700, #ff9800)' :
@@ -157,17 +158,17 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
 
         {/* Pull buttons */}
         <div className="flex gap-3 w-full">
-          <button onClick={doPull1} disabled={gacha.inv.volts < GACHA_COST}
+          <button onClick={doPull1} disabled={gacha.inv.volts < banner.cost1}
             className="game-btn-primary flex-1 py-3 text-sm disabled:opacity-30">
-            1回ガチャ<br /><span className="text-game-gold text-xs">{GACHA_COST}V</span>
+            1回<br /><span className="text-game-gold text-xs">{banner.cost1}V</span>
           </button>
-          <button onClick={doPull10} disabled={gacha.inv.volts < GACHA_COST_10}
+          <button onClick={doPull10} disabled={gacha.inv.volts < banner.cost10}
             className="flex-1 py-3 text-sm font-bold rounded-lg disabled:opacity-30"
             style={{
-              background: 'linear-gradient(135deg, hsl(var(--game-neon-purple)), hsl(var(--accent)))',
-              color: '#fff', border: '1px solid hsl(var(--accent) / 0.5)',
+              background: `linear-gradient(135deg, ${banner.col}dd, ${banner.col}88)`,
+              color: '#fff', border: `1px solid ${banner.col}55`,
             }}>
-            10連ガチャ<br /><span className="text-game-gold text-xs">{GACHA_COST_10}V（お得！）</span>
+            10連<br /><span className="text-game-gold text-xs">{banner.cost10}V</span>
           </button>
         </div>
 
@@ -178,7 +179,6 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
               {results.map((tid, i) => {
                 const def = TDEFS[tid];
                 const revealed = i < revealIdx;
-                const isPickup = tid === gacha.inv.pickup;
                 return (
                   <motion.div key={`${i}-${tid}`}
                     initial={{ rotateY: 180, opacity: 0 }}
@@ -204,7 +204,6 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
                         </span>
                         <span className="text-[8px] text-foreground/70 mt-0.5 relative z-10">{def.n.slice(0, 4)}</span>
                         {isNew(tid) && <span className="text-[7px] text-game-gold font-bold mt-0.5 relative z-10">NEW!</span>}
-                        {isPickup && <span className="text-[7px] text-game-gold font-bold relative z-10">🎯PU</span>}
                       </>
                     ) : (
                       <span className="text-lg opacity-30">❓</span>
@@ -219,7 +218,7 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
 
         {/* Owned units */}
         <div className="w-full mt-2">
-          <h3 className="text-sm font-bold text-foreground/80 mb-2">所持ユニット ({gacha.inv.owned.length})</h3>
+          <h3 className="text-sm font-bold text-foreground/80 mb-2">所持ユニット ({gacha.inv.owned.length}/{Object.keys(TDEFS).length})</h3>
           <div className="grid grid-cols-4 gap-1.5">
             {gacha.inv.owned.map(tid => {
               const def = TDEFS[tid];
@@ -237,21 +236,18 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
 
         {/* Rates */}
         <details className="w-full text-xs text-muted-foreground mt-2">
-          <summary className="cursor-pointer text-center">排出確率・天井</summary>
+          <summary className="cursor-pointer text-center">排出確率</summary>
           <div className="mt-2 space-y-2">
             <div className="grid grid-cols-4 gap-1">
-              {RARITY_ORDER.map(r => (
-                <div key={r} className="text-center p-1 rounded" style={{ background: RARITY_COLOR[r] + '15', color: RARITY_COLOR[r] }}>
-                  <div className="font-bold">{r}</div>
-                  <div className="text-[9px]">{RARITY_LABEL[r]}</div>
-                  <div className="text-[10px] font-mono">{(GACHA_RATES[r] * 100).toFixed(1)}%</div>
-                </div>
-              ))}
-            </div>
-            <div className="text-[10px] space-y-1 p-2 rounded bg-muted/10">
-              <p>🎯 <strong>ピックアップ</strong>: 該当レアリティ排出時、50%でピックアップ対象</p>
-              <p>📈 <strong>ソフト天井</strong>: 50回目からOD確率が徐々に上昇</p>
-              <p>🔒 <strong>ハード天井</strong>: 80回目でOD確定</p>
+              {RARITY_ORDER.map(r => {
+                const rate = banner.rateBoost?.[r] ?? GACHA_RATES[r];
+                return (
+                  <div key={r} className="text-center p-1 rounded" style={{ background: RARITY_COLOR[r] + '15', color: RARITY_COLOR[r] }}>
+                    <div className="font-bold">{r}</div>
+                    <div className="text-[10px] font-mono">{(rate * 100).toFixed(1)}%</div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </details>
