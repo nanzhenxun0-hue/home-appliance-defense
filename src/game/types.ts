@@ -244,40 +244,41 @@ export interface GachaInventory {
 export const GACHA_COST = 100;
 export const GACHA_COST_10 = 900;
 
+// Commercial-grade stricter rates
 export const GACHA_RATES: Record<Rarity, number> = {
-  C: 0.35, U: 0.25, R: 0.15, E: 0.12,
-  L: 0.06, M: 0.04, G: 0.02, OD: 0.01,
+  C: 0.45, U: 0.28, R: 0.13, E: 0.07,
+  L: 0.035, M: 0.02, G: 0.008, OD: 0.003,
 };
 
 export const GACHA_BANNERS: GachaBanner[] = [
   {
     id: 'normal',
-    name: 'ノーマルガチャ',
-    em: '🎰',
+    name: 'ノーマル配送',
+    em: '🚚',
     cost1: 100,
     cost10: 900,
-    desc: '標準的な排出率のガチャ',
+    desc: '標準の家電配送。茶色いダンボールで届きます',
     col: '#7c3aed',
   },
   {
     id: 'premium',
-    name: 'プレミアムガチャ',
-    em: '💎',
-    cost1: 200,
-    cost10: 1800,
-    desc: 'レア以上の確率2倍！',
+    name: 'プレミアム配送',
+    em: '🚛',
+    cost1: 250,
+    cost10: 2250,
+    desc: '「精密機器取り扱い注意」シール付き！レア以上UP',
     col: '#c026d3',
-    rateBoost: { R: 0.30, E: 0.24, L: 0.12, M: 0.08, G: 0.04, OD: 0.02, C: 0.10, U: 0.10 },
+    rateBoost: { C: 0.20, U: 0.25, R: 0.22, E: 0.15, L: 0.08, M: 0.05, G: 0.03, OD: 0.02 },
   },
   {
     id: 'limited',
-    name: '限定ガチャ',
-    em: '🌟',
-    cost1: 300,
-    cost10: 2700,
-    desc: 'OD確率5倍！ピックアップ付き',
+    name: '限定高級配送',
+    em: '✨',
+    cost1: 400,
+    cost10: 3600,
+    desc: '化粧箱入り超高級配送！OD確率10倍＋ピックアップ',
     col: '#ffd700',
-    rateBoost: { OD: 0.05, G: 0.05, M: 0.08, L: 0.10, E: 0.15, R: 0.20, U: 0.20, C: 0.17 },
+    rateBoost: { C: 0.15, U: 0.20, R: 0.20, E: 0.15, L: 0.10, M: 0.08, G: 0.05, OD: 0.07 },
     pickup: 'plasma',
   },
 ];

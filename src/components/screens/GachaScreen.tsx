@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import type { TowerID, Rarity, GachaBannerType } from '@/game/types';
 import { RARITY_COLOR, RARITY_LABEL, RARITY_ORDER, GACHA_RATES, GACHA_BANNERS } from '@/game/types';
 import { TDEFS } from '@/game/constants';
 import ScreenCrackEffect from '@/components/game/ScreenCrackEffect';
+import GachaAnimation from '@/components/game/GachaAnimation';
 
 interface GachaScreenProps {
   gacha: {
@@ -18,77 +19,53 @@ interface GachaScreenProps {
 const PITY_HARD = 80;
 
 const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
-  const [results, setResults] = useState<TowerID[]>([]);
-  const [revealing, setRevealing] = useState(false);
-  const [revealIdx, setRevealIdx] = useState(0);
+  const [animResults, setAnimResults] = useState<TowerID[]>([]);
   const [odActive, setOdActive] = useState(false);
   const [activeBanner, setActiveBanner] = useState<GachaBannerType>('normal');
+  const [ownedSnapshot, setOwnedSnapshot] = useState<TowerID[]>([]);
 
   const banner = GACHA_BANNERS.find(b => b.id === activeBanner) || GACHA_BANNERS[0];
 
-  const hasOD = (ids: TowerID[]) => ids.some(id => TDEFS[id]?.r === 'OD');
-  const hasHighRare = (ids: TowerID[]) => ids.some(id => {
-    const r = TDEFS[id]?.r;
-    return r === 'G' || r === 'M' || r === 'L';
-  });
-
-  const startReveal = useCallback((ids: TowerID[]) => {
-    setResults(ids);
-    setRevealing(true);
-    setRevealIdx(0);
-    if (hasOD(ids)) {
-      playSound?.('gacha_od');
+  const startAnim = useCallback((ids: TowerID[]) => {
+    setOwnedSnapshot([...gacha.inv.owned]);
+    setAnimResults(ids);
+    if (ids.some(id => TDEFS[id]?.r === 'OD')) {
       setOdActive(true);
-      setTimeout(() => {
-        ids.forEach((_, i) => {
-          setTimeout(() => {
-            setRevealIdx(prev => prev + 1);
-            const def = TDEFS[ids[i]];
-            if (def.r === 'OD') playSound?.('gacha_od');
-            else if (['G', 'M', 'L'].includes(def.r)) playSound?.('gacha_rare');
-            else playSound?.('gacha_reveal');
-          }, i * 250);
-        });
-      }, 1800);
-    } else {
-      playSound?.('gacha_pull');
-      const delay = hasHighRare(ids) ? 600 : 300;
-      ids.forEach((_, i) => {
-        setTimeout(() => {
-          setRevealIdx(prev => prev + 1);
-          const def = TDEFS[ids[i]];
-          if (['G', 'M', 'L'].includes(def.r)) playSound?.('gacha_rare');
-          else playSound?.('gacha_reveal');
-        }, delay + i * 200);
-      });
     }
-  }, [playSound]);
+  }, [gacha.inv.owned]);
 
   const doPull1 = () => {
     const r = gacha.pull1(activeBanner);
-    if (r) startReveal([r]);
+    if (r) startAnim([r]);
   };
 
   const doPull10 = () => {
     const r = gacha.pull10(activeBanner);
-    if (r) startReveal(r);
+    if (r) startAnim(r);
   };
 
-  const isNew = (tid: TowerID) => !gacha.inv.owned.includes(tid);
-
-  const getRarityGlow = (r: Rarity) => {
-    if (r === 'OD') return '0 0 16px rgba(255,215,0,0.8), 0 0 32px rgba(255,107,0,0.4)';
-    if (r === 'G') return '0 0 12px rgba(0,229,255,0.6)';
-    if (r === 'M') return '0 0 12px rgba(233,30,99,0.6)';
-    if (r === 'L') return '0 0 10px rgba(255,152,0,0.5)';
-    return 'none';
+  const closeAnim = () => {
+    setAnimResults([]);
+    setOdActive(false);
   };
+
+  const isNewAtPull = (tid: TowerID) => !ownedSnapshot.includes(tid);
 
   const pityPct = Math.min((gacha.inv.pity / PITY_HARD) * 100, 100);
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col items-center p-4 relative overflow-hidden">
       <ScreenCrackEffect active={odActive} onComplete={() => setOdActive(false)} />
+
+      {/* Gacha animation overlay */}
+      {animResults.length > 0 && (
+        <GachaAnimation
+          results={animResults}
+          onComplete={closeAnim}
+          playSound={playSound}
+          isNew={isNewAtPull}
+        />
+      )}
 
       <div className="absolute inset-0 z-0 opacity-20"
         style={{ background: 'radial-gradient(ellipse at 50% 30%, hsl(270 80% 30%), transparent 70%)' }} />
@@ -101,7 +78,7 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
           </div>
         </div>
 
-        <h1 className="text-2xl font-black text-game-purple sf-title tracking-tight">🎰 ガチャ</h1>
+        <h1 className="text-2xl font-black text-game-purple sf-title tracking-tight">📦 家電配送ガチャ</h1>
 
         {/* Banner tabs */}
         <div className="flex gap-1.5 w-full">
@@ -115,16 +92,14 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
                 border: `1.5px solid ${activeBanner === b.id ? b.col : '#333'}`,
                 color: activeBanner === b.id ? b.col : '#888',
                 boxShadow: activeBanner === b.id ? `0 0 10px ${b.col}33` : 'none',
-              }}
-            >
+              }}>
               {b.em} {b.name}
             </button>
           ))}
         </div>
 
         {/* Banner info */}
-        <div className="w-full glass-panel rounded-lg p-2.5"
-          style={{ borderColor: banner.col + '44' }}>
+        <div className="w-full glass-panel rounded-lg p-2.5" style={{ borderColor: banner.col + '44' }}>
           <div className="text-xs font-bold" style={{ color: banner.col }}>{banner.em} {banner.name}</div>
           <div className="text-[10px] text-muted-foreground mt-0.5">{banner.desc}</div>
           {banner.pickup && (
@@ -135,7 +110,7 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
         {/* Pity Counter */}
         <div className="w-full glass-panel rounded-lg p-2">
           <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-muted-foreground">天井カウンター</span>
+            <span className="text-muted-foreground">エコ替えカウンター（天井）</span>
             <span className="font-mono font-bold" style={{ color: pityPct > 60 ? '#ff9800' : pityPct > 80 ? '#f44336' : '#9e9e9e' }}>
               {gacha.inv.pity}/{PITY_HARD}
             </span>
@@ -152,69 +127,25 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
             />
           </div>
           <div className="text-[9px] text-muted-foreground mt-1">
-            {gacha.inv.pity >= 50 ? '🔥 確率UP中！' : `あと${PITY_HARD - gacha.inv.pity}回で★OD確定`} ・ 累計{gacha.inv.totalPulls}回
+            {gacha.inv.pity >= 50 ? '🔥 確率UP中！' : `あと${PITY_HARD - gacha.inv.pity}回でOD確定`} ・ 累計{gacha.inv.totalPulls}回
           </div>
         </div>
 
         {/* Pull buttons */}
         <div className="flex gap-3 w-full">
-          <button onClick={doPull1} disabled={gacha.inv.volts < banner.cost1}
+          <button onClick={doPull1} disabled={gacha.inv.volts < banner.cost1 || animResults.length > 0}
             className="game-btn-primary flex-1 py-3 text-sm disabled:opacity-30">
-            1回<br /><span className="text-game-gold text-xs">{banner.cost1}V</span>
+            🚚 単発<br /><span className="text-game-gold text-xs">{banner.cost1}V</span>
           </button>
-          <button onClick={doPull10} disabled={gacha.inv.volts < banner.cost10}
+          <button onClick={doPull10} disabled={gacha.inv.volts < banner.cost10 || animResults.length > 0}
             className="flex-1 py-3 text-sm font-bold rounded-lg disabled:opacity-30"
             style={{
               background: `linear-gradient(135deg, ${banner.col}dd, ${banner.col}88)`,
               color: '#fff', border: `1px solid ${banner.col}55`,
             }}>
-            10連<br /><span className="text-game-gold text-xs">{banner.cost10}V</span>
+            🚛 10連<br /><span className="text-game-gold text-xs">{banner.cost10}V</span>
           </button>
         </div>
-
-        {/* Results */}
-        {results.length > 0 && (
-          <div className="w-full">
-            <div className="grid grid-cols-5 gap-2 mt-2">
-              {results.map((tid, i) => {
-                const def = TDEFS[tid];
-                const revealed = i < revealIdx;
-                return (
-                  <motion.div key={`${i}-${tid}`}
-                    initial={{ rotateY: 180, opacity: 0 }}
-                    animate={revealed ? { rotateY: 0, opacity: 1 } : { rotateY: 180, opacity: 0.3 }}
-                    transition={{ duration: 0.4 }}
-                    className="flex flex-col items-center p-2 rounded-lg relative"
-                    style={{
-                      background: revealed ? RARITY_COLOR[def.r] + '15' : 'rgba(255,255,255,0.03)',
-                      border: `1.5px solid ${revealed ? RARITY_COLOR[def.r] + '55' : '#333'}`,
-                      boxShadow: revealed ? getRarityGlow(def.r) : 'none',
-                    }}>
-                    {revealed ? (
-                      <>
-                        {def.r === 'OD' && (
-                          <motion.div className="absolute inset-0 rounded-lg"
-                            animate={{ opacity: [0.3, 0.6, 0.3] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                            style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,107,0,0.1))', border: '1px solid rgba(255,215,0,0.3)' }} />
-                        )}
-                        <span className="text-xl relative z-10">{def.em}</span>
-                        <span className="text-[7px] font-black mt-0.5 relative z-10" style={{ color: RARITY_COLOR[def.r] }}>
-                          {RARITY_LABEL[def.r]}
-                        </span>
-                        <span className="text-[8px] text-foreground/70 mt-0.5 relative z-10">{def.n.slice(0, 4)}</span>
-                        {isNew(tid) && <span className="text-[7px] text-game-gold font-bold mt-0.5 relative z-10">NEW!</span>}
-                      </>
-                    ) : (
-                      <span className="text-lg opacity-30">❓</span>
-                    )}
-                  </motion.div>
-                );
-              })}
-            </div>
-            <button onClick={() => { setResults([]); setRevealing(false); setOdActive(false); playSound?.('ui_tap'); }} className="game-btn-ghost w-full mt-3 text-xs">閉じる</button>
-          </div>
-        )}
 
         {/* Owned units */}
         <div className="w-full mt-2">
@@ -236,7 +167,7 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
 
         {/* Rates */}
         <details className="w-full text-xs text-muted-foreground mt-2">
-          <summary className="cursor-pointer text-center">排出確率</summary>
+          <summary className="cursor-pointer text-center">排出確率を確認</summary>
           <div className="mt-2 space-y-2">
             <div className="grid grid-cols-4 gap-1">
               {RARITY_ORDER.map(r => {
@@ -244,7 +175,7 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
                 return (
                   <div key={r} className="text-center p-1 rounded" style={{ background: RARITY_COLOR[r] + '15', color: RARITY_COLOR[r] }}>
                     <div className="font-bold">{r}</div>
-                    <div className="text-[10px] font-mono">{(rate * 100).toFixed(1)}%</div>
+                    <div className="text-[10px] font-mono">{(rate * 100).toFixed(2)}%</div>
                   </div>
                 );
               })}
