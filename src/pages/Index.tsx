@@ -13,6 +13,7 @@ import { useGacha } from '@/hooks/useGacha';
 import { useTeam } from '@/hooks/useTeam';
 import { useSound } from '@/hooks/useSound';
 import { useBGM } from '@/hooks/useBGM';
+import { useAreaUnlock } from '@/hooks/useAreaUnlock';
 import { useEffect } from 'react';
 
 type Screen = 'home' | 'howto' | 'area' | 'game' | 'scores' | 'gacha' | 'team' | 'combo' | 'tutorial';
@@ -28,6 +29,7 @@ const Index = () => {
   const { team, toggle, MAX_TEAM } = useTeam();
   const { play, toggle: toggleSound, init: initSound } = useSound();
   const bgm = useBGM();
+  const { unlockedAreas, unlockNext } = useAreaUnlock();
 
   const onVoltEarned = useCallback((amount: number) => {
     gacha.addVolts(amount);
@@ -67,6 +69,7 @@ const Index = () => {
   if (screen === 'howto') return <HowToScreen onBack={() => handleScreenChange('home')} />;
   if (screen === 'area') {
     return <AreaSelectScreen
+      unlockedAreas={unlockedAreas}
       onSelect={(a, d) => { setArea(a); setDiff(d); play('wave_start'); setScreen('game'); }}
       onBack={() => handleScreenChange('team')}
     />;
@@ -88,7 +91,7 @@ const Index = () => {
   if (screen === 'combo') {
     return <ComboRecipeScreen owned={gacha.inv.owned} onBack={() => handleScreenChange('home')} />;
   }
-  return <GameScreen key={`${diff}-${area}`} diff={diff} team={team} area={area} onHome={() => handleScreenChange('home')} onVoltEarned={onVoltEarned} />;
+  return <GameScreen key={`${diff}-${area}`} diff={diff} team={team} area={area} onHome={() => handleScreenChange('home')} onVoltEarned={onVoltEarned} onWin={unlockNext} />;
 };
 
 export default Index;

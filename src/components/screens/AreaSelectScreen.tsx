@@ -6,11 +6,12 @@ import { DIFF } from '@/game/constants';
 import { useHighScore } from '@/hooks/useHighScore';
 
 interface AreaSelectScreenProps {
+  unlockedAreas: Set<AreaKey>;
   onSelect: (area: AreaKey, diff: DifficultyKey) => void;
   onBack: () => void;
 }
 
-const AreaSelectScreen = ({ onSelect, onBack }: AreaSelectScreenProps) => {
+const AreaSelectScreen = ({ unlockedAreas, onSelect, onBack }: AreaSelectScreenProps) => {
   const [selectedArea, setSelectedArea] = useState<AreaKey | null>(null);
   const { getBest } = useHighScore();
 
@@ -73,7 +74,8 @@ const AreaSelectScreen = ({ onSelect, onBack }: AreaSelectScreenProps) => {
         <div className="flex flex-col gap-3">
           {AREA_ORDER.map((key, i) => {
             const area = AREAS[key];
-            const locked = area.unlockArea ? true : false; // TODO: track clears
+            const locked = !unlockedAreas.has(key);
+            const unlockFromArea = area.unlockArea ? AREAS[area.unlockArea] : null;
             return (
               <motion.button
                 key={key}
@@ -89,7 +91,12 @@ const AreaSelectScreen = ({ onSelect, onBack }: AreaSelectScreenProps) => {
                 <div className="flex-1">
                   <div className="font-black text-base" style={{ color: locked ? '#666' : area.col }}>{area.name}</div>
                   <div className="text-[10px] text-muted-foreground">{area.desc}</div>
-                  {area.bossType && (
+                  {locked && unlockFromArea && (
+                    <div className="text-[9px] text-yellow-500/70 mt-1">
+                      🔓 {unlockFromArea.em} {unlockFromArea.name}をクリアすると解放
+                    </div>
+                  )}
+                  {!locked && area.bossType && (
                     <div className="text-[9px] text-game-red mt-1">
                       👹 ボス: {area.bossType === 'boss_ice' ? '氷電魔フローズワンダー' :
                         area.bossType === 'boss_fire' ? '爆熱魔クリムゾンキング' :

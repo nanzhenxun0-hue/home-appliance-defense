@@ -16,9 +16,10 @@ interface GameScreenProps {
   area: AreaKey;
   onHome: () => void;
   onVoltEarned?: (amount: number) => void;
+  onWin?: (area: AreaKey) => void;
 }
 
-const GameScreen = ({ diff, team, area, onHome, onVoltEarned }: GameScreenProps) => {
+const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin }: GameScreenProps) => {
   const cvs = useRef<HTMLCanvasElement>(null);
   const gs = useRef<GameState>(mkState(diff, team, area));
   const raf = useRef<number>(0);
@@ -142,6 +143,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned }: GameScreenProps)
       scoreSaved.current = true;
       addScore({ diff, wave: ui.wave, won: ui.win, date: new Date().toLocaleDateString('ja-JP'), power: ui.power, area });
       playSound(ui.win ? 'victory' : 'game_over');
+      if (ui.win) onWin?.(area);
     }
   }, [ui.over, ui.win]);
 
