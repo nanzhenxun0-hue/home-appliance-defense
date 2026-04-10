@@ -71,7 +71,10 @@ export interface TowerStats extends TowerDef, UpgradeLevel {
   lv: number;
 }
 
-export type EnemyType = 'dust' | 'fast_dust' | 'slime' | 'tank_slime' | 'magnet' | 'virus' | 'boss' | 'boss_ice' | 'boss_fire' | 'final_boss';
+export type EnemyType =
+  | 'dust' | 'fast_dust' | 'slime' | 'tank_slime' | 'magnet' | 'virus'
+  | 'cockroach' | 'mold' | 'surge' | 'dust_lord'
+  | 'boss' | 'boss_ice' | 'boss_fire' | 'final_boss';
 
 export interface EnemyDef {
   em: string;
@@ -82,6 +85,8 @@ export interface EnemyDef {
   col: string;
   name?: string;
   bossAbility?: 'warp' | 'wall' | 'speed_buff' | 'unit_disable';
+  special?: 'clog' | 'corrode' | 'surge_stun' | 'multiply'; // new enemy specials
+  pixel?: boolean; // draw in pixel art style
 }
 
 export interface WaveGroup {
@@ -120,6 +125,9 @@ export interface Enemy {
   hitFlash: number;
   shielded?: boolean;
   speedBuff?: number;
+  clogTimer?: number;   // cockroach: clogs a tower
+  corrodeTimer?: number; // mold: corrodes towers over time
+  surgeStun?: number;   // electrical surge stun duration
 }
 
 export interface Projectile {
@@ -199,6 +207,12 @@ export interface GameState {
   disabledTowers: Set<string>; // temporarily disabled by boss
   bossWallActive: boolean;
   bossWallTimer: number;
+  // Ult system
+  ultGauge: number;       // 0-100
+  ultActive: boolean;
+  ultTimer: number;
+  // Clog: cockroach ability - map of tower key -> clog duration remaining
+  cloggedTowers: Map<string, number>;
 }
 
 export interface UIState {
@@ -210,6 +224,8 @@ export interface UIState {
   over: boolean;
   win: boolean;
   area: AreaKey;
+  ultGauge: number;
+  ultActive: boolean;
 }
 
 export interface HighScoreEntry {

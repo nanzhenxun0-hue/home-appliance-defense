@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { COLS, ROWS, CELL, GW, GH, DIFF, TDEFS, UPS, PS, st, sellVal, AREA_WAVES } from '@/game/constants';
-import { mkState, buildQ, tickGame, getEnabled, canPlace, resetUid, calcPowerBalance, getWaves } from '@/game/logic';
+import { mkState, buildQ, tickGame, fireUlt, getEnabled, canPlace, resetUid, calcPowerBalance, getWaves } from '@/game/logic';
 import { drawFrame } from '@/game/renderer';
 import type { DifficultyKey, TowerID, UIState, GameState, AreaKey } from '@/game/types';
 import { WAVE_VOLT_REWARD, RARITY_COLOR } from '@/game/types';
@@ -35,6 +35,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin }: GameScree
   const [ui, setUi] = useState<UIState>(() => ({
     power: d.sp, wave: 0, baseHP: d.shp, maxHP: d.shp,
     wActive: false, over: false, win: false, area,
+    ultGauge: 0, ultActive: false,
   }));
   const [placeMode, setPlaceMode] = useState<TowerID | null>(null);
   const [pinKey, setPinKey] = useState<string | null>(null);
@@ -124,7 +125,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin }: GameScree
     gs.current = mkState(diff, team, area);
     scoreSaved.current = false;
     const d2 = DIFF[diff];
-    setUi({ power: d2.sp, wave: 0, baseHP: d2.shp, maxHP: d2.shp, wActive: false, over: false, win: false, area });
+    setUi({ power: d2.sp, wave: 0, baseHP: d2.shp, maxHP: d2.shp, wActive: false, over: false, win: false, area, ultGauge: 0, ultActive: false });
     setPlaceMode(null); setPinKey(null);
     hcRef.current = { c: -1, r: -1 };
   };
@@ -164,6 +165,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin }: GameScree
         setUi({
           power: Math.floor(s.power), wave: s.wave, baseHP: s.baseHP, maxHP: s.maxHP,
           wActive: s.waveActive, over: s.over, win: s.win, area,
+          ultGauge: s.ultGauge, ultActive: s.ultActive,
         });
       }
     };
@@ -233,7 +235,27 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin }: GameScree
           )}
         </AnimatePresence>
 
-        <div className="flex gap-1 justify-center overflow-x-auto">
+        <div className="flex gap-1 items-end justify-center overflow-x-auto">
+          {/* Ult button */}
+          <button
+            onClick={() => { fireUlt(gs.current); playSound('wave_start'); }}
+            disabled={ui.ultGauge < 100}
+            className="flex flex-col items-center px-1.5 py-1 rounded-lg transition-all min-w-[48px] relative"
+            style={{
+              background: ui.ultGauge >= 100 ? 'rgba(0,229,255,0.15)' : 'rgba(255,255,255,0.03)',
+              border: `1.5px solid ${ui.ultGauge >= 100 ? '#00e5ff' : '#333'}`,
+              boxShadow: ui.ultGauge >= 100 ? '0 0 16px #00e5ff88' : 'none',
+              animation: ui.ultGauge >= 100 ? 'glow-pulse 1.2s infinite' : 'none',
+            }}
+          >
+            <span className="text-lg leading-none">🌊</span>
+            <span className="text-[7px] font-black mt-0.5" style={{ color: ui.ultGauge >= 100 ? '#00e5ff' : '#555' }}>ULT</span>
+            <div className="w-full h-1 rounded-full mt-0.5 overflow-hidden" style={{ background: '#1a1a2e' }}>
+              <div className="h-full rounded-full transition-all duration-300"
+                style={{ width: `${ui.ultGauge}%`, background: ui.ultGauge >= 100 ? '#00e5ff' : '#4455aa' }} />
+            </div>
+          </button>
+
           {team.map(tid => {
             const def = TDEFS[tid];
             const isSel = placeMode === tid;

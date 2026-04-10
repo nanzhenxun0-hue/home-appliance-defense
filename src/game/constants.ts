@@ -161,30 +161,35 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
 
 // Enemies with 3 mob types + named bosses
 export const EDEFS: Record<EnemyType, EnemyDef> = {
-  dust:       { em:'🌫️', hp:80,   spd:45,  rew:10, dmg:1, col:'#b0b0a0', name:'ダスト' },
-  fast_dust:  { em:'💨',  hp:50,   spd:80,  rew:12, dmg:1, col:'#e0d090', name:'スピードダスト' },
-  slime:      { em:'💧',  hp:160,  spd:25,  rew:18, dmg:2, col:'#4dd0e1', name:'スライム' },
-  tank_slime: { em:'🛡️',  hp:500,  spd:18,  rew:30, dmg:3, col:'#1565c0', name:'タンクスライム' },
-  magnet:     { em:'🧲',  hp:300,  spd:38,  rew:30, dmg:3, col:'#f48fb1', name:'マグネット' },
-  virus:      { em:'🦠',  hp:500,  spd:55,  rew:50, dmg:2, col:'#76ff03', name:'ウイルス' },
-  boss:       { em:'🤖',  hp:2000, spd:20,  rew:150,dmg:5, col:'#ff1744', name:'ボスロボット' },
-  boss_ice:   { em:'🥶',  hp:3500, spd:18,  rew:250,dmg:7, col:'#00bcd4', name:'氷電魔フローズワンダー', bossAbility:'warp' },
-  boss_fire:  { em:'🔥',  hp:4000, spd:22,  rew:300,dmg:8, col:'#ff3d00', name:'爆熱魔クリムゾンキング', bossAbility:'wall' },
-  final_boss: { em:'👿',  hp:8000, spd:15,  rew:500,dmg:10,col:'#9c27b0', name:'家電大魔王デウスマキナ', bossAbility:'unit_disable' },
+  dust:       { em:'🌫️', hp:80,   spd:45,  rew:10, dmg:1, col:'#b0b0a0', name:'ダスト', pixel:true },
+  fast_dust:  { em:'💨',  hp:50,   spd:80,  rew:12, dmg:1, col:'#e0d090', name:'スピードダスト', pixel:true },
+  slime:      { em:'💧',  hp:160,  spd:25,  rew:18, dmg:2, col:'#4dd0e1', name:'スライム', pixel:true },
+  tank_slime: { em:'🛡️',  hp:500,  spd:18,  rew:30, dmg:3, col:'#1565c0', name:'タンクスライム', pixel:true },
+  magnet:     { em:'🧲',  hp:300,  spd:38,  rew:30, dmg:3, col:'#f48fb1', name:'マグネット', pixel:true },
+  virus:      { em:'🦠',  hp:500,  spd:55,  rew:50, dmg:2, col:'#76ff03', name:'ウイルス', pixel:true },
+  // ── 新敵キャラ ──
+  cockroach:  { em:'🪳',  hp:120,  spd:110, rew:20, dmg:2, col:'#795548', name:'ゴキブリ', special:'clog', pixel:true },
+  mold:       { em:'🍄',  hp:280,  spd:22,  rew:25, dmg:2, col:'#558b2f', name:'カビ', special:'corrode', pixel:true },
+  surge:      { em:'⚡',  hp:200,  spd:60,  rew:35, dmg:3, col:'#ffeb3b', name:'過電流モンスター', special:'surge_stun', pixel:true },
+  dust_lord:  { em:'👻',  hp:700,  spd:30,  rew:80, dmg:4, col:'#9e9e9e', name:'ホコリ大王', special:'multiply', pixel:true },
+  boss:       { em:'🤖',  hp:2000, spd:20,  rew:150,dmg:5, col:'#ff1744', name:'ボスロボット', pixel:true },
+  boss_ice:   { em:'🥶',  hp:3500, spd:18,  rew:250,dmg:7, col:'#00bcd4', name:'氷電魔フローズワンダー', bossAbility:'warp', pixel:true },
+  boss_fire:  { em:'🔥',  hp:4000, spd:22,  rew:300,dmg:8, col:'#ff3d00', name:'爆熱魔クリムゾンキング', bossAbility:'wall', pixel:true },
+  final_boss: { em:'👿',  hp:8000, spd:15,  rew:500,dmg:10,col:'#9c27b0', name:'家電大魔王デウスマキナ', bossAbility:'unit_disable', pixel:true },
 };
 
 // Area-specific waves - suburb (basic area)
 const WAVES_SUBURB: WaveGroup[][] = [
   [{ t:'dust',  n:6,  gap:1.5 }],
   [{ t:'dust',  n:8,  gap:1.2 }, { t:'fast_dust', n:3, gap:1.0 }],
-  [{ t:'slime', n:5,  gap:1.5 }, { t:'magnet',n:2, gap:4.0 }],
+  [{ t:'slime', n:5,  gap:1.5 }, { t:'cockroach', n:4, gap:0.8 }],
   [{ t:'fast_dust', n:10, gap:0.8 }, { t:'slime', n:3, gap:2.0 }],
   [{ t:'slime', n:6,  gap:1.2 }, { t:'tank_slime', n:2, gap:3.0 }],
-  [{ t:'magnet',n:6,  gap:1.5 }, { t:'virus', n:2, gap:2.5 }],
-  [{ t:'dust',  n:15, gap:0.5 }, { t:'slime', n:8, gap:1.0 }, { t:'fast_dust',n:5, gap:0.8 }],
-  [{ t:'virus', n:5,  gap:1.5 }, { t:'tank_slime',n:3, gap:2.0 }],
-  [{ t:'slime', n:10, gap:0.8 }, { t:'virus', n:5, gap:1.5 }, { t:'boss',  n:1, gap:0 }],
-  [{ t:'virus', n:8,  gap:1.0 }, { t:'boss',  n:2, gap:5.0 }],
+  [{ t:'mold',  n:4,  gap:2.0 }, { t:'cockroach', n:6, gap:0.6 }],
+  [{ t:'dust',  n:15, gap:0.5 }, { t:'slime', n:8, gap:1.0 }, { t:'surge', n:3, gap:1.5 }],
+  [{ t:'dust_lord', n:2, gap:5.0 }, { t:'cockroach', n:8, gap:0.5 }],
+  [{ t:'slime', n:10, gap:0.8 }, { t:'surge', n:5, gap:1.0 }, { t:'boss', n:1, gap:0 }],
+  [{ t:'dust_lord', n:3, gap:3.0 }, { t:'mold', n:6, gap:1.2 }, { t:'boss', n:2, gap:5.0 }],
 ];
 
 const WAVES_FACTORY: WaveGroup[][] = [

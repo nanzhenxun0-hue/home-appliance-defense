@@ -69,6 +69,10 @@ export const mkState = (diff: DifficultyKey, team: TowerID[], area: AreaKey = 's
     disabledTowers: new Set(),
     bossWallActive: false,
     bossWallTimer: 0,
+    ultGauge: 0,
+    ultActive: false,
+    ultTimer: 0,
+    cloggedTowers: new Map(),
   };
 };
 
@@ -141,12 +145,42 @@ const executeBossAbility = (s: GameState, e: Enemy) => {
   }
 };
 
+export const fireUlt = (s: GameState): void => {
+  if (s.ultGauge < 100) return;
+  s.ultGauge = 0;
+  s.ultActive = true;
+  s.ultTimer = 2.5;
+  s.screenShake = 0.5;
+  // Damage all enemies
+  for (const e of s.enemies) {
+    e.hp = Math.ceil(e.hp * 0.15); // reduce to 15% HP
+    e.frozen = 1.5;
+    e.hitFlash = 0.3;
+    const { x, y } = pxy(e.pi, e.pr);
+    s.effs.push({ id: uid(), x, y, txt: '⚡クリーン！', life: 1.5, ml: 1.5, col: '#00e5ff' });
+  }
+  s.effs.push({ id: uid(), x: 168, y: 210, txt: '🌊全自動洗浄！', life: 3, ml: 3, col: '#00e5ff' });
+};
+
 export const tickGame = (s: GameState, dt: number): void => {
   const dc = DIFF[s.diff];
   const en = getEnabled(s.grid);
   const waves = getWaves(s.area);
 
   if (s.screenShake > 0) s.screenShake = Math.max(0, s.screenShake - dt);
+
+  // Ult timer
+  if (s.ultActive) {
+    s.ultTimer -= dt;
+    if (s.ultTimer <= 0) s.ultActive = false;
+  }
+
+  // Clogged towers decay
+  for (const [k, rem] of s.cloggedTowers.entries()) {
+    const next = rem - dt;
+    if (next <= 0) s.cloggedTowers.delete(k);
+    else s.cloggedTowers.set(k, next);
+  }
 
   // Boss wall timer
   if (s.bossWallActive) {
@@ -209,6 +243,52 @@ export const tickGame = (s: GameState, dt: number): void => {
       if (e.burnT <= 0) { e.hp -= 5; e.burnT = 0.5; if (e.hp <= 0) dead.add(e.id); }
     }
 
+    // New enemy special abilities
+    const eDef = EDEFS[e.type];
+    if (eDef.special === 'clog' && !dead.has(e.id)) {
+      // Cockroach: periodically clogs a nearby tower
+      e.clogTimer = (e.clogTimer ?? (3 + Math.random() * 3)) - dt;
+      if (e.clogTimer <= 0) {
+        e.clogTimer = 4 + Math.random() * 3;
+        const { x: ex, y: ey } = pxy(e.pi, e.pr);
+        let nearest: string | null = null; let nd = Infinity;
+        for (const [k] of Object.entries(s.grid)) {
+          const [gc, gr] = k.split(',').map(Number);
+          const d = Math.hypot(gc * CELL + CELL/2 - ex, gr * CELL + CELL/2 - ey);
+          if (d < nd && d < CELL * 3) { nd = d; nearest = k; }
+        }
+        if (nearest) {
+          s.cloggedTowers.set(nearest, 5);
+          const [gc, gr] = nearest.split(',').map(Number);
+          s.effs.push({ id: uid(), x: gc * CELL + CELL/2, y: gr * CELL + CELL/2, txt: '🪳詰まり！', life: 1.5, ml: 1.5, col: '#795548' });
+        }
+      }
+    }
+
+    if (eDef.special === 'corrode' && !dead.has(e.id)) {
+      // Mold: slowly corrodes nearby towers (power drain)
+      e.corrodeTimer = (e.corrodeTimer ?? 1) - dt;
+      if (e.corrodeTimer <= 0) {
+        e.corrodeTimer = 1;
+        s.power = Math.max(0, s.power - 1);
+      }
+    }
+
+    if (eDef.special === 'surge_stun' && !dead.has(e.id)) {
+      // Surge: stuns nearby towers briefly when it passes a tower
+      const { x: ex, y: ey } = pxy(e.pi, e.pr);
+      for (const [k] of Object.entries(s.grid)) {
+        const [gc, gr] = k.split(',').map(Number);
+        if (Math.hypot(gc * CELL + CELL/2 - ex, gr * CELL + CELL/2 - ey) < CELL * 1.2) {
+          if (!s.disabledTowers.has(k)) {
+            s.disabledTowers.add(k);
+            const rem = k;
+            setTimeout(() => s.disabledTowers.delete(rem), 1500);
+          }
+        }
+      }
+    }
+
     // Boss abilities (random trigger every ~8 seconds)
     if (EDEFS[e.type].bossAbility) {
       const abilityKey = `boss_${e.id}`;
@@ -239,6 +319,7 @@ export const tickGame = (s: GameState, dt: number): void => {
   for (const [key, cell] of Object.entries(s.grid)) {
     if (!en.has(key)) continue;
     if (s.disabledTowers.has(key)) continue; // boss disabled
+    if (s.cloggedTowers.has(key)) continue; // cockroach clogged
     const S = st(cell.tid, cell.lv);
 
     // Fan Lv3 ability: push enemy to start every 10 seconds
@@ -358,6 +439,9 @@ export const tickGame = (s: GameState, dt: number): void => {
       if (tgt.hp <= 0) {
         dead.add(tgt.id);
         s.power = Math.min(s.power + tgt.rew, 999);
+        // Ult gauge charge on kill
+        const isBoss = tgt.type.startsWith('boss') || tgt.type === 'final_boss';
+        s.ultGauge = Math.min(100, s.ultGauge + (isBoss ? 25 : 3));
         const { x, y } = pxy(tgt.pi, tgt.pr);
         s.effs.push({ id: uid(), x, y, txt: `+${tgt.rew}W`, life: 1.0, ml: 1.0, col: '#ffd700' });
         for (let i = 0; i < 8; i++) {
@@ -374,7 +458,27 @@ export const tickGame = (s: GameState, dt: number): void => {
     }
   }
 
+  // Dust lord multiply: spawn small dusts on death
+  const newSpawns: typeof s.enemies = [];
+  for (const e of s.enemies) {
+    if (dead.has(e.id) && EDEFS[e.type].special === 'multiply') {
+      const spawnCount = 2;
+      for (let k = 0; k < spawnCount; k++) {
+        newSpawns.push({
+          id: uid(), type: 'dust' as EnemyType,
+          hp: 30, mhp: 30, spd: 55, rew: 5,
+          pi: e.pi, pr: e.pr + (k * 0.01),
+          hitFlash: 0, frozen: 0, burning: 0, burnT: 0,
+          em: EDEFS['dust' as EnemyType]?.em ?? '💨',
+        });
+      }
+      const { x, y } = pxy(e.pi, e.pr);
+      s.effs.push({ id: uid(), x, y, txt: '💨×2分裂！', life: 1.2, ml: 1.2, col: '#90a4ae' });
+    }
+  }
+
   s.enemies = s.enemies.filter(e => !dead.has(e.id));
+  s.enemies.push(...newSpawns);
   s.projs.forEach(p => p.life -= dt);
   s.projs = s.projs.filter(p => p.life > 0);
   s.effs.forEach(e => e.life -= dt);

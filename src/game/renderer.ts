@@ -341,5 +341,40 @@ export const drawFrame = (
     ctx.fillRect(0, 0, GW, GH);
   }
 
+  // Ult "All Clean" flash overlay
+  if (s.ultActive) {
+    const prog = s.ultTimer / 2.5;
+    const wave1 = Math.sin(time * 12) * 0.15 + 0.15;
+    const alpha = prog * wave1;
+    const grad = ctx.createRadialGradient(GW/2, GH/2, 0, GW/2, GH/2, GW * 0.8);
+    grad.addColorStop(0, `rgba(0,229,255,${alpha * 0.8})`);
+    grad.addColorStop(0.5, `rgba(0,150,200,${alpha * 0.4})`);
+    grad.addColorStop(1, `rgba(0,0,100,${alpha * 0.1})`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, GW, GH);
+
+    // Scan line sweep effect
+    const scanY = ((1 - prog) * GH * 2) % (GH + 20) - 10;
+    const scanGrad = ctx.createLinearGradient(0, scanY - 15, 0, scanY + 15);
+    scanGrad.addColorStop(0, 'rgba(0,229,255,0)');
+    scanGrad.addColorStop(0.5, `rgba(0,229,255,${0.6 * prog})`);
+    scanGrad.addColorStop(1, 'rgba(0,229,255,0)');
+    ctx.fillStyle = scanGrad;
+    ctx.fillRect(0, scanY - 15, GW, 30);
+  }
+
+  // Clogged tower overlay
+  for (const [key] of s.cloggedTowers.entries()) {
+    const [c, r] = key.split(',').map(Number);
+    ctx.globalAlpha = 0.4 + Math.sin(time * 5) * 0.15;
+    ctx.fillStyle = '#795548';
+    rrect(ctx, c * CELL + 3, r * CELL + 3, CELL - 6, CELL - 6, 5);
+    ctx.fill();
+    ctx.font = '10px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#fff'; ctx.globalAlpha = 1;
+    ctx.fillText('🪳', c * CELL + CELL / 2, r * CELL + CELL / 2 - 2);
+  }
+  ctx.globalAlpha = 1;
+
   ctx.restore();
 };
