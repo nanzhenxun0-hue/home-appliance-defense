@@ -17,6 +17,11 @@ export interface GachaState extends GachaInventory {
   pickupBanner: string;
 }
 
+// Chip gain per rarity on duplicate
+const CHIP_ON_DUP: Record<string, number> = {
+  C: 3, U: 5, R: 10, E: 20, L: 50, M: 100, G: 200, OD: 500,
+};
+
 const loadInventory = (): GachaState => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -25,6 +30,7 @@ const loadInventory = (): GachaState => {
       return {
         owned: parsed.owned || [...DEFAULT_OWNED],
         volts: parsed.volts ?? 500,
+        chips: parsed.chips ?? 0,
         pity: parsed.pity ?? 0,
         totalPulls: parsed.totalPulls ?? 0,
         pickup: parsed.pickup ?? 'plasma',
@@ -32,7 +38,7 @@ const loadInventory = (): GachaState => {
       };
     }
   } catch {}
-  return { owned: [...DEFAULT_OWNED], volts: 500, pity: 0, totalPulls: 0, pickup: 'plasma', pickupBanner: 'プラズマキャノン ピックアップ' };
+  return { owned: [...DEFAULT_OWNED], volts: 500, chips: 0, pity: 0, totalPulls: 0, pickup: 'plasma', pickupBanner: 'プラズマキャノン ピックアップ' };
 };
 
 const saveInventory = (inv: GachaState) => {
@@ -95,13 +101,18 @@ export const useGacha = () => {
     if (inv.volts < banner.cost1) return null;
     const pickup = banner.pickup || inv.pickup;
     const { tid, rarity } = pullOne(inv.pity, pickup, banner.rateBoost);
-    update(prev => ({
-      ...prev,
-      owned: prev.owned.includes(tid) ? prev.owned : [...prev.owned, tid],
-      volts: prev.volts - banner.cost1,
-      pity: rarity === 'OD' ? 0 : prev.pity + 1,
-      totalPulls: prev.totalPulls + 1,
-    }));
+    update(prev => {
+      const isDup = prev.owned.includes(tid);
+      const chipGain = isDup ? (CHIP_ON_DUP[rarity] ?? 5) : 0;
+      return {
+        ...prev,
+        owned: isDup ? prev.owned : [...prev.owned, tid],
+        chips: prev.chips + chipGain,
+        volts: prev.volts - banner.cost1,
+        pity: rarity === 'OD' ? 0 : prev.pity + 1,
+        totalPulls: prev.totalPulls + 1,
+      };
+    });
     return tid;
   }, [inv.volts, inv.pity, inv.pickup, update]);
 
@@ -109,21 +120,30 @@ export const useGacha = () => {
     const banner = GACHA_BANNERS.find(b => b.id === bannerType) || GACHA_BANNERS[0];
     if (inv.volts < banner.cost10) return null;
     const results: TowerID[] = [];
+    const rarities: Rarity[] = [];
     let tempPity = inv.pity;
     const pickup = banner.pickup || inv.pickup;
     for (let i = 0; i < 10; i++) {
       const { tid, rarity } = pullOne(tempPity, pickup, banner.rateBoost);
       results.push(tid);
+      rarities.push(rarity);
       tempPity = rarity === 'OD' ? 0 : tempPity + 1;
     }
     update(prev => {
       const newOwned = [...prev.owned];
-      for (const tid of results) {
-        if (!newOwned.includes(tid)) newOwned.push(tid);
+      let chipGain = 0;
+      for (let i = 0; i < results.length; i++) {
+        const tid = results[i];
+        if (newOwned.includes(tid)) {
+          chipGain += CHIP_ON_DUP[rarities[i]] ?? 5;
+        } else {
+          newOwned.push(tid);
+        }
       }
       return {
         ...prev,
         owned: newOwned,
+        chips: prev.chips + chipGain,
         volts: prev.volts - banner.cost10,
         pity: tempPity,
         totalPulls: prev.totalPulls + 10,
@@ -132,15 +152,29 @@ export const useGacha = () => {
     return results;
   }, [inv.volts, inv.pity, inv.pickup, update]);
 
+  // Exchange chips for a random unit of given rarity
+  const exchangeChips = useCallback((rarity: Rarity, cost: number): TowerID | null => {
+    if (inv.chips < cost) return null;
+    const pool = towersOfRarity(rarity).filter(t => !inv.owned.includes(t));
+    if (pool.length === 0) return null;
+    const tid = pool[Math.floor(Math.random() * pool.length)];
+    update(prev => ({
+      ...prev,
+      chips: prev.chips - cost,
+      owned: [...prev.owned, tid],
+    }));
+    return tid;
+  }, [inv.chips, inv.owned, update]);
+
   const addVolts = useCallback((amount: number) => {
     update(prev => ({ ...prev, volts: prev.volts + amount }));
   }, [update]);
 
   const resetGacha = useCallback(() => {
-    const fresh: GachaState = { owned: [...DEFAULT_OWNED], volts: 500, pity: 0, totalPulls: 0, pickup: 'plasma', pickupBanner: 'プラズマキャノン ピックアップ' };
+    const fresh: GachaState = { owned: [...DEFAULT_OWNED], volts: 500, chips: 0, pity: 0, totalPulls: 0, pickup: 'plasma', pickupBanner: 'プラズマキャノン ピックアップ' };
     saveInventory(fresh);
     setInv(fresh);
   }, []);
 
-  return { inv, pull1, pull10, addVolts, resetGacha };
+  return { inv, pull1, pull10, addVolts, exchangeChips, resetGacha };
 };

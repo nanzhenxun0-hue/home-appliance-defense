@@ -44,6 +44,27 @@ export const RARITY_BG: Record<Rarity, string> = {
   L: '#2a1a00', M: '#2a0a1a', G: '#002a2a', OD: '#2a2200',
 };
 
+export type PersonalityType = '熱血漢' | '冷静沈着' | '縁の下の力持ち' | '完璧主義者' | '自由奔放' | '情報通' | 'カリスマ' | '幻想家' | '職人気質' | '快活' | '明察眼' | '天才型' | '超論理型' | '狂天才' | '破壊神' | '頼れる兄貴';
+
+export const PERSONALITY_BONUS: Record<PersonalityType, { label: string; icon: string }> = {
+  '熱血漢':     { label: 'ATK +12%',    icon: '🔥' },
+  '冷静沈着':   { label: '凍結時間+20%', icon: '❄️' },
+  '縁の下の力持ち':{ label: '電力供給+20%', icon: '🔋' },
+  '完璧主義者': { label: '吸引範囲+15%', icon: '🎯' },
+  '自由奔放':   { label: '範囲+15%',    icon: '🌀' },
+  '情報通':     { label: 'シナジー+10%', icon: '📡' },
+  'カリスマ':   { label: 'シナジー+25%', icon: '✨' },
+  '幻想家':     { label: 'ATK範囲+25%', icon: '🌠' },
+  '職人気質':   { label: '炎ダメ+15%',  icon: '🍞' },
+  '快活':       { label: '攻速+10%',    icon: '💨' },
+  '明察眼':     { label: '射程+8%',     icon: '💡' },
+  '天才型':     { label: 'スロー+20%',  icon: '🔊' },
+  '超論理型':   { label: 'チェーン+20%',icon: '💻' },
+  '狂天才':     { label: '雷ヒット+1',   icon: '⚡' },
+  '破壊神':     { label: 'AOE+30%',    icon: '🔱' },
+  '頼れる兄貴': { label: '基地HP回復',   icon: '🌊' },
+};
+
 export interface TowerDef {
   n: string;
   em: string;
@@ -52,6 +73,8 @@ export interface TowerDef {
   baseCost: number;
   req: TowerID | null;
   ability?: 'pushback' | 'firetrap' | 'slowfield' | 'chainlightning' | 'energyshield';
+  personality?: PersonalityType;
+  quote?: string;
 }
 
 export interface UpgradeLevel {
@@ -255,6 +278,7 @@ export interface GachaBanner {
 export interface GachaInventory {
   owned: TowerID[];
   volts: number;
+  chips: number;
 }
 
 export const GACHA_COST = 100;

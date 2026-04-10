@@ -1,4 +1,4 @@
-import type { DifficultyDef, DifficultyKey, TowerDef, TowerID, UpgradeLevel, EnemyDef, EnemyType, WaveGroup, TowerStats } from './types';
+import type { DifficultyDef, DifficultyKey, TowerDef, TowerID, UpgradeLevel, EnemyDef, EnemyType, WaveGroup, TowerStats, PersonalityType } from './types';
 
 // Mobile-friendly grid: 8 cols x 10 rows
 export const COLS = 8;
@@ -32,31 +32,31 @@ export const DIFF: Record<DifficultyKey, DifficultyDef> = {
 // ── Tower definitions with 18 units ──
 export const TDEFS: Record<TowerID, TowerDef> = {
   // C - Common (起点)
-  cord:      { n:'延長コード',       em:'🔌', r:'C',  rc:'#9e9e9e', baseCost:25,  req:null },
-  kettle:    { n:'電気ケトル',       em:'♨️',  r:'C',  rc:'#ffb74d', baseCost:40,  req:null },
+  cord:      { n:'延長コード',       em:'🔌', r:'C',  rc:'#9e9e9e', baseCost:25,  req:null,       personality:'縁の下の力持ち', quote:'「みんなを繋げるのが俺の仕事だ！」' },
+  kettle:    { n:'電気ケトル',       em:'♨️',  r:'C',  rc:'#ffb74d', baseCost:40,  req:null,       personality:'熱血漢',         quote:'「沸騰するまで諦めないぞ！」' },
   // U - Uncommon
-  fan:       { n:'扇風機',           em:'🌀', r:'U',  rc:'#81d4fa', baseCost:55,  req:'cord',   ability:'pushback' },
-  lamp:      { n:'デスクライト',     em:'💡', r:'U',  rc:'#fff176', baseCost:50,  req:'kettle' },
-  toaster:   { n:'トースター',       em:'🍞', r:'U',  rc:'#ff8a65', baseCost:60,  req:'kettle', ability:'firetrap' },
+  fan:       { n:'扇風機',           em:'🌀', r:'U',  rc:'#81d4fa', baseCost:55,  req:'cord',   ability:'pushback',   personality:'自由奔放',         quote:'「風に乗れ！どこへでも飛ばしてやる！」' },
+  lamp:      { n:'デスクライト',     em:'💡', r:'U',  rc:'#fff176', baseCost:50,  req:'kettle',   personality:'明察眼',           quote:'「暗闇に光を当てれば、真実が見える。」' },
+  toaster:   { n:'トースター',       em:'🍞', r:'U',  rc:'#ff8a65', baseCost:60,  req:'kettle', ability:'firetrap',   personality:'職人気質',         quote:'「焦がさず、しかし確実に仕留める！」' },
   // R - Rare
-  vacuum:    { n:'掃除機',           em:'🌪️', r:'R',  rc:'#a5d6a7', baseCost:85,  req:'cord' },
-  router:    { n:'ルーター',         em:'📡', r:'R',  rc:'#80cbc4', baseCost:90,  req:'lamp' },
-  dryer:     { n:'ドライヤー',       em:'💨', r:'R',  rc:'#ef9a9a', baseCost:80,  req:'fan' },
+  vacuum:    { n:'掃除機',           em:'🌪️', r:'R',  rc:'#a5d6a7', baseCost:85,  req:'cord',     personality:'完璧主義者',       quote:'「塵一つ残さない。それが私のポリシー。」' },
+  router:    { n:'ルーター',         em:'📡', r:'R',  rc:'#80cbc4', baseCost:90,  req:'lamp',     personality:'情報通',           quote:'「全ての情報は私を通る。繋がりは力だ。」' },
+  dryer:     { n:'ドライヤー',       em:'💨', r:'R',  rc:'#ef9a9a', baseCost:80,  req:'fan',      personality:'快活',             quote:'「熱風で吹き飛ばせ！元気が一番！」' },
   // E - Epic
-  fridge:    { n:'冷蔵庫',           em:'🧊', r:'E',  rc:'#64b5f6', baseCost:130, req:'vacuum' },
-  aircon:    { n:'エアコン',         em:'❄️', r:'E',  rc:'#4fc3f7', baseCost:140, req:'fan' },
-  speaker:   { n:'スピーカー',       em:'🔊', r:'E',  rc:'#ce93d8', baseCost:120, req:'router', ability:'slowfield' },
+  fridge:    { n:'冷蔵庫',           em:'🧊', r:'E',  rc:'#64b5f6', baseCost:130, req:'vacuum',   personality:'冷静沈着',         quote:'「感情は凍らせておけ。冷静さが勝利を呼ぶ。」' },
+  aircon:    { n:'エアコン',         em:'❄️', r:'E',  rc:'#4fc3f7', baseCost:140, req:'fan',      personality:'冷静沈着',         quote:'「絶対零度の冷気で敵の動きを封じろ！」' },
+  speaker:   { n:'スピーカー',       em:'🔊', r:'E',  rc:'#ce93d8', baseCost:120, req:'router', ability:'slowfield',  personality:'天才型',           quote:'「音の波動が世界を変える。聴け、この轟き！」' },
   // L - Legend
-  microwave: { n:'電子レンジ',       em:'🔥', r:'L',  rc:'#ff7043', baseCost:190, req:'toaster' },
-  washer:    { n:'洗濯機',           em:'🌊', r:'L',  rc:'#26c6da', baseCost:200, req:'fridge' },
+  microwave: { n:'電子レンジ',       em:'🔥', r:'L',  rc:'#ff7043', baseCost:190, req:'toaster',  personality:'熱血漢',           quote:'「マイクロ波で内側から燃やし尽くせ！」' },
+  washer:    { n:'洗濯機',           em:'🌊', r:'L',  rc:'#26c6da', baseCost:200, req:'fridge',   personality:'頼れる兄貴',       quote:'「汚れも敵も全部ぶん回して洗い流す！」' },
   // M - Mythic
-  theater:   { n:'ホームシアター',   em:'🎬', r:'M',  rc:'#e91e63', baseCost:280, req:'router' },
-  projector: { n:'プロジェクター',   em:'📽️', r:'M',  rc:'#ba68c8', baseCost:260, req:'speaker' },
+  theater:   { n:'ホームシアター',   em:'🎬', r:'M',  rc:'#e91e63', baseCost:280, req:'router',   personality:'カリスマ',         quote:'「我々の戦いは、最高の映画より劇的だ！」' },
+  projector: { n:'プロジェクター',   em:'📽️', r:'M',  rc:'#ba68c8', baseCost:260, req:'speaker',  personality:'幻想家',           quote:'「光と影で描く。これが究極の幻術だ！」' },
   // G - Galaxy
-  superpc:   { n:'スーパーPC',       em:'💻', r:'G',  rc:'#00e5ff', baseCost:380, req:'theater' },
-  tesla:     { n:'テスラコイル',     em:'⚡', r:'G',  rc:'#7c4dff', baseCost:400, req:'dryer',  ability:'chainlightning' },
+  superpc:   { n:'スーパーPC',       em:'💻', r:'G',  rc:'#00e5ff', baseCost:380, req:'theater',  personality:'超論理型',         quote:'「計算完了。敵の消滅確率：99.97%。」' },
+  tesla:     { n:'テスラコイル',     em:'⚡', r:'G',  rc:'#7c4dff', baseCost:400, req:'dryer',  ability:'chainlightning', personality:'狂天才', quote:'「神をも超える電撃！食らえ、バカ共！」' },
   // OD - Overdrive
-  plasma:    { n:'プラズマキャノン', em:'🔱', r:'OD', rc:'#ffd700', baseCost:500, req:'superpc' },
+  plasma:    { n:'プラズマキャノン', em:'🔱', r:'OD', rc:'#ffd700', baseCost:500, req:'superpc',  personality:'破壊神',           quote:'「宇宙の終わりを見たいか？これが答えだ！！」' },
 };
 
 export const RCOLOR = Object.fromEntries(
