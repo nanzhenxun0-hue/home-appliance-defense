@@ -34,22 +34,162 @@
 </head>
 <body>
 
-  <h1>🔐 家電ディフェンス</h1>
-  <p>URLの安全性をチェックします</p>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>家電ディフェンス</title>
 
-  <input type="text" id="urlInput" placeholder="URLを入力">
-  <button onclick="analyze()">分析</button>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #eef2f7, #ffffff);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-  <div id="result"></div>
+    /* 左上ボタン */
+    .top-left {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+    }
 
-  <!-- 投げ銭 -->
-  <div id="donateBox">
-    <p>このツールが役に立ったら☕で応援してね！</p>
-    <a href="https://buymeacoffee.com/nanzhenxunx" target="_blank" class="donate-btn">
-      ☕ コーヒーおごる
+    .support-btn {
+      background: rgba(0,0,0,0.05);
+      padding: 8px 14px;
+      border-radius: 20px;
+      text-decoration: none;
+      color: #333;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+
+    .support-btn:hover {
+      background: rgba(0,0,0,0.1);
+    }
+
+    /* メインカード */
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 400px;
+      max-width: 90%;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      margin-top: 15px;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background: #0070f3;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #005ad1;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 16px;
+      font-weight: bold;
+      white-space: pre-line;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- 左上の自然な支援ボタン -->
+  <div class="top-left">
+    <a href="https://buymeacoffee.com/nanzhenxunx" target="_blank" class="support-btn">
+      ☕ Support
     </a>
   </div>
 
-  <script src="script.js"></script>
+  <!-- メインUI -->
+  <div class="container">
+    <h1>🔐 家電ディフェンス</h1>
+    <p>URLの安全性をチェックします</p>
+
+    <input type="text" id="urlInput" placeholder="URLを入力">
+    <button onclick="analyze()">分析</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    function analyze() {
+      let input = document.getElementById("urlInput").value.trim();
+      let risk = 0;
+      let reasons = [];
+
+      try {
+        const url = new URL(input);
+
+        if (url.protocol === "http:") {
+          risk += 2;
+          reasons.push("httpは暗号化されていません");
+        }
+
+        if (url.hostname.includes("@")) {
+          risk += 3;
+          reasons.push("@が含まれています（偽装の可能性）");
+        }
+
+      } catch {
+        risk += 2;
+        reasons.push("URL形式が正しくありません");
+      }
+
+      if (input.length > 60) {
+        risk += 1;
+        reasons.push("URLが長すぎます");
+      }
+
+      if (/l[o0]g[i1]n/i.test(input)) {
+        risk += 2;
+        reasons.push("ログイン系ワードが含まれています");
+      }
+
+      let resultText = "";
+
+      if (risk >= 4) {
+        resultText = "⚠️ 危険な可能性があります\n\n理由:\n- " + reasons.join("\n- ");
+      } else {
+        resultText = "✅ 安全な可能性があります";
+      }
+
+      document.getElementById("result").innerText = resultText;
+    }
+  </script>
+
 </body>
 </html>
