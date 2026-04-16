@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>家電ディフェンス</title>
+
+<style>
+body {
+  margin: 0;
+  background: #111;
+  color: white;
+  text-align: center;
+  font-family: Arial;
+}
+
+canvas {
+  background: #222;
+  margin-top: 20px;
+  border-radius: 10px;
+}
+
+.top-left {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+}
+
+.btn {
+  background: rgba(255,255,255,0.1);
+  padding: 6px 12px;
+  border-radius: 20px;
+  color: white;
+  text-decoration: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="top-left">
+  <a href="/" class="btn">← 戻る</a>
+</div>
+
+<h1>🛡️ 家電ディフェンス</h1>
+<p>敵をクリックして守れ！</p>
+
+<canvas id="game" width="400" height="400"></canvas>
+
+<p>
+HP: <span id="hp">5</span> |
+スコア: <span id="score">0</span>
+</p>
+
+<div id="donate" style="display:none;">
+  <p>楽しめたら☕応援してね！</p>
+  <a href="https://buymeacoffee.com/nanzhenxunx" class="btn" target="_blank">Support</a>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let enemies = [];
+let score = 0;
+let hp = 5;
+let speed = 1;
+
+/* 敵生成 */
+function spawnEnemy() {
+  enemies.push({
+    x: Math.random() * 360,
+    y: 0,
+    size: 25
+  });
+}
+
+/* 描画 */
+function draw() {
+  ctx.clearRect(0, 0, 400, 400);
+
+  // 家
+  ctx.fillStyle = "cyan";
+  ctx.fillRect(170, 360, 60, 20);
+
+  // 敵
+  enemies.forEach(e => {
+    ctx.fillStyle = "red";
+    ctx.fillRect(e.x, e.y, e.size, e.size);
+  });
+}
+
+/* 更新 */
+function update() {
+  enemies.forEach(e => {
+    e.y += speed;
+  });
+
+  enemies = enemies.filter(e => {
+    if (e.y > 360) {
+      hp--;
+      document.getElementById("hp").innerText = hp;
+      return false;
+    }
+    return true;
+  });
+
+  if (hp <= 0) gameOver();
+}
+
+/* クリックで攻撃 */
+canvas.addEventListener("click", e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  enemies = enemies.filter(enemy => {
+    if (
+      mx > enemy.x &&
+      mx < enemy.x + enemy.size &&
+      my > enemy.y &&
+      my < enemy.y + enemy.size
+    ) {
+      score++;
+      document.getElementById("score").innerText = score;
+
+      // 少しずつ難しく
+      if (score % 5 === 0) speed += 0.2;
+
+      return false;
+    }
+    return true;
+  });
+});
+
+/* ゲームオーバー */
+function gameOver() {
+  alert("ゲームオーバー！スコア: " + score);
+
+  document.getElementById("donate").style.display = "block";
+
+  score = 0;
+  hp = 5;
+  speed = 1;
+  enemies = [];
+
+  document.getElementById("score").innerText = score;
+  document.getElementById("hp").innerText = hp;
+}
+
+/* ループ */
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+setInterval(spawnEnemy, 1000);
+loop();
+</script>
+
+</body>
+</html>
