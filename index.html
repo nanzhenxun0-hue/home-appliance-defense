@@ -1,179 +1,89 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>家電ディフェンス</title>
+<meta charset="UTF-8">
+<title>家電ディフェンス</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(135deg,#eef2f7,#fff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #eef2f7, #ffffff);
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+.container {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
 
-    /* 左上ボタン */
-    .top-left {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-    }
+input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+}
 
-    .support-btn {
-      background: rgba(0,0,0,0.05);
-      padding: 8px 14px;
-      border-radius: 20px;
-      text-decoration: none;
-      color: #333;
-      font-size: 13px;
-      transition: 0.2s;
-    }
+button {
+  margin-top: 10px;
+  padding: 10px;
+  width: 100%;
+  background: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 10px;
+}
 
-    .support-btn:hover {
-      background: rgba(0,0,0,0.1);
-    }
+.top-left {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+}
 
-    /* メインカード */
-    .container {
-      background: white;
-      padding: 40px;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      text-align: center;
-      width: 420px;
-      max-width: 90%;
-      animation: fadeIn 0.6s ease;
-    }
-
-    @keyframes fadeIn {
-      from {opacity: 0; transform: translateY(20px);}
-      to {opacity: 1; transform: translateY(0);}
-    }
-
-    h1 {
-      margin-bottom: 10px;
-    }
-
-    p {
-      color: #666;
-      margin-bottom: 20px;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-    }
-
-    button {
-      margin-top: 15px;
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      background: #0070f3;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    button:hover {
-      background: #005ad1;
-    }
-
-    #result {
-      margin-top: 20px;
-      font-size: 16px;
-      font-weight: bold;
-      white-space: pre-line;
-    }
-
-    .safe {
-      color: green;
-    }
-
-    .danger {
-      color: red;
-    }
-
-  </style>
+.link-btn {
+  display: block;
+  margin-top: 10px;
+  text-decoration: none;
+  color: #0070f3;
+}
+</style>
 </head>
+
 <body>
 
-  <!-- 左上：自然な投げ銭 -->
-  <div class="top-left">
-    <a href="https://buymeacoffee.com/nanzhenxunx" target="_blank" class="support-btn">
-      ☕ Support
-    </a>
-  </div>
+<div class="top-left">
+  <a href="https://buymeacoffee.com/nanzhenxunx" target="_blank">☕ Support</a>
+</div>
 
-  <!-- メインUI -->
-  <div class="container">
-    <h1>🔐 家電ディフェンス</h1>
-    <p>URLの安全性をチェック</p>
+<div class="container">
+  <h1>🔐 家電ディフェンス</h1>
+  <p>URLの安全性チェック</p>
 
-    <input type="text" id="urlInput" placeholder="https://example.com">
-    <button onclick="analyze()">分析</button>
+  <input id="url" placeholder="https://example.com">
+  <button onclick="check()">分析</button>
 
-    <div id="result"></div>
-  </div>
+  <p id="result"></p>
 
-  <script>
-    function analyze() {
-      let input = document.getElementById("urlInput").value.trim();
-      let risk = 0;
-      let reasons = [];
+  <a href="/game.html" class="link-btn">🎮 ゲームで遊ぶ</a>
+</div>
 
-      try {
-        const url = new URL(input);
+<script>
+function check() {
+  const input = document.getElementById("url").value;
+  let risk = 0;
 
-        if (url.protocol === "http:") {
-          risk += 2;
-          reasons.push("httpは安全ではありません");
-        }
+  if (!input.startsWith("https://")) risk++;
+  if (input.length > 50) risk++;
 
-        if (url.hostname.includes("@")) {
-          risk += 3;
-          reasons.push("@が含まれています（偽装の可能性）");
-        }
-
-      } catch {
-        risk += 2;
-        reasons.push("URL形式が正しくありません");
-      }
-
-      if (input.length > 60) {
-        risk += 1;
-        reasons.push("URLが長すぎます");
-      }
-
-      if (/l[o0]g[i1]n/i.test(input)) {
-        risk += 2;
-        reasons.push("ログイン系ワードが含まれています");
-      }
-
-      let result = document.getElementById("result");
-
-      if (risk >= 4) {
-        result.className = "danger";
-        result.innerText =
-          "⚠️ 危険な可能性があります\n\n理由:\n- " + reasons.join("\n- ");
-      } else {
-        result.className = "safe";
-        result.innerText = "✅ 安全な可能性があります";
-      }
-    }
-  </script>
+  document.getElementById("result").innerText =
+    risk >= 2 ? "⚠️ 注意" : "✅ 安全そう";
+}
+</script>
 
 </body>
 </html>
