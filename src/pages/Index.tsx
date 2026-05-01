@@ -7,6 +7,7 @@ import ScoreScreen from '@/components/screens/ScoreScreen';
 import GachaScreen from '@/components/screens/GachaScreen';
 import TeamScreen from '@/components/screens/TeamScreen';
 import ComboRecipeScreen from '@/components/screens/ComboRecipeScreen';
+import PatchNotesScreen from '@/components/screens/PatchNotesScreen';
 import AreaSelectScreen from '@/components/screens/AreaSelectScreen';
 import TutorialScreen from '@/components/screens/TutorialScreen';
 import { useGacha } from '@/hooks/useGacha';
@@ -16,7 +17,7 @@ import { useBGM } from '@/hooks/useBGM';
 import { useAreaUnlock } from '@/hooks/useAreaUnlock';
 import { useEffect } from 'react';
 
-type Screen = 'home' | 'howto' | 'area' | 'game' | 'scores' | 'gacha' | 'team' | 'combo' | 'tutorial';
+type Screen = 'home' | 'howto' | 'area' | 'game' | 'scores' | 'gacha' | 'team' | 'combo' | 'tutorial' | 'patch';
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>(() => {
@@ -63,9 +64,11 @@ const Index = () => {
       onGacha={() => handleScreenChange('gacha')}
       onCombo={() => handleScreenChange('combo')}
       onTutorial={() => handleScreenChange('tutorial')}
+      onPatch={() => handleScreenChange('patch')}
       volts={gacha.inv.volts}
     />;
   }
+  if (screen === 'patch') return <PatchNotesScreen onBack={() => handleScreenChange('home')} />;
   if (screen === 'howto') return <HowToScreen onBack={() => handleScreenChange('home')} />;
   if (screen === 'area') {
     return <AreaSelectScreen
