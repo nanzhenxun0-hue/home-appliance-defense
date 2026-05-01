@@ -286,8 +286,8 @@ export const GACHA_COST_10 = 900;
 
 // Commercial-grade stricter rates
 export const GACHA_RATES: Record<Rarity, number> = {
-  C: 0.45, U: 0.28, R: 0.13, E: 0.07,
-  L: 0.035, M: 0.02, G: 0.008, OD: 0.003,
+  C: 0.45, U: 0.279, R: 0.13, E: 0.07,
+  L: 0.035, M: 0.02, G: 0.008, OD: 0.004,
 };
 
 export const GACHA_BANNERS: GachaBanner[] = [
