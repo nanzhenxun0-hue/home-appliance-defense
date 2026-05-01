@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import bgHome from '@/assets/bg-home.jpg';
 import logoImg from '@/assets/logo.png';
+import { APP_VERSION } from '@/game/patchNotes';
 
 interface HomeScreenProps {
   onPlay: () => void;
@@ -9,11 +10,15 @@ interface HomeScreenProps {
   onGacha: () => void;
   onCombo: () => void;
   onTutorial: () => void;
+  onPatch: () => void;
   volts: number;
 }
 
-const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, volts }: HomeScreenProps) => (
+const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, onPatch, volts }: HomeScreenProps) => (
   <div className="min-h-[100dvh] flex flex-col items-center justify-center p-5 relative overflow-hidden bg-background">
+    <div className="absolute top-2 right-3 z-20 text-[10px] font-bold text-purple-300/80 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30">
+      {APP_VERSION}
+    </div>
     <div className="absolute inset-0 z-0">
       <img src={bgHome} alt="" className="w-full h-full object-cover opacity-40" />
       <div className="absolute inset-0 bg-background/70" />
@@ -66,6 +71,7 @@ const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, v
       </button>
       <button onClick={onCombo} className="game-btn-secondary w-full text-sm">⛓️ コンボレシピ</button>
       <button onClick={onHowTo} className="game-btn-secondary w-full text-sm">📖 遊び方</button>
+      <button onClick={onPatch} className="game-btn-secondary w-full text-sm">📋 パッチノート</button>
       <div className="flex gap-2 w-full">
         <button onClick={onScores} className="game-btn-ghost flex-1 text-xs">🏆 スコア</button>
         <button onClick={onTutorial} className="game-btn-ghost flex-1 text-xs">📚 チュートリアル</button>

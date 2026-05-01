@@ -73,7 +73,7 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     { c:60,  pg:8, pc:0, dmg:0,  rng:0,   spd:0,   lbl:'スマートプラグ', eff:'+8W/秒' },
   ],
   kettle: [
-    { c:0,   pg:0, pc:1, dmg:18, rng:2.2, spd:1.2, lbl:'電気ケトル',     eff:'ヤケド付与' },
+    { c:0,   pg:0, pc:1, dmg:20, rng:2.2, spd:1.2, lbl:'電気ケトル',     eff:'ヤケド付与' },
     { c:60,  pg:0, pc:1, dmg:28, rng:2.5, spd:1.5, lbl:'高速ケトル',     eff:'攻速UP' },
     { c:300, pg:0, pc:1, dmg:45, rng:2.8, spd:1.8, lbl:'業務用ケトル',   eff:'★超ヤケド！', abilityUnlock:true },
   ],
@@ -109,7 +109,7 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
   ],
   fridge: [
     { c:0,   pg:0, pc:3, dmg:30, rng:2.4, spd:0.7, lbl:'冷蔵庫',         eff:'凍結攻撃' },
-    { c:60,  pg:0, pc:3, dmg:46, rng:2.7, spd:0.9, lbl:'2ドア冷蔵庫',   eff:'攻速UP' },
+    { c:60,  pg:0, pc:3, dmg:50, rng:2.7, spd:0.9, lbl:'2ドア冷蔵庫',   eff:'攻速UP' },
     { c:300, pg:0, pc:4, dmg:70, rng:3.0, spd:1.2, lbl:'大型冷蔵庫',     eff:'★超凍結！', abilityUnlock:true },
   ],
   aircon: [
@@ -125,7 +125,7 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
   microwave: [
     { c:0,   pg:0, pc:4, dmg:50, rng:2.0, spd:0.6, lbl:'電子レンジ',     eff:'超高火力' },
     { c:60,  pg:0, pc:5, dmg:80, rng:2.3, spd:0.8, lbl:'オーブンレンジ', eff:'攻速UP' },
-    { c:300, pg:0, pc:6, dmg:120,rng:2.6, spd:1.0, lbl:'業務用レンジ',   eff:'★核熱！', abilityUnlock:true },
+    { c:300, pg:0, pc:6, dmg:110,rng:2.6, spd:0.95,lbl:'業務用レンジ',   eff:'★核熱！', abilityUnlock:true },
   ],
   washer: [
     { c:0,   pg:0, pc:4, dmg:35, rng:2.5, spd:1.2, lbl:'洗濯機',         eff:'渦巻き吸引' },
@@ -150,12 +150,12 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
   tesla: [
     { c:0,   pg:0, pc:5, dmg:45, rng:3.0, spd:1.0, lbl:'テスラコイル',   eff:'電撃' },
     { c:60,  pg:0, pc:6, dmg:75, rng:3.5, spd:1.3, lbl:'高圧テスラ',     eff:'攻速UP' },
-    { c:300, pg:0, pc:8, dmg:120,rng:4.0, spd:1.8, lbl:'超電磁テスラ',   eff:'★チェーンライトニング', abilityUnlock:true },
+    { c:300, pg:0, pc:8, dmg:105,rng:4.0, spd:1.8, lbl:'超電磁テスラ',   eff:'★チェーンライトニング', abilityUnlock:true },
   ],
   plasma: [
     { c:0,   pg:0, pc:8, dmg:120,rng:4.0, spd:0.8, lbl:'プラズマキャノン', eff:'全体貫通' },
     { c:60,  pg:0, pc:10,dmg:200,rng:5.0, spd:1.2, lbl:'メガプラズマ',     eff:'攻速UP' },
-    { c:300, pg:0, pc:12,dmg:350,rng:6.0, spd:1.8, lbl:'ギガプラズマ',     eff:'★世界を焼く！', abilityUnlock:true },
+    { c:300, pg:0, pc:12,dmg:300,rng:6.0, spd:1.8, lbl:'ギガプラズマ',     eff:'★世界を焼く！', abilityUnlock:true },
   ],
 };
 
@@ -168,13 +168,13 @@ export const EDEFS: Record<EnemyType, EnemyDef> = {
   magnet:     { em:'🧲',  hp:300,  spd:38,  rew:30, dmg:3, col:'#f48fb1', name:'マグネット', pixel:true },
   virus:      { em:'🦠',  hp:500,  spd:55,  rew:50, dmg:2, col:'#76ff03', name:'ウイルス', pixel:true },
   // ── 新敵キャラ ──
-  cockroach:  { em:'🪳',  hp:120,  spd:110, rew:20, dmg:2, col:'#795548', name:'ゴキブリ', special:'clog', pixel:true },
+  cockroach:  { em:'🪳',  hp:120,  spd:95,  rew:20, dmg:2, col:'#795548', name:'ゴキブリ', special:'clog', pixel:true },
   mold:       { em:'🍄',  hp:280,  spd:22,  rew:25, dmg:2, col:'#558b2f', name:'カビ', special:'corrode', pixel:true },
-  surge:      { em:'⚡',  hp:200,  spd:60,  rew:35, dmg:3, col:'#ffeb3b', name:'過電流モンスター', special:'surge_stun', pixel:true },
-  dust_lord:  { em:'👻',  hp:700,  spd:30,  rew:80, dmg:4, col:'#9e9e9e', name:'ホコリ大王', special:'multiply', pixel:true },
+  surge:      { em:'⚡',  hp:230,  spd:60,  rew:40, dmg:3, col:'#ffeb3b', name:'過電流モンスター', special:'surge_stun', pixel:true },
+  dust_lord:  { em:'👻',  hp:850,  spd:30,  rew:100,dmg:4, col:'#9e9e9e', name:'ホコリ大王', special:'multiply', pixel:true },
   boss:       { em:'🤖',  hp:2000, spd:20,  rew:150,dmg:5, col:'#ff1744', name:'ボスロボット', pixel:true },
-  boss_ice:   { em:'🥶',  hp:3500, spd:18,  rew:250,dmg:7, col:'#00bcd4', name:'氷電魔フローズワンダー', bossAbility:'warp', pixel:true },
-  boss_fire:  { em:'🔥',  hp:4000, spd:22,  rew:300,dmg:8, col:'#ff3d00', name:'爆熱魔クリムゾンキング', bossAbility:'wall', pixel:true },
+  boss_ice:   { em:'🥶',  hp:3500, spd:18,  rew:300,dmg:7, col:'#00bcd4', name:'氷電魔フローズワンダー', bossAbility:'warp', pixel:true },
+  boss_fire:  { em:'🔥',  hp:4000, spd:22,  rew:350,dmg:8, col:'#ff3d00', name:'爆熱魔クリムゾンキング', bossAbility:'wall', pixel:true },
   final_boss: { em:'👿',  hp:8000, spd:15,  rew:500,dmg:10,col:'#9c27b0', name:'家電大魔王デウスマキナ', bossAbility:'unit_disable', pixel:true },
 };
 

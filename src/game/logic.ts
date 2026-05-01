@@ -1,4 +1,4 @@
-import type { GameState, DifficultyKey, Enemy, SpawnItem, TowerID, AreaKey, FireTrap } from './types';
+import type { GameState, DifficultyKey, Enemy, EnemyType, SpawnItem, TowerID, AreaKey, FireTrap } from './types';
 import { DIFF, TDEFS, UPS, EDEFS, PATH, CELL, PS, st, AREA_WAVES } from './constants';
 import { getSynergyEffects } from './synergy';
 import { getChainComboEffects } from './chainCombo';
@@ -466,7 +466,7 @@ export const tickGame = (s: GameState, dt: number): void => {
       for (let k = 0; k < spawnCount; k++) {
         newSpawns.push({
           id: uid(), type: 'dust' as EnemyType,
-          hp: 30, mhp: 30, spd: 55, rew: 5,
+          hp: 30, mhp: 30, spd: 55, rew: 5, dmg: 1,
           pi: e.pi, pr: e.pr + (k * 0.01),
           hitFlash: 0, frozen: 0, burning: 0, burnT: 0,
           em: EDEFS['dust' as EnemyType]?.em ?? '💨',
