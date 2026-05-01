@@ -1,4 +1,4 @@
-import type { GameState, DifficultyKey, Enemy, SpawnItem, TowerID, AreaKey, FireTrap } from './types';
+import type { GameState, DifficultyKey, Enemy, EnemyType, SpawnItem, TowerID, AreaKey, FireTrap } from './types';
 import { DIFF, TDEFS, UPS, EDEFS, PATH, CELL, PS, st, AREA_WAVES } from './constants';
 import { getSynergyEffects } from './synergy';
 import { getChainComboEffects } from './chainCombo';
