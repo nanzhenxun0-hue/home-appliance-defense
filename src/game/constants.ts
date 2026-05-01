@@ -73,7 +73,7 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     { c:60,  pg:8, pc:0, dmg:0,  rng:0,   spd:0,   lbl:'スマートプラグ', eff:'+8W/秒' },
   ],
   kettle: [
-    { c:0,   pg:0, pc:1, dmg:18, rng:2.2, spd:1.2, lbl:'電気ケトル',     eff:'ヤケド付与' },
+    { c:0,   pg:0, pc:1, dmg:20, rng:2.2, spd:1.2, lbl:'電気ケトル',     eff:'ヤケド付与' },
     { c:60,  pg:0, pc:1, dmg:28, rng:2.5, spd:1.5, lbl:'高速ケトル',     eff:'攻速UP' },
     { c:300, pg:0, pc:1, dmg:45, rng:2.8, spd:1.8, lbl:'業務用ケトル',   eff:'★超ヤケド！', abilityUnlock:true },
   ],
