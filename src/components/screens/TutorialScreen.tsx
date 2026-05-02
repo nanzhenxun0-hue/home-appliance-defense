@@ -7,17 +7,21 @@ interface TutorialScreenProps {
 
 /**
  * 行動型チュートリアル（読ませない、やらせる）
- * STEP0: スタートボタンだけ
- * STEP1: 指定マスに「延長コード」を強制配置
- * STEP2: 自動戦闘を見るだけ（操作不可）
- * STEP3: 2体目「電気ケトル」を強制配置
- * STEP4: わざと負ける構成 → ヒント → 配置をやり直し
- * STEP5: ULTボタンを光らせて押させる
- * STEP6: 卒業
+ * 電力システムを「動かない違和感 → 延長コードで解決」で体感させる
+ *
+ * STEP0: スタート押すだけ
+ * STEP1: 電気ケトルを置かせる（光ったマス）
+ * STEP2: 動かない！（電力なし、敵が来る）
+ * STEP3: 延長コードを置かせる
+ * STEP4: 電力ON → ケトル発光 → 攻撃開始
+ * STEP5: 2体目のケトルを置こうとする → 電力不足で置けない
+ * STEP6: 延長コードを追加 → ケトル設置可
+ * STEP7: 軽い失敗（適当配置だと突破される）→ 配置やり直し
+ * STEP8: 卒業
  */
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6;
-type Cell = { x: number; y: number; unit?: 'cord' | 'kettle' };
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+type UnitType = 'cord' | 'kettle';
 
 const COLS = 5;
 const ROWS = 4;
@@ -27,80 +31,97 @@ const PATH: Array<[number, number]> = [
 const PATH_KEY = new Set(PATH.map(([x, y]) => `${x},${y}`));
 
 const UNITS = {
-  cord:   { em: '🔌', name: '延長コード', color: '#9e9e9e', dmg: 0,  range: 0,   atkSpd: 0, supply: 5 },
-  kettle: { em: '♨️', name: '電気ケトル', color: '#ffb74d', dmg: 14, range: 1.5, atkSpd: 1.0 },
+  cord:   { em: '🔌', name: '延長コード', supply: 2, demand: 0, dmg: 0 },
+  kettle: { em: '♨️', name: '電気ケトル', supply: 0, demand: 1, dmg: 30, range: 1.6, atkSpd: 1.0 },
 } as const;
 
 interface Enemy { id: number; pi: number; pr: number; hp: number; mhp: number; spd: number; em: string }
 
 const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
   const [step, setStep] = useState<Step>(0);
-  const [grid, setGrid] = useState<Record<string, 'cord' | 'kettle'>>({});
+  const [grid, setGrid] = useState<Record<string, UnitType>>({});
   const [enemies, setEnemies] = useState<Enemy[]>([]);
   const [hp, setHp] = useState(5);
-  const [ultCharge, setUltCharge] = useState(0);
-  const [ultFired, setUltFired] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
+  const [warning, setWarning] = useState<string | null>(null);
   const enemyId = useRef(1);
   const lastTs = useRef<number | null>(null);
   const raf = useRef<number>(0);
   const fireFlashes = useRef<Record<string, number>>({});
 
-  // どのマスに置かせるかを決定（光らせるマス）
+  // 電力計算
+  const power = useMemo(() => {
+    let supply = 0, demand = 0;
+    for (const k in grid) {
+      const u = grid[k];
+      supply += UNITS[u].supply;
+      demand += UNITS[u].demand;
+    }
+    return { supply, demand, ok: supply >= demand };
+  }, [grid]);
+
+  // どのマスに置かせるか（光らせる）/ 何が置けるか
   const targetCell = useMemo<{ x: number; y: number } | null>(() => {
-    if (step === 1) return { x: 1, y: 0 };
-    if (step === 3) return { x: 3, y: 2 };
-    if (step === 4) return { x: 2, y: 0 }; // ヒント後の置き直し位置
+    if (step === 1) return { x: 2, y: 0 };  // ケトル
+    if (step === 3) return { x: 1, y: 0 };  // コード（ケトル隣）
+    if (step === 5) return { x: 2, y: 2 };  // 2体目ケトル試行
+    if (step === 6) return { x: 3, y: 2 };  // 追加コード
+    if (step === 7) return { x: 2, y: 2 };  // ケトル置き直し
     return null;
   }, [step]);
 
-  const requiredUnit: 'cord' | 'kettle' | null =
-    step === 1 ? 'cord' :
-    step === 3 ? 'kettle' :
-    step === 4 ? 'kettle' :
+  const requiredUnit: UnitType | null =
+    step === 1 ? 'kettle' :
+    step === 3 ? 'cord' :
+    step === 5 ? 'kettle' :
+    step === 6 ? 'cord' :
+    step === 7 ? 'kettle' :
     null;
 
-  // STEP2 / STEP4 / STEP5 で敵をスポーン
+  // 敵スポーン
   useEffect(() => {
     if (step === 2) {
+      // 動かない体験（弱い敵をゆっくり）
       enemyId.current = 1;
+      setHp(5);
       setEnemies([
-        { id: enemyId.current++, pi: 0, pr: 0,    hp: 30, mhp: 30, spd: 0.5, em: '🌫️' },
-        { id: enemyId.current++, pi: 0, pr: -1.2, hp: 30, mhp: 30, spd: 0.5, em: '🌫️' },
+        { id: enemyId.current++, pi: 0, pr: 0, hp: 30, mhp: 30, spd: 0.35, em: '🌫️' },
       ]);
     } else if (step === 4) {
-      // わざと負けやすい構成：HP低くタフな敵2体
-      setHp(2);
+      // 動き出す体験
       setEnemies([
-        { id: enemyId.current++, pi: 0, pr: 0,    hp: 50, mhp: 50, spd: 0.45, em: '💧' },
+        { id: enemyId.current++, pi: 0, pr: 0,    hp: 30, mhp: 30, spd: 0.4, em: '🌫️' },
+        { id: enemyId.current++, pi: 0, pr: -1.5, hp: 30, mhp: 30, spd: 0.4, em: '🌫️' },
       ]);
-    } else if (step === 5) {
-      setUltCharge(100);
-      setUltFired(false);
+    } else if (step === 7) {
+      // 軽い失敗チャンス（タフめ）
+      setHp(3);
       setEnemies([
-        { id: enemyId.current++, pi: 0, pr: 0,    hp: 80, mhp: 80, spd: 0.4, em: '🪳' },
-        { id: enemyId.current++, pi: 0, pr: -0.6, hp: 80, mhp: 80, spd: 0.4, em: '🪳' },
-        { id: enemyId.current++, pi: 0, pr: -1.2, hp: 80, mhp: 80, spd: 0.4, em: '🪳' },
+        { id: enemyId.current++, pi: 0, pr: 0,    hp: 60, mhp: 60, spd: 0.45, em: '💧' },
+        { id: enemyId.current++, pi: 0, pr: -1.5, hp: 60, mhp: 60, spd: 0.45, em: '💧' },
       ]);
-    } else if (step === 0 || step === 1 || step === 3) {
+    } else if (step === 0 || step === 1 || step === 3 || step === 5 || step === 6 || step === 8) {
       setEnemies([]);
     }
   }, [step]);
 
-  // STEP4 用：失敗ヒント表示タイマー
+  // ヒント自動表示
   useEffect(() => {
-    if (step !== 4) { setHint(null); return; }
     setHint(null);
-    const t = setTimeout(() => {
-      setHint('💡 ヒント：敵の通り道に置いてみよう');
-    }, 1800);
-    return () => clearTimeout(t);
+    if (step === 2) {
+      const t = setTimeout(() => setHint('💡 ⚡電力がない…？'), 1500);
+      return () => clearTimeout(t);
+    }
+    if (step === 7) {
+      const t = setTimeout(() => setHint('💡 敵の通り道に置こう'), 2000);
+      return () => clearTimeout(t);
+    }
   }, [step]);
 
-  // ループ：敵を進ませて、近くのケトルが攻撃
+  // ゲームループ
   useEffect(() => {
-    if (step !== 2 && step !== 4 && step !== 5) {
+    if (step !== 2 && step !== 4 && step !== 7) {
       cancelAnimationFrame(raf.current);
       lastTs.current = null;
       return;
@@ -112,28 +133,29 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
 
       setEnemies(prev => {
         let baseLost = 0;
-        // 攻撃処理
-        const grids = Object.entries(grid);
         const next = prev.map(e => ({ ...e })).filter(e => e.hp > 0);
-        for (const [key, u] of grids) {
-          if (u !== 'kettle') continue;
-          const [gx, gy] = key.split(',').map(Number);
-          // 射程内の最も進んだ敵
-          let target: Enemy | null = null;
-          for (const en of next) {
-            if (en.pr < 0) continue;
-            const ex = en.pi + 0; // path is row 1, x = pi
-            const ey = 1;
-            const dx = ex - gx, dy = ey - gy;
-            if (Math.hypot(dx, dy) <= UNITS.kettle.range) {
-              if (!target || en.pi > target.pi) target = en;
+
+        // ケトル攻撃（電力OKのときだけ）
+        if (power.ok) {
+          for (const [key, u] of Object.entries(grid)) {
+            if (u !== 'kettle') continue;
+            const [gx, gy] = key.split(',').map(Number);
+            let target: Enemy | null = null;
+            for (const en of next) {
+              if (en.pr < 0) continue;
+              const ex = en.pi, ey = 1;
+              const dx = ex - gx, dy = ey - gy;
+              if (Math.hypot(dx, dy) <= UNITS.kettle.range) {
+                if (!target || en.pi > target.pi) target = en;
+              }
+            }
+            if (target) {
+              target.hp -= 45 * dt;
+              fireFlashes.current[key] = 0.15;
             }
           }
-          if (target) {
-            target.hp -= 30 * dt; // dps ≈ 30
-            fireFlashes.current[key] = 0.15;
-          }
         }
+
         // 敵を進める
         for (const e of next) {
           e.pr += e.spd * dt;
@@ -151,7 +173,6 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
         return next.filter(e => e.hp > 0);
       });
 
-      // フラッシュ減衰
       for (const k in fireFlashes.current) {
         fireFlashes.current[k] -= dt;
         if (fireFlashes.current[k] <= 0) delete fireFlashes.current[k];
@@ -159,41 +180,50 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
     };
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current);
-  }, [step, grid]);
+  }, [step, grid, power.ok]);
 
-  // 進行条件チェック
+  // 進行条件
   useEffect(() => {
-    if (step === 2 && enemies.length === 0) {
-      const t = setTimeout(() => setStep(3), 800);
+    // STEP2: 敵が一定距離まで来たら → STEP3 へ進ませる（動かない違和感を体験させた後）
+    if (step === 2) {
+      const e = enemies[0];
+      if (e && e.pi >= 2) {
+        const t = setTimeout(() => {
+          setEnemies([]);
+          setStep(3);
+        }, 200);
+        return () => clearTimeout(t);
+      }
+    }
+    if (step === 4 && enemies.length === 0) {
+      const t = setTimeout(() => setStep(5), 800);
       return () => clearTimeout(t);
     }
-    if (step === 4) {
+    if (step === 7) {
       if (hp <= 0) {
-        // 失敗 → ヒントを残してリトライさせる（STEP4のまま）
         setEnemies([]);
         const t = setTimeout(() => {
           setHp(3);
           setHint('💡 配置を変えよう。光ったマスに置いてね');
-          // 既存のkettleを撤去（ヒントのため）
+          // ケトルだけ撤去（コードは残す）
           setGrid(g => {
             const ng: typeof g = {};
             for (const k in g) if (g[k] === 'cord') ng[k] = g[k];
             return ng;
           });
-          setEnemies([{ id: enemyId.current++, pi: 0, pr: 0, hp: 50, mhp: 50, spd: 0.45, em: '💧' }]);
+          setEnemies([
+            { id: enemyId.current++, pi: 0, pr: 0,    hp: 60, mhp: 60, spd: 0.45, em: '💧' },
+            { id: enemyId.current++, pi: 0, pr: -1.5, hp: 60, mhp: 60, spd: 0.45, em: '💧' },
+          ]);
         }, 900);
         return () => clearTimeout(t);
       }
       if (enemies.length === 0 && hp > 0) {
-        const t = setTimeout(() => setStep(5), 800);
+        const t = setTimeout(() => setStep(8), 800);
         return () => clearTimeout(t);
       }
     }
-    if (step === 5 && ultFired && enemies.length === 0) {
-      const t = setTimeout(() => setStep(6), 800);
-      return () => clearTimeout(t);
-    }
-  }, [step, enemies.length, hp, ultFired]);
+  }, [step, enemies, hp]);
 
   const place = (x: number, y: number) => {
     if (PATH_KEY.has(`${x},${y}`)) return;
@@ -202,38 +232,53 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
       setShake(true); setTimeout(() => setShake(false), 250);
       return;
     }
+
+    // STEP5: わざと電力不足で置けない演出
+    if (step === 5 && requiredUnit === 'kettle') {
+      // 仮配置せず、警告だけ出す
+      setWarning('⚡ 電力が足りない！');
+      setShake(true);
+      setTimeout(() => setShake(false), 250);
+      setTimeout(() => {
+        setWarning(null);
+        setStep(6);
+      }, 1400);
+      return;
+    }
+
     setGrid(g => ({ ...g, [`${x},${y}`]: requiredUnit }));
     if (step === 1) setTimeout(() => setStep(2), 600);
     if (step === 3) setTimeout(() => setStep(4), 600);
-    // STEP4 で置いた直後はゲームループが続いて勝てば次へ進む
-  };
-
-  const fireUlt = () => {
-    if (step !== 5 || ultCharge < 100 || ultFired) return;
-    setUltFired(true);
-    setUltCharge(0);
-    setEnemies(es => es.map(e => ({ ...e, hp: 0 })));
+    if (step === 6) setTimeout(() => setStep(7), 600);
+    // STEP7 で置いた直後はゲームループで決着
   };
 
   const stepBanner = (() => {
     switch (step) {
-      case 0: return { em: '👋', text: 'はじめよう' };
-      case 1: return { em: '🔌', text: '光ったマスに「延長コード」を置こう' };
-      case 2: return { em: '👀', text: '見てるだけでOK！自動で攻撃するよ' };
-      case 3: return { em: '♨️', text: 'もう1体「電気ケトル」を置こう' };
-      case 4: return { em: '🤔', text: hint ?? '強い敵が来た…倒せるかな？' };
-      case 5: return { em: '🌊', text: '光ってる ULT を押そう！' };
-      case 6: return { em: '🎓', text: '卒業！自由に遊んでみよう' };
+      case 0: return { em: '👋', text: 'スタートを押そう' };
+      case 1: return { em: '♨️', text: '光ったマスに「電気ケトル」を置こう' };
+      case 2: return { em: '🤔', text: hint ?? 'あれ？動かない…？' };
+      case 3: return { em: '🔌', text: '電力が必要みたい。延長コードを置こう' };
+      case 4: return { em: '⚡', text: '電力があると動く！' };
+      case 5: return { em: '➕', text: 'もう1体ケトルを置こうとしてみよう' };
+      case 6: return { em: '🔌', text: '延長コードを追加しよう' };
+      case 7: return { em: '🛡️', text: hint ?? '配置を工夫して防衛！' };
+      case 8: return { em: '🎓', text: '電力を管理して防衛しよう！' };
     }
   })();
 
   // セル描画
+  const cellSize = 56;
   const renderCell = (x: number, y: number) => {
     const key = `${x},${y}`;
     const isPath = PATH_KEY.has(key);
     const unit = grid[key];
     const isTarget = targetCell && targetCell.x === x && targetCell.y === y && !unit;
     const flash = (fireFlashes.current[key] ?? 0) > 0;
+    // ケトルが電力ONなら光る、OFFなら暗く
+    const isKettleOn = unit === 'kettle' && power.ok;
+    const isKettleOff = unit === 'kettle' && !power.ok;
+
     return (
       <button
         key={key}
@@ -243,19 +288,25 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
         style={{
           background: isPath ? '#3a2c1a' : '#1a1a2e',
           border: `2px solid ${isTarget ? '#fbbf24' : isPath ? '#5a4030' : '#2a2a44'}`,
-          boxShadow: isTarget ? '0 0 16px #fbbf24, inset 0 0 12px #fbbf2466' : flash ? '0 0 12px #ff7043' : 'none',
+          boxShadow: isTarget
+            ? '0 0 16px #fbbf24, inset 0 0 12px #fbbf2466'
+            : flash ? '0 0 12px #ff7043'
+            : isKettleOn ? '0 0 14px #ffd54f, inset 0 0 8px #ffb74d88'
+            : 'none',
           animation: isTarget ? 'glow-pulse 1.2s infinite' : 'none',
           cursor: isTarget ? 'pointer' : 'default',
+          opacity: isKettleOff ? 0.45 : 1,
+          filter: isKettleOff ? 'grayscale(0.7)' : 'none',
         }}
       >
         {unit && <span className="text-2xl">{UNITS[unit].em}</span>}
+        {isKettleOn && <span className="absolute -top-1 -right-1 text-[10px]">⚡</span>}
+        {isKettleOff && <span className="absolute -top-1 -right-1 text-[10px]">💤</span>}
         {isTarget && !unit && <span className="text-xs text-yellow-300 font-black animate-pulse">ここ</span>}
       </button>
     );
   };
 
-  // 敵オーバーレイ
-  const cellSize = 56; // px (matches w-14)
   const renderEnemy = (e: Enemy) => {
     if (e.pr < 0) return null;
     const i = Math.min(e.pi, PATH.length - 1);
@@ -281,7 +332,7 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
 
       {/* 進行ドット */}
       <div className="flex justify-center gap-1.5 mt-2 mb-3 relative z-10">
-        {[0,1,2,3,4,5,6].map(i => (
+        {[0,1,2,3,4,5,6,7,8].map(i => (
           <div key={i} className="w-2 h-2 rounded-full transition-all"
             style={{
               background: i === step ? '#c084fc' : i < step ? '#7c3aed' : '#333',
@@ -295,27 +346,45 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
         <motion.div
           key={`${step}-${stepBanner.text}`}
           initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-          className="glass-panel px-4 py-3 mb-4 max-w-sm w-full text-center relative z-10"
+          className="glass-panel px-4 py-3 mb-3 max-w-sm w-full text-center relative z-10"
         >
           <div className="text-3xl mb-1">{stepBanner.em}</div>
           <div className="text-sm font-bold text-foreground">{stepBanner.text}</div>
         </motion.div>
       </AnimatePresence>
 
-      {/* HP / Ult */}
-      {step >= 2 && (
-        <div className="flex gap-3 mb-3 relative z-10 text-xs">
-          <span className="text-red-400 font-black">❤️ {hp}</span>
-          {step >= 5 && (
-            <span className="font-black" style={{ color: ultCharge >= 100 ? '#00e5ff' : '#666' }}>
-              🌊 ULT {ultCharge}%
-            </span>
+      {/* HP / 電力 */}
+      {step >= 1 && step <= 7 && (
+        <div className="flex gap-3 mb-2 relative z-10 text-xs items-center">
+          {step >= 2 && <span className="text-red-400 font-black">❤️ {hp}</span>}
+          <span className="font-black px-2 py-0.5 rounded"
+            style={{
+              color: power.ok ? '#7dd3fc' : '#fb7185',
+              background: power.ok ? '#0c4a6e88' : '#7f1d1d88',
+              border: `1px solid ${power.ok ? '#0ea5e9' : '#ef4444'}`,
+            }}>
+            ⚡ {power.demand}/{power.supply}
+          </span>
+          {!power.ok && grid && Object.values(grid).includes('kettle') && (
+            <span className="text-rose-400 font-black animate-pulse text-[10px]">電力不足！</span>
           )}
         </div>
       )}
 
+      {/* 警告 */}
+      <AnimatePresence>
+        {warning && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+            className="absolute top-1/3 z-30 px-6 py-3 rounded-lg font-black text-lg"
+            style={{ background: '#7f1d1d', color: '#fff', boxShadow: '0 0 24px #ef4444' }}>
+            {warning}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* グリッド + 敵 */}
-      {step >= 1 && step <= 5 && (
+      {step >= 1 && step <= 7 && (
         <motion.div
           animate={shake ? { x: [-4, 4, -3, 3, 0] } : {}}
           transition={{ duration: 0.25 }}
@@ -331,6 +400,17 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
         </motion.div>
       )}
 
+      {/* 配置可能ユニット表示 */}
+      {requiredUnit && (
+        <div className="relative z-10 mb-2 flex items-center gap-2 px-3 py-1.5 rounded-md"
+          style={{ background: '#1a1a2e', border: '1px solid #fbbf24' }}>
+          <span className="text-xl">{UNITS[requiredUnit].em}</span>
+          <span className="text-xs font-bold text-yellow-200">{UNITS[requiredUnit].name}</span>
+          {requiredUnit === 'cord' && <span className="text-[10px] text-sky-300">+⚡{UNITS.cord.supply}</span>}
+          {requiredUnit === 'kettle' && <span className="text-[10px] text-rose-300">−⚡{UNITS.kettle.demand}</span>}
+        </div>
+      )}
+
       {/* アクション領域 */}
       <div className="relative z-10 flex flex-col items-center gap-2 max-w-sm w-full">
         {step === 0 && (
@@ -340,27 +420,14 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
             ▶ スタート
           </button>
         )}
-        {step === 5 && (
-          <button onClick={fireUlt} disabled={ultFired}
-            className="px-6 py-3 rounded-lg font-black text-lg"
-            style={{
-              background: 'linear-gradient(135deg, #00e5ff, #7c4dff)',
-              color: '#fff',
-              boxShadow: ultFired ? 'none' : '0 0 24px #00e5ff',
-              animation: ultFired ? 'none' : 'glow-pulse 0.9s infinite',
-              opacity: ultFired ? 0.4 : 1,
-            }}>
-            🌊 ULT発動！
-          </button>
-        )}
-        {step === 6 && (
+        {step === 8 && (
           <button onClick={onComplete} className="game-btn-primary text-lg px-8 py-3"
             style={{ animation: 'glow-pulse 1.5s infinite' }}>
             🎮 自由プレイへ
           </button>
         )}
 
-        {step !== 6 && (
+        {step !== 8 && (
           <button onClick={onComplete} className="text-[10px] text-muted-foreground/60 mt-3 py-1">
             スキップ
           </button>
