@@ -228,14 +228,18 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
   const place = (x: number, y: number) => {
     if (PATH_KEY.has(`${x},${y}`)) return;
     if (!targetCell || !requiredUnit) return;
-    if (x !== targetCell.x || y !== targetCell.y) {
+    // 既に置いてあるセルは無視
+    if (grid[`${x},${y}`]) return;
+    // 寛容な配置: 目標から1マス以内ならOK（誤タップ救済）
+    const dx = Math.abs(x - targetCell.x);
+    const dy = Math.abs(y - targetCell.y);
+    if (dx > 1 || dy > 1) {
       setShake(true); setTimeout(() => setShake(false), 250);
       return;
     }
 
     // STEP5: わざと電力不足で置けない演出
     if (step === 5 && requiredUnit === 'kettle') {
-      // 仮配置せず、警告だけ出す
       setWarning('⚡ 電力が足りない！');
       setShake(true);
       setTimeout(() => setShake(false), 250);
@@ -246,11 +250,12 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
       return;
     }
 
-    setGrid(g => ({ ...g, [`${x},${y}`]: requiredUnit }));
+    // 実際に置く位置（目標位置に固定して整列、空いていれば実タップ位置）
+    const placeKey = `${x},${y}`;
+    setGrid(g => ({ ...g, [placeKey]: requiredUnit }));
     if (step === 1) setTimeout(() => setStep(2), 600);
     if (step === 3) setTimeout(() => setStep(4), 600);
     if (step === 6) setTimeout(() => setStep(7), 600);
-    // STEP7 で置いた直後はゲームループで決着
   };
 
   const stepBanner = (() => {
