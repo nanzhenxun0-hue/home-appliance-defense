@@ -10,6 +10,7 @@ import ComboRecipeScreen from '@/components/screens/ComboRecipeScreen';
 import PatchNotesScreen from '@/components/screens/PatchNotesScreen';
 import AreaSelectScreen from '@/components/screens/AreaSelectScreen';
 import TutorialScreen from '@/components/screens/TutorialScreen';
+import CompendiumScreen from '@/components/screens/CompendiumScreen';
 import { useGacha } from '@/hooks/useGacha';
 import { useTeam } from '@/hooks/useTeam';
 import { useSound } from '@/hooks/useSound';
@@ -17,7 +18,7 @@ import { useBGM } from '@/hooks/useBGM';
 import { useAreaUnlock } from '@/hooks/useAreaUnlock';
 import { useEffect } from 'react';
 
-type Screen = 'home' | 'howto' | 'area' | 'game' | 'scores' | 'gacha' | 'team' | 'combo' | 'tutorial' | 'patch';
+type Screen = 'home' | 'howto' | 'area' | 'game' | 'scores' | 'gacha' | 'team' | 'combo' | 'tutorial' | 'patch' | 'compendium';
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>(() => {
@@ -65,8 +66,12 @@ const Index = () => {
       onCombo={() => handleScreenChange('combo')}
       onTutorial={() => handleScreenChange('tutorial')}
       onPatch={() => handleScreenChange('patch')}
+      onCompendium={() => handleScreenChange('compendium')}
       volts={gacha.inv.volts}
     />;
+  }
+  if (screen === 'compendium') {
+    return <CompendiumScreen owned={gacha.inv.owned} onBack={() => handleScreenChange('home')} />;
   }
   if (screen === 'patch') return <PatchNotesScreen onBack={() => handleScreenChange('home')} />;
   if (screen === 'howto') return <HowToScreen onBack={() => handleScreenChange('home')} />;
