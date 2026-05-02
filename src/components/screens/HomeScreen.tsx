@@ -11,10 +11,11 @@ interface HomeScreenProps {
   onCombo: () => void;
   onTutorial: () => void;
   onPatch: () => void;
+  onCompendium: () => void;
   volts: number;
 }
 
-const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, onPatch, volts }: HomeScreenProps) => (
+const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, onPatch, onCompendium, volts }: HomeScreenProps) => (
   <div className="min-h-[100dvh] flex flex-col items-center justify-center p-5 relative overflow-hidden bg-background">
     <div className="absolute top-2 right-3 z-20 text-[10px] font-bold text-purple-300/80 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30">
       {APP_VERSION}
@@ -70,6 +71,7 @@ const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, o
         🎰 ガチャ（3種）
       </button>
       <button onClick={onCombo} className="game-btn-secondary w-full text-sm">⛓️ コンボレシピ</button>
+      <button onClick={onCompendium} className="game-btn-secondary w-full text-sm">📚 家電図鑑</button>
       <button onClick={onHowTo} className="game-btn-secondary w-full text-sm">📖 遊び方</button>
       <button onClick={onPatch} className="game-btn-secondary w-full text-sm">📋 パッチノート</button>
       <div className="flex gap-2 w-full">

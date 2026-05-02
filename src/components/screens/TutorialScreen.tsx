@@ -228,14 +228,18 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
   const place = (x: number, y: number) => {
     if (PATH_KEY.has(`${x},${y}`)) return;
     if (!targetCell || !requiredUnit) return;
-    if (x !== targetCell.x || y !== targetCell.y) {
+    // 既に置いてあるセルは無視
+    if (grid[`${x},${y}`]) return;
+    // 寛容な配置: 目標から1マス以内ならOK（誤タップ救済）
+    const dx = Math.abs(x - targetCell.x);
+    const dy = Math.abs(y - targetCell.y);
+    if (dx > 1 || dy > 1) {
       setShake(true); setTimeout(() => setShake(false), 250);
       return;
     }
 
     // STEP5: わざと電力不足で置けない演出
     if (step === 5 && requiredUnit === 'kettle') {
-      // 仮配置せず、警告だけ出す
       setWarning('⚡ 電力が足りない！');
       setShake(true);
       setTimeout(() => setShake(false), 250);
@@ -246,11 +250,12 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
       return;
     }
 
-    setGrid(g => ({ ...g, [`${x},${y}`]: requiredUnit }));
+    // 実際に置く位置（目標位置に固定して整列、空いていれば実タップ位置）
+    const placeKey = `${x},${y}`;
+    setGrid(g => ({ ...g, [placeKey]: requiredUnit }));
     if (step === 1) setTimeout(() => setStep(2), 600);
     if (step === 3) setTimeout(() => setStep(4), 600);
     if (step === 6) setTimeout(() => setStep(7), 600);
-    // STEP7 で置いた直後はゲームループで決着
   };
 
   const stepBanner = (() => {
@@ -275,7 +280,9 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
     const unit = grid[key];
     const isTarget = targetCell && targetCell.x === x && targetCell.y === y && !unit;
     const flash = (fireFlashes.current[key] ?? 0) > 0;
-    // ケトルが電力ONなら光る、OFFなら暗く
+    // 目標から1マス以内も placeable（誤タップ救済）
+    const inRange = targetCell && Math.abs(x - targetCell.x) <= 1 && Math.abs(y - targetCell.y) <= 1;
+    const placeable = !!targetCell && !!requiredUnit && !isPath && !unit && !!inRange;
     const isKettleOn = unit === 'kettle' && power.ok;
     const isKettleOff = unit === 'kettle' && !power.ok;
 
@@ -283,18 +290,18 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
       <button
         key={key}
         onClick={() => place(x, y)}
-        disabled={!targetCell || isPath || !!unit}
+        disabled={!placeable && !isTarget}
         className="relative aspect-square rounded-md transition-all"
         style={{
-          background: isPath ? '#3a2c1a' : '#1a1a2e',
+          background: isPath ? '#3a2c1a' : isTarget ? '#3a2c00' : '#1a1a2e',
           border: `2px solid ${isTarget ? '#fbbf24' : isPath ? '#5a4030' : '#2a2a44'}`,
           boxShadow: isTarget
-            ? '0 0 16px #fbbf24, inset 0 0 12px #fbbf2466'
+            ? '0 0 24px #fbbf24cc, inset 0 0 16px #fbbf2477'
             : flash ? '0 0 12px #ff7043'
             : isKettleOn ? '0 0 14px #ffd54f, inset 0 0 8px #ffb74d88'
             : 'none',
-          animation: isTarget ? 'glow-pulse 1.2s infinite' : 'none',
-          cursor: isTarget ? 'pointer' : 'default',
+          animation: isTarget ? 'glow-pulse 0.9s infinite' : 'none',
+          cursor: placeable ? 'pointer' : 'default',
           opacity: isKettleOff ? 0.45 : 1,
           filter: isKettleOff ? 'grayscale(0.7)' : 'none',
         }}
@@ -302,7 +309,12 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
         {unit && <span className="text-2xl">{UNITS[unit].em}</span>}
         {isKettleOn && <span className="absolute -top-1 -right-1 text-[10px]">⚡</span>}
         {isKettleOff && <span className="absolute -top-1 -right-1 text-[10px]">💤</span>}
-        {isTarget && !unit && <span className="text-xs text-yellow-300 font-black animate-pulse">ここ</span>}
+        {isTarget && !unit && (
+          <>
+            <span className="absolute -top-7 left-1/2 -translate-x-1/2 text-2xl animate-bounce drop-shadow-[0_0_6px_#fbbf24]">⬇️</span>
+            <span className="text-[10px] text-yellow-300 font-black animate-pulse">ここ</span>
+          </>
+        )}
       </button>
     );
   };
