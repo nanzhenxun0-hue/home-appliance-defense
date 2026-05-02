@@ -167,7 +167,7 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
 
         {/* Rates */}
         <details className="w-full text-xs text-muted-foreground mt-2">
-          <summary className="cursor-pointer text-center">排出確率を確認</summary>
+          <summary className="cursor-pointer text-center">📊 排出確率を確認</summary>
           <div className="mt-2 space-y-2">
             <div className="grid grid-cols-4 gap-1">
               {RARITY_ORDER.map(r => {
@@ -182,6 +182,21 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
             </div>
           </div>
         </details>
+
+        {/* Gacha Guide */}
+        <details className="w-full text-xs text-muted-foreground mt-1">
+          <summary className="cursor-pointer text-center">❓ ガチャの仕組み</summary>
+          <div className="mt-2 space-y-2 text-[10px] leading-relaxed text-foreground/75">
+            <GuideRow em="🚚" t="3種類のバナー" d="ノーマル(100V)・プレミアム(250V/レア以上UP)・限定(400V/OD10倍&ピックアップ)。状況に応じて使い分け。" />
+            <GuideRow em="🎯" t="天井（ピティ）" d={`80回引いてもODが出ない場合、次回以降の確率がUP。50回超で🔥確率UP表示、80回で実質保証。バナーを跨いでも累計でカウント。`} />
+            <GuideRow em="🎰" t="10連保証" d="10連を引くとレア(R)以上が1体以上必ず排出。コスパも単発より約10%お得。" />
+            <GuideRow em="📦" t="重複時の扱い" d="既に所持している家電を引いた場合は、ボルト変換ではなくコレクション完成度として記録される。図鑑で確認可能。" />
+            <GuideRow em="⭐" t="レアリティ8段階" d="C / U / R / E / L / M / G / OD（オーバードライブ）の順に強力。OD家電は0.4%と希少。" />
+            <GuideRow em="✨" t="ピックアップ" d="限定バナーで指定家電が排出時に確率1.5倍。新キャラ実装時にも実施予定。" />
+            <GuideRow em="💡" t="入手後の流れ" d="所持→編成画面で5体パーティに加え→エリア出撃→Lv3まで育ててスキル開花。" />
+          </div>
+        </details>
+
       </div>
     </div>
   );
