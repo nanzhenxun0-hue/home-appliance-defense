@@ -75,6 +75,12 @@ export interface TowerDef {
   ability?: 'pushback' | 'firetrap' | 'slowfield' | 'chainlightning' | 'energyshield';
   personality?: PersonalityType;
   quote?: string;
+  /** 固有スキル名（図鑑/UI表示用） */
+  skillName?: string;
+  /** 固有スキルの説明（Lv3で開花する切り札） */
+  skillDesc?: string;
+  /** 役割タグ（DPS/サポート/タンク/CC等） */
+  role?: string;
 }
 
 export interface UpgradeLevel {
