@@ -202,4 +202,14 @@ const GachaScreen = ({ gacha, onBack, playSound }: GachaScreenProps) => {
   );
 };
 
+const GuideRow = ({ em, t, d }: { em: string; t: string; d: string }) => (
+  <div className="flex gap-2 p-1.5 rounded bg-white/[0.02] border border-white/5">
+    <span className="text-base flex-shrink-0">{em}</span>
+    <div className="flex-1">
+      <div className="font-bold text-foreground/90 text-[11px]">{t}</div>
+      <div className="text-foreground/60">{d}</div>
+    </div>
+  </div>
+);
+
 export default GachaScreen;
