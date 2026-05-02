@@ -32,31 +32,31 @@ export const DIFF: Record<DifficultyKey, DifficultyDef> = {
 // ── Tower definitions with 18 units ──
 export const TDEFS: Record<TowerID, TowerDef> = {
   // C - Common (起点)
-  cord:      { n:'延長コード',       em:'🔌', r:'C',  rc:'#9e9e9e', baseCost:25,  req:null,       personality:'縁の下の力持ち', quote:'「みんなを繋げるのが俺の仕事だ！」' },
-  kettle:    { n:'電気ケトル',       em:'♨️',  r:'C',  rc:'#ffb74d', baseCost:40,  req:null,       personality:'熱血漢',         quote:'「沸騰するまで諦めないぞ！」' },
+  cord:      { n:'延長コード',       em:'🔌', r:'C',  rc:'#9e9e9e', baseCost:25,  req:null,       personality:'縁の下の力持ち', quote:'「みんなを繋げるのが俺の仕事だ！」', role:'発電', skillName:'パワーシェア', skillDesc:'戦場に電力を供給。Lv3で供給量+8/秒。設置数で電力上限が伸びる。' },
+  kettle:    { n:'電気ケトル',       em:'♨️',  r:'C',  rc:'#ffb74d', baseCost:40,  req:null,       personality:'熱血漢',         quote:'「沸騰するまで諦めないぞ！」', role:'近接DPS', skillName:'ボイル・バースト', skillDesc:'近接にヤケドDoTを付与。Lv3で2秒の継続炎上ダメージへ強化。' },
   // U - Uncommon
-  fan:       { n:'扇風機',           em:'🌀', r:'U',  rc:'#81d4fa', baseCost:55,  req:'cord',   ability:'pushback',   personality:'自由奔放',         quote:'「風に乗れ！どこへでも飛ばしてやる！」' },
-  lamp:      { n:'デスクライト',     em:'💡', r:'U',  rc:'#fff176', baseCost:50,  req:'kettle',   personality:'明察眼',           quote:'「暗闇に光を当てれば、真実が見える。」' },
-  toaster:   { n:'トースター',       em:'🍞', r:'U',  rc:'#ff8a65', baseCost:60,  req:'kettle', ability:'firetrap',   personality:'職人気質',         quote:'「焦がさず、しかし確実に仕留める！」' },
+  fan:       { n:'扇風機',           em:'🌀', r:'U',  rc:'#81d4fa', baseCost:55,  req:'cord',     ability:'pushback',   personality:'自由奔放', quote:'「風に乗れ！どこへでも飛ばしてやる！」', role:'CC/ノックバック', skillName:'ガストブロウ', skillDesc:'敵を後方へ押し戻す。Lv3で10秒毎に範囲全敵をスタートまで吹き飛ばす。' },
+  lamp:      { n:'デスクライト',     em:'💡', r:'U',  rc:'#fff176', baseCost:50,  req:'kettle',   personality:'明察眼',           quote:'「暗闇に光を当てれば、真実が見える。」', role:'長射程DPS', skillName:'スポットレイ', skillDesc:'光線で単体狙撃。Lv3で射程+30%・ステルス無効化。' },
+  toaster:   { n:'トースター',       em:'🍞', r:'U',  rc:'#ff8a65', baseCost:60,  req:'kettle',   ability:'firetrap',   personality:'職人気質', quote:'「焦がさず、しかし確実に仕留める！」', role:'設置型DPS', skillName:'ファイアトラップ', skillDesc:'地面に火炎トラップを置く。Lv3で踏んだ敵に大ダメージ。' },
   // R - Rare
-  vacuum:    { n:'掃除機',           em:'🌪️', r:'R',  rc:'#a5d6a7', baseCost:85,  req:'cord',     personality:'完璧主義者',       quote:'「塵一つ残さない。それが私のポリシー。」' },
-  router:    { n:'ルーター',         em:'📡', r:'R',  rc:'#80cbc4', baseCost:90,  req:'lamp',     personality:'情報通',           quote:'「全ての情報は私を通る。繋がりは力だ。」' },
-  dryer:     { n:'ドライヤー',       em:'💨', r:'R',  rc:'#ef9a9a', baseCost:80,  req:'fan',      personality:'快活',             quote:'「熱風で吹き飛ばせ！元気が一番！」' },
+  vacuum:    { n:'掃除機',           em:'🌪️', r:'R',  rc:'#a5d6a7', baseCost:85,  req:'cord',     personality:'完璧主義者', quote:'「塵一つ残さない。それが私のポリシー。」', role:'CC/吸引', skillName:'バキュームプル', skillDesc:'敵をコース上で引き戻す。Lv3で吸引範囲+15%・自動追尾。' },
+  router:    { n:'ルーター',         em:'📡', r:'R',  rc:'#80cbc4', baseCost:90,  req:'lamp',     personality:'情報通',           quote:'「全ての情報は私を通る。繋がりは力だ。」', role:'バフ/サポート', skillName:'WiFiオーラ', skillDesc:'周囲の味方の攻速をUP。Lv3でメッシュ化し効果範囲が大幅拡大。' },
+  dryer:     { n:'ドライヤー',       em:'💨', r:'R',  rc:'#ef9a9a', baseCost:80,  req:'fan',      personality:'快活',             quote:'「熱風で吹き飛ばせ！元気が一番！」', role:'熱風DPS', skillName:'ヒートブラスト', skillDesc:'熱風で連続ヒット。Lv3で範囲攻撃に変化、複数敵を同時に焼く。' },
   // E - Epic
-  fridge:    { n:'冷蔵庫',           em:'🧊', r:'E',  rc:'#64b5f6', baseCost:130, req:'vacuum',   personality:'冷静沈着',         quote:'「感情は凍らせておけ。冷静さが勝利を呼ぶ。」' },
-  aircon:    { n:'エアコン',         em:'❄️', r:'E',  rc:'#4fc3f7', baseCost:140, req:'fan',      personality:'冷静沈着',         quote:'「絶対零度の冷気で敵の動きを封じろ！」' },
-  speaker:   { n:'スピーカー',       em:'🔊', r:'E',  rc:'#ce93d8', baseCost:120, req:'router', ability:'slowfield',  personality:'天才型',           quote:'「音の波動が世界を変える。聴け、この轟き！」' },
+  fridge:    { n:'冷蔵庫',           em:'🧊', r:'E',  rc:'#64b5f6', baseCost:130, req:'vacuum',   personality:'冷静沈着', quote:'「感情は凍らせておけ。冷静さが勝利を呼ぶ。」', role:'CC/凍結', skillName:'アブソリュートフリーズ', skillDesc:'敵を凍結させ停止。Lv3で凍結時間が延長＋ボスにも有効。' },
+  aircon:    { n:'エアコン',         em:'❄️', r:'E',  rc:'#4fc3f7', baseCost:140, req:'fan',      personality:'冷静沈着', quote:'「絶対零度の冷気で敵の動きを封じろ！」', role:'範囲CC', skillName:'クライオフィールド', skillDesc:'広範囲を冷気で覆い全敵を低速化。Lv3で凍結チャンスも付与。' },
+  speaker:   { n:'スピーカー',       em:'🔊', r:'E',  rc:'#ce93d8', baseCost:120, req:'router',   ability:'slowfield',  personality:'天才型', quote:'「音の波動が世界を変える。聴け、この轟き！」', role:'デバフ/スロー', skillName:'ソニックウェーブ', skillDesc:'音波で敵をスロウ化。Lv3で範囲スロウフィールドを常時展開。' },
   // L - Legend
-  microwave: { n:'電子レンジ',       em:'🔥', r:'L',  rc:'#ff7043', baseCost:190, req:'toaster',  personality:'熱血漢',           quote:'「マイクロ波で内側から燃やし尽くせ！」' },
-  washer:    { n:'洗濯機',           em:'🌊', r:'L',  rc:'#26c6da', baseCost:200, req:'fridge',   personality:'頼れる兄貴',       quote:'「汚れも敵も全部ぶん回して洗い流す！」' },
+  microwave: { n:'電子レンジ',       em:'🔥', r:'L',  rc:'#ff7043', baseCost:190, req:'toaster',  personality:'熱血漢', quote:'「マイクロ波で内側から燃やし尽くせ！」', role:'重DPS', skillName:'マイクロインフェルノ', skillDesc:'内側から焼く高火力。Lv3で核熱化し残留炎上ダメージ。' },
+  washer:    { n:'洗濯機',           em:'🌊', r:'L',  rc:'#26c6da', baseCost:200, req:'fridge',   personality:'頼れる兄貴', quote:'「汚れも敵も全部ぶん回して洗い流す！」', role:'タンク/AOE', skillName:'スピンドレイン', skillDesc:'渦巻きで敵を巻き込みダメージ。Lv3で渦が拡大し基地HPも回復。' },
   // M - Mythic
-  theater:   { n:'ホームシアター',   em:'🎬', r:'M',  rc:'#e91e63', baseCost:280, req:'router',   personality:'カリスマ',         quote:'「我々の戦いは、最高の映画より劇的だ！」' },
-  projector: { n:'プロジェクター',   em:'📽️', r:'M',  rc:'#ba68c8', baseCost:260, req:'speaker',  personality:'幻想家',           quote:'「光と影で描く。これが究極の幻術だ！」' },
+  theater:   { n:'ホームシアター',   em:'🎬', r:'M',  rc:'#e91e63', baseCost:280, req:'router',   personality:'カリスマ', quote:'「我々の戦いは、最高の映画より劇的だ！」', role:'全体バフ', skillName:'シアターモード', skillDesc:'戦場全体に攻速バフ。Lv3で音波ダメージも追加し全味方を底上げ。' },
+  projector: { n:'プロジェクター',   em:'📽️', r:'M',  rc:'#ba68c8', baseCost:260, req:'speaker',  personality:'幻想家', quote:'「光と影で描く。これが究極の幻術だ！」', role:'貫通DPS', skillName:'ホログラムビーム', skillDesc:'光線で複数貫通。Lv3でレーザー化し列を一掃。' },
   // G - Galaxy
-  superpc:   { n:'スーパーPC',       em:'💻', r:'G',  rc:'#00e5ff', baseCost:380, req:'theater',  personality:'超論理型',         quote:'「計算完了。敵の消滅確率：99.97%。」' },
-  tesla:     { n:'テスラコイル',     em:'⚡', r:'G',  rc:'#7c4dff', baseCost:400, req:'dryer',  ability:'chainlightning', personality:'狂天才', quote:'「神をも超える電撃！食らえ、バカ共！」' },
+  superpc:   { n:'スーパーPC',       em:'💻', r:'G',  rc:'#00e5ff', baseCost:380, req:'theater',  personality:'超論理型', quote:'「計算完了。敵の消滅確率：99.97%。」', role:'最適化DPS', skillName:'クァンタムカリキュレート', skillDesc:'最適解で敵を撃破。Lv3で次元崩壊弾により範囲全消滅級ダメージ。' },
+  tesla:     { n:'テスラコイル',     em:'⚡', r:'G',  rc:'#7c4dff', baseCost:400, req:'dryer',    ability:'chainlightning', personality:'狂天才', quote:'「神をも超える電撃！食らえ、バカ共！」', role:'チェーンDPS', skillName:'チェーンライトニング', skillDesc:'雷が複数敵を連鎖。Lv3でヒット数+1、雷の跳躍範囲も拡大。' },
   // OD - Overdrive
-  plasma:    { n:'プラズマキャノン', em:'🔱', r:'OD', rc:'#ffd700', baseCost:500, req:'superpc',  personality:'破壊神',           quote:'「宇宙の終わりを見たいか？これが答えだ！！」' },
+  plasma:    { n:'プラズマキャノン', em:'🔱', r:'OD', rc:'#ffd700', baseCost:500, req:'superpc',  personality:'破壊神', quote:'「宇宙の終わりを見たいか？これが答えだ！！」', role:'AOE殲滅', skillName:'プラズマアポカリプス', skillDesc:'全体貫通の破壊光線。Lv3で「世界を焼く」発動、AOE+30%。' },
 };
 
 export const RCOLOR = Object.fromEntries(
