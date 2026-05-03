@@ -62,6 +62,7 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
   const lastTs = useRef<number | null>(null);
   const raf = useRef<number>(0);
   const fireFlashes = useRef<Record<string, number>>({});
+  const lastProgressLog = useRef('');
 
   // 電力計算
   const power = useMemo(() => {
@@ -183,7 +184,11 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
 
   // 進行条件
   useEffect(() => {
-    logTutorial('step-check', { step, enemies: enemies.length, hp, grid: Object.keys(grid) });
+    const progressSignature = `${step}:${enemies.length}:${hp}:${Object.keys(grid).sort().join('|')}`;
+    if (lastProgressLog.current !== progressSignature) {
+      lastProgressLog.current = progressSignature;
+      logTutorial('step-check', { step, enemies: enemies.length, hp, grid: Object.keys(grid) });
+    }
     // STEP2: 敵が一定距離まで来たら → STEP3 へ進ませる（動かない違和感を体験させた後）
     if (step === 2) {
       const e = enemies[0];
