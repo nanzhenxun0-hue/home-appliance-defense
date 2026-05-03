@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TDEFS, UPS } from '@/game/constants';
+import { TOWER_USAGE } from '@/game/towerUsage';
 import { RARITY_COLOR, RARITY_LABEL, RARITY_ORDER, PERSONALITY_BONUS, type TowerID, type Rarity } from '@/game/types';
 
 interface Props {
@@ -200,6 +201,17 @@ const CompendiumScreen = ({ owned, onBack }: Props) => {
                           </div>
                         )}
 
+                        {/* 扱い方ガイド */}
+                        {TOWER_USAGE[selected] && (
+                          <div className="mb-3 p-2 rounded-lg space-y-1.5"
+                            style={{ background: '#0ea5e910', border: '1px solid #0ea5e955' }}>
+                            <div className="text-[9px] text-game-blue font-black mb-1">📖 扱い方ガイド</div>
+                            <UsageRow icon="📍" label="配置" text={TOWER_USAGE[selected].placement} />
+                            <UsageRow icon="🔗" label="シナジー" text={TOWER_USAGE[selected].synergy} />
+                            <UsageRow icon="💡" label="コツ" text={TOWER_USAGE[selected].tips} />
+                          </div>
+                        )}
+
                         {/* Upgrade table */}
                         <div className="mb-2">
                           <div className="text-[10px] text-muted-foreground font-bold mb-1">⬆ アップグレード</div>
@@ -253,6 +265,16 @@ const Stat = ({ label, val, col }: { label: string; val: number | string; col: s
   <div className="flex items-center gap-1 px-1 py-0.5 rounded bg-black/30">
     <span className="text-[8px] text-muted-foreground">{label}</span>
     <span className="font-mono font-bold" style={{ color: col }}>{val}</span>
+  </div>
+);
+
+const UsageRow = ({ icon, label, text }: { icon: string; label: string; text: string }) => (
+  <div className="flex gap-1.5">
+    <span className="text-[11px] flex-shrink-0">{icon}</span>
+    <div className="flex-1">
+      <span className="text-[9px] text-game-blue font-bold mr-1">{label}</span>
+      <span className="text-[10px] text-foreground/85 leading-snug">{text}</span>
+    </div>
   </div>
 );
 
