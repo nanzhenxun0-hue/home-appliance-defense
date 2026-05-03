@@ -25,8 +25,8 @@ describe('tutorial STEP3 extension-cord placement', () => {
   });
 
   it('rescues an occupied-cell mis-tap by using the next open highlighted neighbor', () => {
-    const grid: Record<string, TutorialUnitType> = { '2,0': 'kettle', '1,0': 'cord' };
-    const result = resolveTutorialPlacement({ step: 6, x: 2, y: 2, grid, pathKeys });
+    const grid: Record<string, TutorialUnitType> = { '2,0': 'kettle', '1,0': 'cord', '3,2': 'kettle' };
+    const result = resolveTutorialPlacement({ step: 6, x: 3, y: 2, grid, pathKeys });
 
     expect(result.ok).toBe(true);
     expect(result.unit).toBe('cord');
