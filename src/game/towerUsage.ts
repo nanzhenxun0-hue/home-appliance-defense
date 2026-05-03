@@ -38,6 +38,11 @@ export const TOWER_USAGE: Record<TowerID, TowerUsage> = {
     synergy: '電子レンジと並べて炎上ダメージを重ね掛け。',
     tips: 'Lv3で踏むと大ダメージ。一気に湧くウェーブで真価を発揮。',
   },
+  ricecooker: {
+    placement: '序盤の攻撃役の後ろ。蒸気範囲が道に重なる位置。',
+    synergy: 'ケトル→炊飯器→オーブン→IHの熱チェーン起点。',
+    tips: '供給も少し増やせる万能枠。Lv3は撃破時回復で長期戦に強い。',
+  },
   vacuum: {
     placement: '道の中盤。引き戻しで敵をループさせる。',
     synergy: 'プラズマやテスラの射程内に引き込んで殲滅。',
@@ -52,6 +57,11 @@ export const TOWER_USAGE: Record<TowerID, TowerUsage> = {
     placement: '敵が密集する直線。範囲熱風を活かす。',
     synergy: 'テスラへの素材としても重要。ルーターで攻速UP。',
     tips: 'Lv3で範囲攻撃化。複数体まとめて処理可能。',
+  },
+  dishwasher: {
+    placement: '妨害敵が通る中盤。広めの水流で足を止める。',
+    synergy: '掃除機・洗濯機と並べて水流制御ラインを作る。',
+    tips: 'Lv3で詰まりや腐食を洗浄。事故りやすい後半の保険。',
   },
   fridge: {
     placement: 'ボス戦のキー位置。凍結で無力化。',
@@ -68,6 +78,11 @@ export const TOWER_USAGE: Record<TowerID, TowerUsage> = {
     synergy: 'プロジェクターやテスラの貫通DPSと最強コンボ。',
     tips: 'Lv3でスロウフィールド常時展開。射程3.0以上に複数敵がいるとき強力。',
   },
+  oven: {
+    placement: '曲がり角の少し手前。敵が範囲内に長く残る場所。',
+    synergy: 'トースター・電子レンジ・IHと炎上ダメージを重ねる。',
+    tips: 'Lv3は炎上敵へ追撃。先にトースターで燃やすと火力が跳ねる。',
+  },
   microwave: {
     placement: '中央の対ボス決戦ポイント。低速だが超火力。',
     synergy: 'フリッジで凍結→電子レンジで一撃必殺。',
@@ -78,6 +93,11 @@ export const TOWER_USAGE: Record<TowerID, TowerUsage> = {
     synergy: '吸引（掃除機）と組み合わせて敵を渦で巻き込む。',
     tips: 'Lv3で基地HP回復。最後の砦として置こう。',
   },
+  coffeemaker: {
+    placement: '攻撃家電の密集地帯。範囲バフが全員に届く中心。',
+    synergy: 'ルーター・シアターと重ねて攻速を限界まで上げる。',
+    tips: '攻撃しない時間がある分、強いDPSを2体以上巻き込む配置が必須。',
+  },
   theater: {
     placement: '攻撃ユニットの大集団の中央。全体バフ。',
     synergy: 'ルーターと重ねて攻速バフを最大化。',
@@ -87,6 +107,11 @@ export const TOWER_USAGE: Record<TowerID, TowerUsage> = {
     placement: '直線通路に正対。貫通光線が刺さる。',
     synergy: 'スピーカーのスロウで敵を直線上に列ばせる。',
     tips: 'Lv3でレーザー化。一直線の敵を全滅させられる。',
+  },
+  ihcooker: {
+    placement: '熱系ユニットの近く。道の内側で複数方向に届く位置。',
+    synergy: '炊飯器→オーブン→IH→テスラ→プラズマの6段チェーン。',
+    tips: 'Lv3の追撃リングは炎上前提。熱系を先に置くほど強い。',
   },
   superpc: {
     placement: '中央の最重要拠点。最適化された超火力。',
