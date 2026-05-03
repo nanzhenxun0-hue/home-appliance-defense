@@ -38,20 +38,25 @@ export const TDEFS: Record<TowerID, TowerDef> = {
   fan:       { n:'扇風機',           em:'🌀', r:'U',  rc:'#81d4fa', baseCost:55,  req:'cord',     ability:'pushback',   personality:'自由奔放', quote:'「風に乗れ！どこへでも飛ばしてやる！」', role:'CC/ノックバック', skillName:'ガストブロウ', skillDesc:'敵を後方へ押し戻す。Lv3で10秒毎に範囲全敵をスタートまで吹き飛ばす。' },
   lamp:      { n:'デスクライト',     em:'💡', r:'U',  rc:'#fff176', baseCost:50,  req:'kettle',   personality:'明察眼',           quote:'「暗闇に光を当てれば、真実が見える。」', role:'長射程DPS', skillName:'スポットレイ', skillDesc:'光線で単体狙撃。Lv3で射程+30%・ステルス無効化。' },
   toaster:   { n:'トースター',       em:'🍞', r:'U',  rc:'#ff8a65', baseCost:60,  req:'kettle',   ability:'firetrap',   personality:'職人気質', quote:'「焦がさず、しかし確実に仕留める！」', role:'設置型DPS', skillName:'ファイアトラップ', skillDesc:'地面に火炎トラップを置く。Lv3で踏んだ敵に大ダメージ。' },
+  ricecooker:{ n:'炊飯器',           em:'🍚', r:'U',  rc:'#f5f5f5', baseCost:65,  req:'kettle',   ability:'steam',      personality:'縁の下の力持ち', quote:'「蒸気で包めば、家はまだ戦える。」', role:'蒸気DoT/補助', skillName:'スチームリカバー', skillDesc:'蒸気で敵に継続ダメージ。Lv3で撃破時に基地HPを少し回復。' },
   // R - Rare
   vacuum:    { n:'掃除機',           em:'🌪️', r:'R',  rc:'#a5d6a7', baseCost:85,  req:'cord',     personality:'完璧主義者', quote:'「塵一つ残さない。それが私のポリシー。」', role:'CC/吸引', skillName:'バキュームプル', skillDesc:'敵をコース上で引き戻す。Lv3で吸引範囲+15%・自動追尾。' },
   router:    { n:'ルーター',         em:'📡', r:'R',  rc:'#80cbc4', baseCost:90,  req:'lamp',     personality:'情報通',           quote:'「全ての情報は私を通る。繋がりは力だ。」', role:'バフ/サポート', skillName:'WiFiオーラ', skillDesc:'周囲の味方の攻速をUP。Lv3でメッシュ化し効果範囲が大幅拡大。' },
   dryer:     { n:'ドライヤー',       em:'💨', r:'R',  rc:'#ef9a9a', baseCost:80,  req:'fan',      personality:'快活',             quote:'「熱風で吹き飛ばせ！元気が一番！」', role:'熱風DPS', skillName:'ヒートブラスト', skillDesc:'熱風で連続ヒット。Lv3で範囲攻撃に変化、複数敵を同時に焼く。' },
+  dishwasher:{ n:'食洗機',           em:'🍽️', r:'R',  rc:'#4dd0e1', baseCost:95,  req:'cord',     ability:'wash',       personality:'完璧主義者', quote:'「汚れた敵は、洗い流すだけ。」', role:'浄化/スロー', skillName:'ジェットウォッシュ', skillDesc:'水流で敵を減速。Lv3で詰まり・腐食などの妨害を洗浄し味方を復帰。' },
   // E - Epic
   fridge:    { n:'冷蔵庫',           em:'🧊', r:'E',  rc:'#64b5f6', baseCost:130, req:'vacuum',   personality:'冷静沈着', quote:'「感情は凍らせておけ。冷静さが勝利を呼ぶ。」', role:'CC/凍結', skillName:'アブソリュートフリーズ', skillDesc:'敵を凍結させ停止。Lv3で凍結時間が延長＋ボスにも有効。' },
   aircon:    { n:'エアコン',         em:'❄️', r:'E',  rc:'#4fc3f7', baseCost:140, req:'fan',      personality:'冷静沈着', quote:'「絶対零度の冷気で敵の動きを封じろ！」', role:'範囲CC', skillName:'クライオフィールド', skillDesc:'広範囲を冷気で覆い全敵を低速化。Lv3で凍結チャンスも付与。' },
   speaker:   { n:'スピーカー',       em:'🔊', r:'E',  rc:'#ce93d8', baseCost:120, req:'router',   ability:'slowfield',  personality:'天才型', quote:'「音の波動が世界を変える。聴け、この轟き！」', role:'デバフ/スロー', skillName:'ソニックウェーブ', skillDesc:'音波で敵をスロウ化。Lv3で範囲スロウフィールドを常時展開。' },
+  oven:       { n:'オーブン',         em:'🥧', r:'E',  rc:'#ff7043', baseCost:145, req:'toaster',  ability:'bake',       personality:'職人気質', quote:'「予熱は完了。ここから一気に焼き上げる。」', role:'範囲炎上DPS', skillName:'ベイクゾーン', skillDesc:'範囲内の敵を焼き続ける。Lv3で炎上中の敵へのダメージが増加。' },
   // L - Legend
   microwave: { n:'電子レンジ',       em:'🔥', r:'L',  rc:'#ff7043', baseCost:190, req:'toaster',  personality:'熱血漢', quote:'「マイクロ波で内側から燃やし尽くせ！」', role:'重DPS', skillName:'マイクロインフェルノ', skillDesc:'内側から焼く高火力。Lv3で核熱化し残留炎上ダメージ。' },
   washer:    { n:'洗濯機',           em:'🌊', r:'L',  rc:'#26c6da', baseCost:200, req:'fridge',   personality:'頼れる兄貴', quote:'「汚れも敵も全部ぶん回して洗い流す！」', role:'タンク/AOE', skillName:'スピンドレイン', skillDesc:'渦巻きで敵を巻き込みダメージ。Lv3で渦が拡大し基地HPも回復。' },
+  coffeemaker:{ n:'コーヒーメーカー', em:'☕', r:'L',  rc:'#8d6e63', baseCost:185, req:'router',   ability:'caffeine',   personality:'情報通', quote:'「眠気を飛ばす。判断速度も火力だ。」', role:'攻速バフ/集中', skillName:'カフェインブースト', skillDesc:'周囲の味方を加速。Lv3で一時的に攻撃間隔をさらに短縮する覚醒を付与。' },
   // M - Mythic
   theater:   { n:'ホームシアター',   em:'🎬', r:'M',  rc:'#e91e63', baseCost:280, req:'router',   personality:'カリスマ', quote:'「我々の戦いは、最高の映画より劇的だ！」', role:'全体バフ', skillName:'シアターモード', skillDesc:'戦場全体に攻速バフ。Lv3で音波ダメージも追加し全味方を底上げ。' },
   projector: { n:'プロジェクター',   em:'📽️', r:'M',  rc:'#ba68c8', baseCost:260, req:'speaker',  personality:'幻想家', quote:'「光と影で描く。これが究極の幻術だ！」', role:'貫通DPS', skillName:'ホログラムビーム', skillDesc:'光線で複数貫通。Lv3でレーザー化し列を一掃。' },
+  ihcooker:   { n:'IHクッキングヒーター', em:'🍳', r:'M',  rc:'#ffca28', baseCost:270, req:'oven',     ability:'induction',  personality:'超論理型', quote:'「熱は一点に集める。無駄な火力など存在しない。」', role:'誘導熱DPS', skillName:'インダクションリング', skillDesc:'磁場で敵を焼き、雷・炎チェーンを増幅。Lv3で範囲内の炎上敵へ追撃。' },
   // G - Galaxy
   superpc:   { n:'スーパーPC',       em:'💻', r:'G',  rc:'#00e5ff', baseCost:380, req:'theater',  personality:'超論理型', quote:'「計算完了。敵の消滅確率：99.97%。」', role:'最適化DPS', skillName:'クァンタムカリキュレート', skillDesc:'最適解で敵を撃破。Lv3で次元崩壊弾により範囲全消滅級ダメージ。' },
   tesla:     { n:'テスラコイル',     em:'⚡', r:'G',  rc:'#7c4dff', baseCost:400, req:'dryer',    ability:'chainlightning', personality:'狂天才', quote:'「神をも超える電撃！食らえ、バカ共！」', role:'チェーンDPS', skillName:'チェーンライトニング', skillDesc:'雷が複数敵を連鎖。Lv3でヒット数+1、雷の跳躍範囲も拡大。' },
