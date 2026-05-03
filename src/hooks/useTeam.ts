@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import type { TowerID } from '@/game/types';
 
 const STORAGE_KEY = 'kaden-td-team';
-const MAX_TEAM = 5;
+const MAX_TEAM = 6;
 
 const loadTeam = (): TowerID[] => {
   try {
