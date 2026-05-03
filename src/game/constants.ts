@@ -137,6 +137,11 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     { c:60,  pg:0, pc:3, dmg:30, rng:3.4, spd:1.5, lbl:'サウンドバー',   eff:'攻速UP' },
     { c:300, pg:0, pc:4, dmg:45, rng:4.0, spd:1.8, lbl:'重低音スピーカー',eff:'★スロウフィールド', abilityUnlock:true },
   ],
+  oven: [
+    { c:0,   pg:0, pc:3, dmg:32, rng:2.4, spd:0.9, lbl:'オーブン',       eff:'範囲炎上' },
+    { c:80,  pg:0, pc:4, dmg:52, rng:2.8, spd:1.1, lbl:'コンベクション', eff:'炎上強化' },
+    { c:360, pg:0, pc:5, dmg:78, rng:3.2, spd:1.4, lbl:'石窯オーブン',   eff:'★炎上追撃', abilityUnlock:true },
+  ],
   microwave: [
     { c:0,   pg:0, pc:4, dmg:50, rng:2.0, spd:0.6, lbl:'電子レンジ',     eff:'超高火力' },
     { c:60,  pg:0, pc:5, dmg:80, rng:2.3, spd:0.8, lbl:'オーブンレンジ', eff:'攻速UP' },
@@ -147,6 +152,11 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     { c:60,  pg:0, pc:5, dmg:55, rng:2.8, spd:1.5, lbl:'ドラム式',       eff:'攻速UP' },
     { c:300, pg:0, pc:6, dmg:85, rng:3.2, spd:1.8, lbl:'業務用洗濯機',   eff:'★渦巻き地獄！', abilityUnlock:true },
   ],
+  coffeemaker: [
+    { c:0,   pg:0, pc:3, dmg:0,  rng:3.0, spd:0,   lbl:'コーヒーメーカー', eff:'周囲攻速+25%', bf:1.25 },
+    { c:80,  pg:0, pc:4, dmg:0,  rng:3.6, spd:0,   lbl:'エスプレッソ',     eff:'攻速+40%', bf:1.40 },
+    { c:360, pg:0, pc:5, dmg:12, rng:4.2, spd:1.1, lbl:'業務用マシン',     eff:'★覚醒+追撃', bf:1.60, abilityUnlock:true },
+  ],
   theater: [
     { c:0,   pg:0, pc:5, dmg:0,  rng:4.0, spd:0,   lbl:'ホームシアター', eff:'全体攻速+30%', bf:1.30 },
     { c:60,  pg:0, pc:6, dmg:0,  rng:5.0, spd:0,   lbl:'IMAXシアター',   eff:'攻速+50%', bf:1.50 },
@@ -156,6 +166,11 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     { c:0,   pg:0, pc:4, dmg:25, rng:3.5, spd:0.8, lbl:'プロジェクター', eff:'光線攻撃' },
     { c:60,  pg:0, pc:5, dmg:42, rng:4.0, spd:1.1, lbl:'4Kプロジェクター',eff:'攻速UP' },
     { c:300, pg:0, pc:6, dmg:65, rng:4.5, spd:1.4, lbl:'レーザープロジェクター',eff:'★貫通光線！', abilityUnlock:true },
+  ],
+  ihcooker: [
+    { c:0,   pg:0, pc:5, dmg:48, rng:2.8, spd:1.1, lbl:'IHヒーター',     eff:'誘導熱' },
+    { c:90,  pg:0, pc:6, dmg:76, rng:3.2, spd:1.4, lbl:'高火力IH',       eff:'雷炎増幅' },
+    { c:380, pg:0, pc:8, dmg:118,rng:3.8, spd:1.8, lbl:'三口IH',         eff:'★炎上追撃リング', abilityUnlock:true },
   ],
   superpc: [
     { c:0,   pg:0, pc:6, dmg:60, rng:3.5, spd:1.5, lbl:'スーパーPC',     eff:'レーザー攻撃' },
