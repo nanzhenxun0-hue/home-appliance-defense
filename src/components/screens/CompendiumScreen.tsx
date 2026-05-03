@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TDEFS, UPS } from '@/game/constants';
+import { TOWER_USAGE } from '@/game/towerUsage';
 import { RARITY_COLOR, RARITY_LABEL, RARITY_ORDER, PERSONALITY_BONUS, type TowerID, type Rarity } from '@/game/types';
 
 interface Props {
