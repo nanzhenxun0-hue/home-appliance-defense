@@ -23,7 +23,8 @@ export type TowerID =
   | 'microwave' | 'washer'                // L
   | 'theater' | 'projector'               // M
   | 'superpc' | 'tesla'                   // G
-  | 'plasma';                             // OD
+  | 'plasma'                              // OD
+  | 'ricecooker' | 'dishwasher' | 'oven' | 'coffeemaker' | 'ihcooker';
 
 export type Rarity = 'C' | 'U' | 'R' | 'E' | 'L' | 'M' | 'G' | 'OD';
 
@@ -72,7 +73,7 @@ export interface TowerDef {
   rc: string;
   baseCost: number;
   req: TowerID | null;
-  ability?: 'pushback' | 'firetrap' | 'slowfield' | 'chainlightning' | 'energyshield';
+  ability?: 'pushback' | 'firetrap' | 'slowfield' | 'chainlightning' | 'energyshield' | 'steam' | 'wash' | 'bake' | 'caffeine' | 'induction';
   personality?: PersonalityType;
   quote?: string;
   /** 固有スキル名（図鑑/UI表示用） */

@@ -358,6 +358,24 @@ export const tickGame = (s: GameState, dt: number): void => {
       }
     }
 
+    // Dishwasher Lv3 ability: wash away clogs / disables nearby
+    if (cell.tid === 'dishwasher' && cell.lv >= 2 && S.abilityUnlock) {
+      const abKey = `ability_${key}`;
+      s.abilityTimers[abKey] = (s.abilityTimers[abKey] || 8) - dt;
+      if (s.abilityTimers[abKey] <= 0) {
+        s.abilityTimers[abKey] = 8;
+        const [c, r] = key.split(',').map(Number);
+        for (const k of Object.keys(s.grid)) {
+          const [gc, gr] = k.split(',').map(Number);
+          if (Math.hypot(gc - c, gr - r) <= S.rng) {
+            s.cloggedTowers.delete(k);
+            s.disabledTowers.delete(k);
+          }
+        }
+        s.effs.push({ id: uid(), x: c * CELL + CELL/2, y: r * CELL + CELL/2, txt: '🍽️洗浄！', life: 1.2, ml: 1.2, col: '#4dd0e1' });
+      }
+    }
+
     if (!S.spd || !S.dmg) continue;
 
     const synFx = getSynergyEffects(s.team, cell.tid);
@@ -371,8 +389,8 @@ export const tickGame = (s: GameState, dt: number): void => {
     const [c, r] = key.split(',').map(Number);
     const cx = c * CELL + CELL / 2, cy = r * CELL + CELL / 2, range = S.rng * CELL;
     let rm = 1;
-    for (const [k2, c2] of Object.entries(s.grid)) {
-      if (c2.tid !== 'router' && c2.tid !== 'theater') continue;
+      for (const [k2, c2] of Object.entries(s.grid)) {
+        if (c2.tid !== 'router' && c2.tid !== 'theater' && c2.tid !== 'coffeemaker') continue;
       if (!en.has(k2)) continue;
       const [rc, rr] = k2.split(',').map(Number);
       const rs = st(c2.tid, c2.lv);
@@ -397,14 +415,16 @@ export const tickGame = (s: GameState, dt: number): void => {
         fan:'#b3e5fc', vacuum:'#ce93d8', washer:'#26c6da', lamp:'#fff176',
         superpc:'#00e5ff', plasma:'#ffd700', theater:'#e91e63',
         toaster:'#ff8a65', dryer:'#ef9a9a', speaker:'#ce93d8', projector:'#ba68c8',
-        tesla:'#7c4dff',
+        tesla:'#7c4dff', ricecooker:'#f5f5f5', dishwasher:'#4dd0e1', oven:'#ff7043',
+        coffeemaker:'#8d6e63', ihcooker:'#ffca28',
       };
       s.projs.push({ id: uid(), sx: cx, sy: cy, ex, ey, life: 0.18, col: projCol[cell.tid] || '#fff' });
-      if (cell.tid === 'kettle' || cell.tid === 'microwave' || cell.tid === 'toaster' || cell.tid === 'dryer') {
+      if (cell.tid === 'kettle' || cell.tid === 'microwave' || cell.tid === 'toaster' || cell.tid === 'dryer' || cell.tid === 'ricecooker' || cell.tid === 'oven' || cell.tid === 'ihcooker') {
         tgt.burning = 3; tgt.burnT = 0.5;
       }
       if (cell.tid === 'fridge' || cell.tid === 'aircon') tgt.frozen = 1.5;
-      if (cell.tid === 'speaker' && cell.lv >= 2) tgt.frozen = 0.5; // slow field
+      if ((cell.tid === 'speaker' && cell.lv >= 2) || cell.tid === 'dishwasher') tgt.frozen = 0.5; // slow field
+      if (cell.tid === 'ihcooker' && cell.lv >= 2 && tgt.burning > 0) tgt.hp -= Math.ceil(synDmg * 0.35);
       if (cell.tid === 'fan' || cell.tid === 'vacuum' || cell.tid === 'washer') {
         const bk = cell.tid === 'fan' ? 0.45 : 0.22;
         tgt.pr -= bk;

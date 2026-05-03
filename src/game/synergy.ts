@@ -17,7 +17,7 @@ export const SYNERGIES: Synergy[] = [
   {
     id: 'kitchen',
     name: '🍳 キッチン連合',
-    members: ['kettle', 'toaster', 'fridge', 'microwave'],
+    members: ['kettle', 'toaster', 'fridge', 'microwave', 'ricecooker', 'oven', 'ihcooker'],
     minCount: 2,
     desc: '火力系の攻撃力+25%',
     effect: { dmgMult: 1.25 },
@@ -33,7 +33,7 @@ export const SYNERGIES: Synergy[] = [
   {
     id: 'network',
     name: '📶 ネットワーク',
-    members: ['router', 'superpc', 'theater', 'speaker'],
+    members: ['router', 'superpc', 'theater', 'speaker', 'coffeemaker'],
     minCount: 2,
     desc: 'バフ系の消費電力-30%',
     effect: { powerDiscount: 0.30 },
@@ -73,10 +73,18 @@ export const SYNERGIES: Synergy[] = [
   {
     id: 'heatwave',
     name: '🔥 ヒートウェーブ',
-    members: ['toaster', 'dryer', 'microwave'],
+    members: ['toaster', 'dryer', 'microwave', 'oven', 'ihcooker', 'ricecooker'],
     minCount: 2,
     desc: '熱系の攻撃力+30%',
     effect: { dmgMult: 1.30 },
+  },
+  {
+    id: 'washline',
+    name: '🍽️ 洗浄ライン',
+    members: ['dishwasher', 'washer', 'vacuum', 'fridge'],
+    minCount: 2,
+    desc: '洗浄・吸引系の攻速+18%・消費-10%',
+    effect: { spdMult: 1.18, powerDiscount: 0.10 },
   },
 ];
 

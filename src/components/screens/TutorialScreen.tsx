@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  getTutorialFallbackPlacement,
+  getTutorialRequiredUnit,
+  getTutorialTarget,
+  resolveTutorialPlacement,
+  shouldAdvanceAfterTutorialPlacement,
+  type TutorialStep,
+  type TutorialUnitType,
+} from '@/game/tutorialFlow';
 
 interface TutorialScreenProps {
   onComplete: () => void;
@@ -20,8 +29,12 @@ interface TutorialScreenProps {
  * STEP8: 卒業
  */
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-type UnitType = 'cord' | 'kettle';
+type Step = TutorialStep;
+type UnitType = TutorialUnitType;
+
+const logTutorial = (event: string, payload?: Record<string, unknown>) => {
+  console.debug(`[tutorial] ${event}`, payload ?? {});
+};
 
 const COLS = 5;
 const ROWS = 4;
@@ -49,6 +62,7 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
   const lastTs = useRef<number | null>(null);
   const raf = useRef<number>(0);
   const fireFlashes = useRef<Record<string, number>>({});
+  const lastProgressLog = useRef('');
 
   // 電力計算
   const power = useMemo(() => {
@@ -62,22 +76,8 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
   }, [grid]);
 
   // どのマスに置かせるか（光らせる）/ 何が置けるか
-  const targetCell = useMemo<{ x: number; y: number } | null>(() => {
-    if (step === 1) return { x: 2, y: 0 };  // ケトル
-    if (step === 3) return { x: 1, y: 0 };  // コード（ケトル隣）
-    if (step === 5) return { x: 2, y: 2 };  // 2体目ケトル試行
-    if (step === 6) return { x: 3, y: 2 };  // 追加コード
-    if (step === 7) return { x: 2, y: 2 };  // ケトル置き直し
-    return null;
-  }, [step]);
-
-  const requiredUnit: UnitType | null =
-    step === 1 ? 'kettle' :
-    step === 3 ? 'cord' :
-    step === 5 ? 'kettle' :
-    step === 6 ? 'cord' :
-    step === 7 ? 'kettle' :
-    null;
+  const targetCell = useMemo(() => getTutorialTarget(step), [step]);
+  const requiredUnit: UnitType | null = getTutorialRequiredUnit(step);
 
   // 敵スポーン
   useEffect(() => {
@@ -184,11 +184,17 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
 
   // 進行条件
   useEffect(() => {
+    const progressSignature = `${step}:${enemies.length}:${hp}:${Object.keys(grid).sort().join('|')}`;
+    if (lastProgressLog.current !== progressSignature) {
+      lastProgressLog.current = progressSignature;
+      logTutorial('step-check', { step, enemies: enemies.length, hp, grid: Object.keys(grid) });
+    }
     // STEP2: 敵が一定距離まで来たら → STEP3 へ進ませる（動かない違和感を体験させた後）
     if (step === 2) {
       const e = enemies[0];
       if (e && e.pi >= 2) {
         const t = setTimeout(() => {
+          logTutorial('advance', { from: 2, to: 3, reason: 'enemy_reached_midpoint' });
           setEnemies([]);
           setStep(3);
         }, 200);
@@ -199,23 +205,43 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
     if (step === 3) {
       const hasCord = Object.values(grid).includes('cord');
       if (hasCord) {
-        const t = setTimeout(() => setStep(4), 500);
+        const t = setTimeout(() => {
+          logTutorial('advance', { from: 3, to: 4, reason: 'cord_detected' });
+          setStep(4);
+        }, 500);
         return () => clearTimeout(t);
       }
+      const t = setTimeout(() => {
+        const fallback = getTutorialFallbackPlacement(3, grid, PATH_KEY);
+        if (!fallback) return;
+        logTutorial('auto-place', { step: 3, unit: 'cord', placeKey: fallback, reason: 'step3_timeout' });
+        setGrid(g => ({ ...g, [fallback]: 'cord' }));
+        setStep(4);
+      }, 8000);
+      return () => clearTimeout(t);
     }
     if (step === 4) {
       // 通常: 敵全滅で次へ。安全弁: 6秒経っても進まなければ強制進行
       if (enemies.length === 0) {
-        const t = setTimeout(() => setStep(5), 800);
+        const t = setTimeout(() => {
+          logTutorial('advance', { from: 4, to: 5, reason: 'enemy_clear' });
+          setStep(5);
+        }, 800);
         return () => clearTimeout(t);
       }
-      const t = setTimeout(() => setStep(5), 12000);
+      const t = setTimeout(() => {
+        logTutorial('advance', { from: 4, to: 5, reason: 'step4_timeout' });
+        setStep(5);
+      }, 12000);
       return () => clearTimeout(t);
     }
     if (step === 6) {
       const cordCount = Object.values(grid).filter(v => v === 'cord').length;
       if (cordCount >= 2) {
-        const t = setTimeout(() => setStep(7), 500);
+        const t = setTimeout(() => {
+          logTutorial('advance', { from: 6, to: 7, reason: 'second_cord_detected' });
+          setStep(7);
+        }, 500);
         return () => clearTimeout(t);
       }
     }
@@ -246,36 +272,38 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
   }, [step, enemies, hp, grid]);
 
   const place = (x: number, y: number) => {
-    if (PATH_KEY.has(`${x},${y}`)) return;
     if (!targetCell || !requiredUnit) return;
-    // 既に置いてあるセルは無視
-    if (grid[`${x},${y}`]) return;
-    // 寛容な配置: 目標から1マス以内ならOK（誤タップ救済）
-    const dx = Math.abs(x - targetCell.x);
-    const dy = Math.abs(y - targetCell.y);
-    if (dx > 1 || dy > 1) {
-      setShake(true); setTimeout(() => setShake(false), 250);
-      return;
-    }
+
+    const result = resolveTutorialPlacement({ step, x, y, grid, pathKeys: PATH_KEY });
+    logTutorial('place-attempt', { step, x, y, result });
 
     // STEP5: わざと電力不足で置けない演出
-    if (step === 5 && requiredUnit === 'kettle') {
+    if (result.reason === 'power_shortage') {
       setWarning('⚡ 電力が足りない！');
       setShake(true);
       setTimeout(() => setShake(false), 250);
       setTimeout(() => {
         setWarning(null);
+        logTutorial('advance', { from: 5, to: 6, reason: 'power_shortage_seen' });
         setStep(6);
       }, 1400);
       return;
     }
 
+    if (!result.ok || !result.placeKey || !result.unit) {
+      setShake(true); setTimeout(() => setShake(false), 250);
+      return;
+    }
+
     // 実際に置く位置（目標位置に固定して整列、空いていれば実タップ位置）
-    const placeKey = `${x},${y}`;
-    setGrid(g => ({ ...g, [placeKey]: requiredUnit }));
-    if (step === 1) setTimeout(() => setStep(2), 600);
-    if (step === 3) setTimeout(() => setStep(4), 600);
-    if (step === 6) setTimeout(() => setStep(7), 600);
+    setGrid(g => ({ ...g, [result.placeKey!]: result.unit! }));
+    const nextStep = shouldAdvanceAfterTutorialPlacement(step);
+    if (nextStep) {
+      setTimeout(() => {
+        logTutorial('advance', { from: step, to: nextStep, reason: 'placement_success', redirected: result.redirected });
+        setStep(nextStep);
+      }, 600);
+    }
   };
 
   const stepBanner = (() => {
@@ -303,6 +331,7 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
     // 目標から1マス以内も placeable（誤タップ救済）
     const inRange = targetCell && Math.abs(x - targetCell.x) <= 1 && Math.abs(y - targetCell.y) <= 1;
     const placeable = !!targetCell && !!requiredUnit && !isPath && !unit && !!inRange;
+    const isPowerPlacementStep = step === 3 || step === 6;
     const isKettleOn = unit === 'kettle' && power.ok;
     const isKettleOff = unit === 'kettle' && !power.ok;
 
@@ -310,18 +339,19 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
       <button
         key={key}
         onClick={() => place(x, y)}
-        disabled={!placeable && !isTarget}
+        disabled={!placeable && !isPowerPlacementStep}
         className="relative aspect-square rounded-md transition-all"
         style={{
-          background: isPath ? '#3a2c1a' : isTarget ? '#3a2c00' : '#1a1a2e',
-          border: `2px solid ${isTarget ? '#fbbf24' : isPath ? '#5a4030' : '#2a2a44'}`,
+          background: isPath ? '#3a2c1a' : isTarget ? '#3a2c00' : placeable && isPowerPlacementStep ? '#082f49' : '#1a1a2e',
+          border: `2px solid ${isTarget ? '#fbbf24' : placeable && isPowerPlacementStep ? '#38bdf8' : isPath ? '#5a4030' : '#2a2a44'}`,
           boxShadow: isTarget
             ? '0 0 24px #fbbf24cc, inset 0 0 16px #fbbf2477'
+            : placeable && isPowerPlacementStep ? '0 0 14px #38bdf866, inset 0 0 10px #38bdf833'
             : flash ? '0 0 12px #ff7043'
             : isKettleOn ? '0 0 14px #ffd54f, inset 0 0 8px #ffb74d88'
             : 'none',
-          animation: isTarget ? 'glow-pulse 0.9s infinite' : 'none',
-          cursor: placeable ? 'pointer' : 'default',
+          animation: isTarget || (placeable && isPowerPlacementStep) ? 'glow-pulse 0.9s infinite' : 'none',
+          cursor: placeable || isPowerPlacementStep ? 'pointer' : 'default',
           opacity: isKettleOff ? 0.45 : 1,
           filter: isKettleOff ? 'grayscale(0.7)' : 'none',
         }}
