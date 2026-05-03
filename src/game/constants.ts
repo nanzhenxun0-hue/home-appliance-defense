@@ -97,6 +97,11 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     { c:60,  pg:0, pc:1, dmg:25, rng:2.3, spd:1.3, lbl:'高機能トースター',eff:'攻速UP' },
     { c:300, pg:0, pc:2, dmg:40, rng:2.6, spd:1.6, lbl:'業務用トースター',eff:'★火トラップ設置', abilityUnlock:true },
   ],
+  ricecooker: [
+    { c:0,   pg:1, pc:1, dmg:14, rng:2.2, spd:1.1, lbl:'炊飯器',         eff:'蒸気DoT' },
+    { c:70,  pg:1, pc:1, dmg:24, rng:2.6, spd:1.3, lbl:'圧力炊飯器',     eff:'蒸気範囲UP' },
+    { c:320, pg:2, pc:2, dmg:38, rng:3.0, spd:1.6, lbl:'土鍋IH炊飯器',   eff:'★撃破時HP回復', abilityUnlock:true },
+  ],
   vacuum: [
     { c:0,   pg:0, pc:2, dmg:22, rng:2.0, spd:0.9, lbl:'掃除機',         eff:'吸引・引き戻し' },
     { c:60,  pg:0, pc:2, dmg:35, rng:2.3, spd:1.1, lbl:'サイクロン',     eff:'攻速UP' },
@@ -111,6 +116,11 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     { c:0,   pg:0, pc:2, dmg:20, rng:2.5, spd:1.5, lbl:'ドライヤー',     eff:'熱風攻撃' },
     { c:60,  pg:0, pc:2, dmg:32, rng:2.8, spd:1.8, lbl:'イオンドライヤー',eff:'攻速UP' },
     { c:300, pg:0, pc:3, dmg:50, rng:3.2, spd:2.2, lbl:'業務用ドライヤー',eff:'★範囲熱風！', abilityUnlock:true },
+  ],
+  dishwasher: [
+    { c:0,   pg:0, pc:2, dmg:16, rng:2.6, spd:1.1, lbl:'食洗機',         eff:'水流スロー' },
+    { c:70,  pg:0, pc:2, dmg:28, rng:3.0, spd:1.4, lbl:'ビルトイン食洗機', eff:'洗浄範囲UP' },
+    { c:320, pg:0, pc:3, dmg:44, rng:3.4, spd:1.7, lbl:'業務用食洗機',     eff:'★妨害洗浄', abilityUnlock:true },
   ],
   fridge: [
     { c:0,   pg:0, pc:3, dmg:30, rng:2.4, spd:0.7, lbl:'冷蔵庫',         eff:'凍結攻撃' },
