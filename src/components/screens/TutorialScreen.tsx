@@ -272,36 +272,38 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
   }, [step, enemies, hp, grid]);
 
   const place = (x: number, y: number) => {
-    if (PATH_KEY.has(`${x},${y}`)) return;
     if (!targetCell || !requiredUnit) return;
-    // 既に置いてあるセルは無視
-    if (grid[`${x},${y}`]) return;
-    // 寛容な配置: 目標から1マス以内ならOK（誤タップ救済）
-    const dx = Math.abs(x - targetCell.x);
-    const dy = Math.abs(y - targetCell.y);
-    if (dx > 1 || dy > 1) {
-      setShake(true); setTimeout(() => setShake(false), 250);
-      return;
-    }
+
+    const result = resolveTutorialPlacement({ step, x, y, grid, pathKeys: PATH_KEY });
+    logTutorial('place-attempt', { step, x, y, result });
 
     // STEP5: わざと電力不足で置けない演出
-    if (step === 5 && requiredUnit === 'kettle') {
+    if (result.reason === 'power_shortage') {
       setWarning('⚡ 電力が足りない！');
       setShake(true);
       setTimeout(() => setShake(false), 250);
       setTimeout(() => {
         setWarning(null);
+        logTutorial('advance', { from: 5, to: 6, reason: 'power_shortage_seen' });
         setStep(6);
       }, 1400);
       return;
     }
 
+    if (!result.ok || !result.placeKey || !result.unit) {
+      setShake(true); setTimeout(() => setShake(false), 250);
+      return;
+    }
+
     // 実際に置く位置（目標位置に固定して整列、空いていれば実タップ位置）
-    const placeKey = `${x},${y}`;
-    setGrid(g => ({ ...g, [placeKey]: requiredUnit }));
-    if (step === 1) setTimeout(() => setStep(2), 600);
-    if (step === 3) setTimeout(() => setStep(4), 600);
-    if (step === 6) setTimeout(() => setStep(7), 600);
+    setGrid(g => ({ ...g, [result.placeKey!]: result.unit! }));
+    const nextStep = shouldAdvanceAfterTutorialPlacement(step);
+    if (nextStep) {
+      setTimeout(() => {
+        logTutorial('advance', { from: step, to: nextStep, reason: 'placement_success', redirected: result.redirected });
+        setStep(nextStep);
+      }, 600);
+    }
   };
 
   const stepBanner = (() => {
@@ -329,6 +331,7 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
     // 目標から1マス以内も placeable（誤タップ救済）
     const inRange = targetCell && Math.abs(x - targetCell.x) <= 1 && Math.abs(y - targetCell.y) <= 1;
     const placeable = !!targetCell && !!requiredUnit && !isPath && !unit && !!inRange;
+    const isPowerPlacementStep = step === 3 || step === 6;
     const isKettleOn = unit === 'kettle' && power.ok;
     const isKettleOff = unit === 'kettle' && !power.ok;
 
@@ -336,18 +339,19 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
       <button
         key={key}
         onClick={() => place(x, y)}
-        disabled={!placeable && !isTarget}
+        disabled={!placeable && !isPowerPlacementStep}
         className="relative aspect-square rounded-md transition-all"
         style={{
-          background: isPath ? '#3a2c1a' : isTarget ? '#3a2c00' : '#1a1a2e',
-          border: `2px solid ${isTarget ? '#fbbf24' : isPath ? '#5a4030' : '#2a2a44'}`,
+          background: isPath ? '#3a2c1a' : isTarget ? '#3a2c00' : placeable && isPowerPlacementStep ? '#082f49' : '#1a1a2e',
+          border: `2px solid ${isTarget ? '#fbbf24' : placeable && isPowerPlacementStep ? '#38bdf8' : isPath ? '#5a4030' : '#2a2a44'}`,
           boxShadow: isTarget
             ? '0 0 24px #fbbf24cc, inset 0 0 16px #fbbf2477'
+            : placeable && isPowerPlacementStep ? '0 0 14px #38bdf866, inset 0 0 10px #38bdf833'
             : flash ? '0 0 12px #ff7043'
             : isKettleOn ? '0 0 14px #ffd54f, inset 0 0 8px #ffb74d88'
             : 'none',
-          animation: isTarget ? 'glow-pulse 0.9s infinite' : 'none',
-          cursor: placeable ? 'pointer' : 'default',
+          animation: isTarget || (placeable && isPowerPlacementStep) ? 'glow-pulse 0.9s infinite' : 'none',
+          cursor: placeable || isPowerPlacementStep ? 'pointer' : 'default',
           opacity: isKettleOff ? 0.45 : 1,
           filter: isKettleOff ? 'grayscale(0.7)' : 'none',
         }}
