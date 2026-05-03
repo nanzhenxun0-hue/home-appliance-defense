@@ -183,11 +183,13 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
 
   // 進行条件
   useEffect(() => {
+    logTutorial('step-check', { step, enemies: enemies.length, hp, grid: Object.keys(grid) });
     // STEP2: 敵が一定距離まで来たら → STEP3 へ進ませる（動かない違和感を体験させた後）
     if (step === 2) {
       const e = enemies[0];
       if (e && e.pi >= 2) {
         const t = setTimeout(() => {
+          logTutorial('advance', { from: 2, to: 3, reason: 'enemy_reached_midpoint' });
           setEnemies([]);
           setStep(3);
         }, 200);
@@ -198,23 +200,43 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
     if (step === 3) {
       const hasCord = Object.values(grid).includes('cord');
       if (hasCord) {
-        const t = setTimeout(() => setStep(4), 500);
+        const t = setTimeout(() => {
+          logTutorial('advance', { from: 3, to: 4, reason: 'cord_detected' });
+          setStep(4);
+        }, 500);
         return () => clearTimeout(t);
       }
+      const t = setTimeout(() => {
+        const fallback = getTutorialFallbackPlacement(3, grid, PATH_KEY);
+        if (!fallback) return;
+        logTutorial('auto-place', { step: 3, unit: 'cord', placeKey: fallback, reason: 'step3_timeout' });
+        setGrid(g => ({ ...g, [fallback]: 'cord' }));
+        setStep(4);
+      }, 8000);
+      return () => clearTimeout(t);
     }
     if (step === 4) {
       // 通常: 敵全滅で次へ。安全弁: 6秒経っても進まなければ強制進行
       if (enemies.length === 0) {
-        const t = setTimeout(() => setStep(5), 800);
+        const t = setTimeout(() => {
+          logTutorial('advance', { from: 4, to: 5, reason: 'enemy_clear' });
+          setStep(5);
+        }, 800);
         return () => clearTimeout(t);
       }
-      const t = setTimeout(() => setStep(5), 12000);
+      const t = setTimeout(() => {
+        logTutorial('advance', { from: 4, to: 5, reason: 'step4_timeout' });
+        setStep(5);
+      }, 12000);
       return () => clearTimeout(t);
     }
     if (step === 6) {
       const cordCount = Object.values(grid).filter(v => v === 'cord').length;
       if (cordCount >= 2) {
-        const t = setTimeout(() => setStep(7), 500);
+        const t = setTimeout(() => {
+          logTutorial('advance', { from: 6, to: 7, reason: 'second_cord_detected' });
+          setStep(7);
+        }, 500);
         return () => clearTimeout(t);
       }
     }
