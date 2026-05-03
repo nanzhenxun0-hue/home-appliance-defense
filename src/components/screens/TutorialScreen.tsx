@@ -195,9 +195,29 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
         return () => clearTimeout(t);
       }
     }
-    if (step === 4 && enemies.length === 0) {
-      const t = setTimeout(() => setStep(5), 800);
+    // STEP3 安全弁: コードが置かれていれば必ず STEP4 へ
+    if (step === 3) {
+      const hasCord = Object.values(grid).includes('cord');
+      if (hasCord) {
+        const t = setTimeout(() => setStep(4), 500);
+        return () => clearTimeout(t);
+      }
+    }
+    if (step === 4) {
+      // 通常: 敵全滅で次へ。安全弁: 6秒経っても進まなければ強制進行
+      if (enemies.length === 0) {
+        const t = setTimeout(() => setStep(5), 800);
+        return () => clearTimeout(t);
+      }
+      const t = setTimeout(() => setStep(5), 12000);
       return () => clearTimeout(t);
+    }
+    if (step === 6) {
+      const cordCount = Object.values(grid).filter(v => v === 'cord').length;
+      if (cordCount >= 2) {
+        const t = setTimeout(() => setStep(7), 500);
+        return () => clearTimeout(t);
+      }
     }
     if (step === 7) {
       if (hp <= 0) {
@@ -223,7 +243,7 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
         return () => clearTimeout(t);
       }
     }
-  }, [step, enemies, hp]);
+  }, [step, enemies, hp, grid]);
 
   const place = (x: number, y: number) => {
     if (PATH_KEY.has(`${x},${y}`)) return;
