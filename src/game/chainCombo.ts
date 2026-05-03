@@ -78,6 +78,22 @@ export const CHAIN_COMBOS: ChainCombo[] = [
     bonus: { dmgMult: 1.25, spdMult: 1.0 },
   },
   {
+    id: 'kitchen_ignition',
+    name: '🍳 キッチンイグニッション',
+    em: '🍳',
+    chain: ['kettle', 'toaster', 'ricecooker', 'oven', 'ihcooker', 'microwave'],
+    desc: '熱家電を6段まで繋ぐ灼熱キッチンチェーン',
+    bonus: { dmgMult: 1.45, spdMult: 1.15 },
+  },
+  {
+    id: 'wash_cycle',
+    name: '🍽️ ウォッシュサイクル',
+    em: '🍽️',
+    chain: ['cord', 'dishwasher', 'vacuum', 'fridge', 'washer', 'plasma'],
+    desc: '洗浄→吸引→冷却→渦巻き→最終砲の6段チェーン',
+    bonus: { dmgMult: 1.35, spdMult: 1.20 },
+  },
+  {
     id: 'wind_tunnel',
     name: '🌬️ ウィンドトンネル',
     em: '🌬️',
