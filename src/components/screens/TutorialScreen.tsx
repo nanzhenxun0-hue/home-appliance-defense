@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  getTutorialFallbackPlacement,
+  getTutorialRequiredUnit,
+  getTutorialTarget,
+  resolveTutorialPlacement,
+  shouldAdvanceAfterTutorialPlacement,
+  type TutorialStep,
+  type TutorialUnitType,
+} from '@/game/tutorialFlow';
 
 interface TutorialScreenProps {
   onComplete: () => void;
@@ -20,8 +29,12 @@ interface TutorialScreenProps {
  * STEP8: 卒業
  */
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-type UnitType = 'cord' | 'kettle';
+type Step = TutorialStep;
+type UnitType = TutorialUnitType;
+
+const logTutorial = (event: string, payload?: Record<string, unknown>) => {
+  console.debug(`[tutorial] ${event}`, payload ?? {});
+};
 
 const COLS = 5;
 const ROWS = 4;
@@ -62,22 +75,8 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
   }, [grid]);
 
   // どのマスに置かせるか（光らせる）/ 何が置けるか
-  const targetCell = useMemo<{ x: number; y: number } | null>(() => {
-    if (step === 1) return { x: 2, y: 0 };  // ケトル
-    if (step === 3) return { x: 1, y: 0 };  // コード（ケトル隣）
-    if (step === 5) return { x: 2, y: 2 };  // 2体目ケトル試行
-    if (step === 6) return { x: 3, y: 2 };  // 追加コード
-    if (step === 7) return { x: 2, y: 2 };  // ケトル置き直し
-    return null;
-  }, [step]);
-
-  const requiredUnit: UnitType | null =
-    step === 1 ? 'kettle' :
-    step === 3 ? 'cord' :
-    step === 5 ? 'kettle' :
-    step === 6 ? 'cord' :
-    step === 7 ? 'kettle' :
-    null;
+  const targetCell = useMemo(() => getTutorialTarget(step), [step]);
+  const requiredUnit: UnitType | null = getTutorialRequiredUnit(step);
 
   // 敵スポーン
   useEffect(() => {
