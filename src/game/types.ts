@@ -114,6 +114,10 @@ export interface EnemyDef {
   dmg: number;
   col: string;
   name?: string;
+  role?: string;
+  skillName?: string;
+  skillDesc?: string;
+  guide?: string;
   bossAbility?: 'warp' | 'wall' | 'speed_buff' | 'unit_disable';
   special?: 'clog' | 'corrode' | 'surge_stun' | 'multiply'; // new enemy specials
   pixel?: boolean; // draw in pixel art style
