@@ -1,4 +1,4 @@
-export const APP_VERSION = 'v1.2.0';
+export const APP_VERSION = 'v1.3.0';
 
 export type PatchCategory = 'feature' | 'balance' | 'enemy' | 'gacha' | 'fix';
 
@@ -18,6 +18,17 @@ export const PATCH_CATEGORY_META: Record<PatchCategory, { label: string; color: 
 };
 
 export const PATCH_NOTES: PatchNote[] = [
+  {
+    version: 'v1.3.0',
+    date: '2026-05-06',
+    highlights: ['延長コード設置の安定化', '7体編成対応', '敵キャラ図鑑追加'],
+    changes: {
+      feature: ['敵キャラ図鑑を追加し、全14敵の能力・対処メモを確認可能に', '通常モードの編成枠を6体→7体へ拡張'],
+      balance: ['編成画面をスクロール不要に近づけるコンパクト表示へ調整', 'ホーム表示を23ユニット・7体編成に更新'],
+      enemy: ['敵ごとに固有能力名・役割・対処ガイドを追加'],
+      fix: ['チュートリアルSTEP3で延長コードを置けない問題を修正', 'STEP3で誤タップしても安全なマスへ補正し、進行不能時は自動配置でSTEP4へ進むよう改善'],
+    },
+  },
   {
     version: 'v1.2.0',
     date: '2026-05-01',
