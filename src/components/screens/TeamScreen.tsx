@@ -37,7 +37,7 @@ const TeamScreen = ({ owned, team, maxTeam, onToggle, onStart, onBack }: TeamScr
         {/* Current team */}
         <div className="glass-panel p-2 rounded-xl">
           <div className="text-[10px] text-muted-foreground mb-1 font-bold">出撃チーム（最大{maxTeam}体）</div>
-          <div className="grid grid-cols-7 gap-1 min-h-[54px]">
+          <div className="grid grid-cols-7 gap-1 min-h-[46px]">
             {Array.from({ length: maxTeam }).map((_, i) => {
               const tid = team[i];
               if (tid) {
@@ -45,7 +45,7 @@ const TeamScreen = ({ owned, team, maxTeam, onToggle, onStart, onBack }: TeamScr
                 return (
                   <motion.button key={`slot-${i}`} layoutId={`team-${tid}`}
                     onClick={() => onToggle(tid)}
-                    className="flex flex-col items-center justify-center p-1 rounded-lg min-h-[52px]"
+                    className="flex flex-col items-center justify-center p-0.5 rounded-lg min-h-[46px]"
                     style={{
                       background: RARITY_COLOR[def.r] + '20',
                       border: `2px solid ${RARITY_COLOR[def.r]}66`,
@@ -58,7 +58,7 @@ const TeamScreen = ({ owned, team, maxTeam, onToggle, onStart, onBack }: TeamScr
                 );
               }
               return (
-                <div key={`slot-${i}`} className="min-h-[52px] rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
+                <div key={`slot-${i}`} className="min-h-[46px] rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
                   <span className="text-muted-foreground/30 text-[9px]">空</span>
                 </div>
               );
@@ -118,7 +118,7 @@ const TeamScreen = ({ owned, team, maxTeam, onToggle, onStart, onBack }: TeamScr
                 <span className="inline-block w-2 h-2 rounded-full" style={{ background: RARITY_COLOR[rarity] }} />
                 {RARITY_LABEL[rarity]}
               </div>
-              <div className="grid grid-cols-4 gap-1">
+              <div className="grid grid-cols-5 gap-1">
                 {units.map(tid => {
                   const def = TDEFS[tid];
                   const inTeam = team.includes(tid);
@@ -132,7 +132,7 @@ const TeamScreen = ({ owned, team, maxTeam, onToggle, onStart, onBack }: TeamScr
 
                   return (
                     <motion.button key={tid} onClick={() => canAdd && onToggle(tid)}
-                      className="flex flex-col items-center justify-center p-1 rounded-lg transition-all relative min-h-[54px]"
+                      className="flex flex-col items-center justify-center p-0.5 rounded-lg transition-all relative min-h-[44px]"
                       style={{
                         background: inTeam ? RARITY_COLOR[def.r] + '20' : 'rgba(255,255,255,0.02)',
                         border: `1.5px solid ${inTeam ? RARITY_COLOR[def.r] + '88' : hasSynergyPotential ? '#ffd70055' : RARITY_COLOR[def.r] + '22'}`,
@@ -144,14 +144,14 @@ const TeamScreen = ({ owned, team, maxTeam, onToggle, onStart, onBack }: TeamScr
                       )}
                       <span className="text-lg leading-none">{def.em}</span>
                       <span className="text-[8px] font-bold text-foreground/80 truncate w-full text-center leading-none">{def.n}</span>
-                      <div className="flex gap-0.5 text-[7px] mt-0.5 flex-wrap justify-center leading-none">
+                      <div className="flex gap-0.5 text-[6px] mt-0.5 flex-wrap justify-center leading-none">
                         {S.dmg > 0 && <span className="text-yellow-400">⚔{S.dmg}</span>}
                         {S.rng > 0 && <span className="text-blue-300">📏{S.rng}</span>}
                         {S.pg > 0 && <span className="text-green-400">+{S.pg}W</span>}
                         {S.pc > 0 && <span className="text-red-400">-{S.pc}W</span>}
                       </div>
                       <span className="text-[7px] text-yellow-400 font-bold leading-none">{def.baseCost}W</span>
-                      {inTeam && <span className="text-[7px] text-green-400 font-bold">✅ 選択中</span>}
+                      {inTeam && <span className="absolute bottom-0.5 right-0.5 text-[7px] text-green-400 font-bold">✅</span>}
                     </motion.button>
                   );
                 })}
