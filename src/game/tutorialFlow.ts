@@ -17,6 +17,8 @@ export interface TutorialPlacementResult {
 
 export const tutorialKey = (x: number, y: number) => `${x},${y}`;
 
+export const TUTORIAL_SAFE_PATH_KEYS = new Set(['0,1', '1,1', '2,1', '3,1', '4,1']);
+
 export const getTutorialTarget = (step: TutorialStep): TutorialTarget | null => {
   if (step === 1) return { x: 2, y: 0, unit: 'kettle' };
   if (step === 3) return { x: 1, y: 0, unit: 'cord' };
@@ -52,6 +54,24 @@ export const getTutorialFallbackPlacement = (
     return key;
   }
   return null;
+};
+
+export const ensureTutorialPowerPlacement = (
+  step: TutorialStep,
+  grid: Record<string, TutorialUnitType>,
+  pathKeys: Set<string> = TUTORIAL_SAFE_PATH_KEYS,
+): TutorialPlacementResult => {
+  const target = getTutorialTarget(step);
+  if (!target || target.unit !== 'cord') return { ok: false, reason: 'no_target' };
+
+  const alreadyHasRequiredCord = step === 3
+    ? Object.values(grid).includes('cord')
+    : Object.values(grid).filter(v => v === 'cord').length >= 2;
+  if (alreadyHasRequiredCord) return { ok: true, unit: 'cord', placeKey: undefined, redirected: false };
+
+  const fallback = getTutorialFallbackPlacement(step, grid, pathKeys);
+  if (!fallback) return { ok: false, reason: 'no_open_cell' };
+  return { ok: true, unit: 'cord', placeKey: fallback, redirected: true };
 };
 
 export const resolveTutorialPlacement = ({

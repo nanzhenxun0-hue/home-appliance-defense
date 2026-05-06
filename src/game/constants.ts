@@ -191,21 +191,21 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
 
 // Enemies with 3 mob types + named bosses
 export const EDEFS: Record<EnemyType, EnemyDef> = {
-  dust:       { em:'🌫️', hp:80,   spd:45,  rew:10, dmg:1, col:'#b0b0a0', name:'ダスト', pixel:true },
-  fast_dust:  { em:'💨',  hp:50,   spd:80,  rew:12, dmg:1, col:'#e0d090', name:'スピードダスト', pixel:true },
-  slime:      { em:'💧',  hp:160,  spd:25,  rew:18, dmg:2, col:'#4dd0e1', name:'スライム', pixel:true },
-  tank_slime: { em:'🛡️',  hp:500,  spd:18,  rew:30, dmg:3, col:'#1565c0', name:'タンクスライム', pixel:true },
-  magnet:     { em:'🧲',  hp:300,  spd:38,  rew:30, dmg:3, col:'#f48fb1', name:'マグネット', pixel:true },
-  virus:      { em:'🦠',  hp:500,  spd:55,  rew:50, dmg:2, col:'#76ff03', name:'ウイルス', pixel:true },
+  dust:       { em:'🌫️', hp:80,   spd:45,  rew:10, dmg:1, col:'#b0b0a0', name:'ダスト', role:'基本型', skillName:'粉塵行進', skillDesc:'特別な能力はないが数で押し寄せる。', guide:'ケトルやランプの基礎火力で早めに処理。序盤の資金源。', pixel:true },
+  fast_dust:  { em:'💨',  hp:50,   spd:80,  rew:12, dmg:1, col:'#e0d090', name:'スピードダスト', role:'高速型', skillName:'高速すり抜け', skillDesc:'HPは低いが移動が速く、終盤ラインを抜けやすい。', guide:'扇風機・スピーカー・エアコンで減速してから狙撃。', pixel:true },
+  slime:      { em:'💧',  hp:160,  spd:25,  rew:18, dmg:2, col:'#4dd0e1', name:'スライム', role:'耐久型', skillName:'ねばねば装甲', skillDesc:'遅い代わりにHPが高く、序盤火力を受け止める。', guide:'炎上DoTが有効。ケトル→トースターの熱ラインで削る。', pixel:true },
+  tank_slime: { em:'🛡️',  hp:500,  spd:18,  rew:30, dmg:3, col:'#1565c0', name:'タンクスライム', role:'重装型', skillName:'重粘性ボディ', skillDesc:'高HPで前線を詰まらせ、後続の壁になる。', guide:'掃除機で戻し、電子レンジ・プラズマなど重DPSで集中攻撃。', pixel:true },
+  magnet:     { em:'🧲',  hp:300,  spd:38,  rew:30, dmg:3, col:'#f48fb1', name:'マグネット', role:'妨害型', skillName:'磁力ノイズ', skillDesc:'電気家電の配置ラインを乱す中堅敵。', guide:'コードを余分に置いて電力に余裕を作り、遠距離火力で落とす。', pixel:true },
+  virus:      { em:'🦠',  hp:500,  spd:55,  rew:50, dmg:2, col:'#76ff03', name:'ウイルス', role:'危険型', skillName:'感染加速', skillDesc:'高HPかつ速め。放置するとライン崩壊の原因になる。', guide:'スピーカーや冷蔵庫で足止めし、テスラの連鎖でまとめて処理。', pixel:true },
   // ── 新敵キャラ ──
-  cockroach:  { em:'🪳',  hp:120,  spd:95,  rew:20, dmg:2, col:'#795548', name:'ゴキブリ', special:'clog', pixel:true },
-  mold:       { em:'🍄',  hp:280,  spd:22,  rew:25, dmg:2, col:'#558b2f', name:'カビ', special:'corrode', pixel:true },
-  surge:      { em:'⚡',  hp:230,  spd:60,  rew:40, dmg:3, col:'#ffeb3b', name:'過電流モンスター', special:'surge_stun', pixel:true },
-  dust_lord:  { em:'👻',  hp:850,  spd:30,  rew:100,dmg:4, col:'#9e9e9e', name:'ホコリ大王', special:'multiply', pixel:true },
-  boss:       { em:'🤖',  hp:2000, spd:20,  rew:150,dmg:5, col:'#ff1744', name:'ボスロボット', pixel:true },
-  boss_ice:   { em:'🥶',  hp:3500, spd:18,  rew:300,dmg:7, col:'#00bcd4', name:'氷電魔フローズワンダー', bossAbility:'warp', pixel:true },
-  boss_fire:  { em:'🔥',  hp:4000, spd:22,  rew:350,dmg:8, col:'#ff3d00', name:'爆熱魔クリムゾンキング', bossAbility:'wall', pixel:true },
-  final_boss: { em:'👿',  hp:8000, spd:15,  rew:500,dmg:10,col:'#9c27b0', name:'家電大魔王デウスマキナ', bossAbility:'unit_disable', pixel:true },
+  cockroach:  { em:'🪳',  hp:120,  spd:95,  rew:20, dmg:2, col:'#795548', name:'ゴキブリ', role:'奇襲妨害', skillName:'配線詰まり', skillDesc:'通過中に近くの家電を詰まらせる。', guide:'食洗機Lv3で洗浄可能。速いので曲がり角前で減速。', special:'clog', pixel:true },
+  mold:       { em:'🍄',  hp:280,  spd:22,  rew:25, dmg:2, col:'#558b2f', name:'カビ', role:'腐食妨害', skillName:'じわじわ腐食', skillDesc:'時間経過で家電の働きを鈍らせる。', guide:'食洗機・洗濯機ラインでケア。長く残さず炎で焼く。', special:'corrode', pixel:true },
+  surge:      { em:'⚡',  hp:230,  spd:60,  rew:40, dmg:3, col:'#ffeb3b', name:'過電流モンスター', role:'電撃妨害', skillName:'サージスタン', skillDesc:'電力ラインにショックを与え、家電を一時停止させる。', guide:'コードを分散配置。冷凍・スローで止めてから倒す。', special:'surge_stun', pixel:true },
+  dust_lord:  { em:'👻',  hp:850,  spd:30,  rew:100,dmg:4, col:'#9e9e9e', name:'ホコリ大王', role:'分裂中ボス', skillName:'ホコリ分裂', skillDesc:'倒れると小さなダストをばらまく。', guide:'範囲攻撃を残して倒す。オーブン・テスラ・プラズマが有効。', special:'multiply', pixel:true },
+  boss:       { em:'🤖',  hp:2000, spd:20,  rew:150,dmg:5, col:'#ff1744', name:'ボスロボット', role:'標準ボス', skillName:'重装進軍', skillDesc:'高HPで正面から押し切る基本ボス。', guide:'冷蔵庫で止め、電子レンジやスーパーPCで集中火力。', pixel:true },
+  boss_ice:   { em:'🥶',  hp:3500, spd:18,  rew:300,dmg:7, col:'#00bcd4', name:'氷電魔フローズワンダー', role:'ワープボス', skillName:'氷結ワープ', skillDesc:'一定間隔で前方へワープして防衛線を飛び越える。', guide:'終盤にも火力を置く。熱系チェーンで凍結に負けず削る。', bossAbility:'warp', pixel:true },
+  boss_fire:  { em:'🔥',  hp:4000, spd:22,  rew:350,dmg:8, col:'#ff3d00', name:'爆熱魔クリムゾンキング', role:'壁生成ボス', skillName:'炎壁展開', skillDesc:'ボスを守る壁を展開し、攻撃を吸わせる。', guide:'貫通・全体攻撃が有効。プラズマやプロジェクターで壁ごと焼く。', bossAbility:'wall', pixel:true },
+  final_boss: { em:'👿',  hp:8000, spd:15,  rew:500,dmg:10,col:'#9c27b0', name:'家電大魔王デウスマキナ', role:'最終ボス', skillName:'家電支配', skillDesc:'味方ユニットを停止させ、防衛網を崩壊させる。', guide:'7体編成でコード・食洗機・全体バフを入れ、止められても火力が残る形にする。', bossAbility:'unit_disable', pixel:true },
 };
 
 // Area-specific waves - suburb (basic area)

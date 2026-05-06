@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ensureTutorialPowerPlacement,
   getTutorialFallbackPlacement,
   resolveTutorialPlacement,
   shouldAdvanceAfterTutorialPlacement,
@@ -22,6 +23,14 @@ describe('tutorial STEP3 extension-cord placement', () => {
     const result = resolveTutorialPlacement({ step: 3, x: 1, y: 1, grid, pathKeys });
 
     expect(result).toMatchObject({ ok: true, unit: 'cord', placeKey: '1,0', redirected: true });
+  });
+
+  it('auto-rescues STEP3 by finding a safe cord cell when the player never taps correctly', () => {
+    const grid: Record<string, TutorialUnitType> = { '2,0': 'kettle' };
+    const result = ensureTutorialPowerPlacement(3, grid, pathKeys);
+
+    expect(result).toMatchObject({ ok: true, unit: 'cord', placeKey: '1,0', redirected: true });
+    expect(shouldAdvanceAfterTutorialPlacement(3)).toBe(4);
   });
 
   it('rescues an occupied-cell mis-tap by using the next open highlighted neighbor', () => {

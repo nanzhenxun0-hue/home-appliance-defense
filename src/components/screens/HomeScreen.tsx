@@ -12,10 +12,11 @@ interface HomeScreenProps {
   onTutorial: () => void;
   onPatch: () => void;
   onCompendium: () => void;
+  onEnemyCompendium: () => void;
   volts: number;
 }
 
-const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, onPatch, onCompendium, volts }: HomeScreenProps) => (
+const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, onPatch, onCompendium, onEnemyCompendium, volts }: HomeScreenProps) => (
   <div className="min-h-[100dvh] flex flex-col items-center justify-center p-5 relative overflow-hidden bg-background">
     <div className="absolute top-2 right-3 z-20 text-[10px] font-bold text-purple-300/80 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30">
       {APP_VERSION}
@@ -71,7 +72,10 @@ const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, o
         🎰 ガチャ（3種）
       </button>
       <button onClick={onCombo} className="game-btn-secondary w-full text-sm">⛓️ コンボレシピ</button>
-      <button onClick={onCompendium} className="game-btn-secondary w-full text-sm">📚 家電図鑑</button>
+      <div className="grid grid-cols-2 gap-2 w-full">
+        <button onClick={onCompendium} className="game-btn-secondary text-sm px-2">📚 家電</button>
+        <button onClick={onEnemyCompendium} className="game-btn-secondary text-sm px-2">👹 敵図鑑</button>
+      </div>
       <button onClick={onHowTo} className="game-btn-secondary w-full text-sm">📖 遊び方</button>
       <button onClick={onPatch} className="game-btn-secondary w-full text-sm">📋 パッチノート</button>
       <div className="flex gap-2 w-full">
@@ -82,7 +86,7 @@ const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, o
 
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
       className="mt-8 flex gap-2 flex-wrap justify-center relative z-10">
-      {[['🗺️', '5エリア'], ['🎮', '6体編成'], ['⚡', '18ユニット'], ['👹', 'ボス戦']].map(([em, t]) => (
+      {[['🗺️', '5エリア'], ['🎮', '7体編成'], ['⚡', '23ユニット'], ['👹', '敵図鑑']].map(([em, t]) => (
         <span key={t} className="game-badge text-[9px]">{em} {t}</span>
       ))}
     </motion.div>
