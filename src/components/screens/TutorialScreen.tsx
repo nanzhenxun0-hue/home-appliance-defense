@@ -110,8 +110,16 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
   useEffect(() => {
     setHint(null);
     if (step === 2) {
-      const t = setTimeout(() => setHint('💡 ⚡電力がない…？'), 1500);
-      return () => clearTimeout(t);
+      const hintTimer = setTimeout(() => setHint('💡 ⚡電力がない…？'), 900);
+      const advanceTimer = setTimeout(() => {
+        logTutorial('advance', { from: 2, to: 3, reason: 'power_hint_timeout' });
+        setEnemies([]);
+        setStep(3);
+      }, 2400);
+      return () => {
+        clearTimeout(hintTimer);
+        clearTimeout(advanceTimer);
+      };
     }
     if (step === 7) {
       const t = setTimeout(() => setHint('💡 敵の通り道に置こう'), 2000);
@@ -272,6 +280,12 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
   }, [step, enemies, hp, grid]);
 
   const place = (x: number, y: number) => {
+    if (step === 2) {
+      logTutorial('advance', { from: 2, to: 3, reason: 'grid_tap_after_power_shortage', x, y });
+      setEnemies([]);
+      setStep(3);
+      return;
+    }
     if (!targetCell || !requiredUnit) {
       logTutorial('place-blocked-no-target', { step, x, y, targetCell, requiredUnit });
       return;
