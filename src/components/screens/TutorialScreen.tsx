@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  ensureTutorialPowerPlacement,
   getTutorialFallbackPlacement,
   getTutorialRequiredUnit,
   getTutorialTarget,
@@ -212,12 +213,12 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
         return () => clearTimeout(t);
       }
       const t = setTimeout(() => {
-        const fallback = getTutorialFallbackPlacement(3, grid, PATH_KEY);
-        if (!fallback) return;
-        logTutorial('auto-place', { step: 3, unit: 'cord', placeKey: fallback, reason: 'step3_timeout' });
-        setGrid(g => ({ ...g, [fallback]: 'cord' }));
+        const result = ensureTutorialPowerPlacement(3, grid, PATH_KEY);
+        if (!result.ok || !result.placeKey) return logTutorial('auto-place-failed', { step: 3, result });
+        logTutorial('auto-place', { step: 3, unit: 'cord', placeKey: result.placeKey, reason: 'step3_timeout' });
+        setGrid(g => ({ ...g, [result.placeKey!]: 'cord' }));
         setStep(4);
-      }, 8000);
+      }, 3000);
       return () => clearTimeout(t);
     }
     if (step === 4) {
@@ -272,7 +273,10 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
   }, [step, enemies, hp, grid]);
 
   const place = (x: number, y: number) => {
-    if (!targetCell || !requiredUnit) return;
+    if (!targetCell || !requiredUnit) {
+      logTutorial('place-blocked-no-target', { step, x, y, targetCell, requiredUnit });
+      return;
+    }
 
     const result = resolveTutorialPlacement({ step, x, y, grid, pathKeys: PATH_KEY });
     logTutorial('place-attempt', { step, x, y, result });
@@ -291,6 +295,16 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
     }
 
     if (!result.ok || !result.placeKey || !result.unit) {
+      if (step === 3 || step === 6) {
+        const rescue = ensureTutorialPowerPlacement(step, grid, PATH_KEY);
+        logTutorial('place-rescue-attempt', { step, x, y, rescue });
+        if (rescue.ok && rescue.placeKey) {
+          setGrid(g => ({ ...g, [rescue.placeKey!]: 'cord' }));
+          const nextStep = shouldAdvanceAfterTutorialPlacement(step);
+          if (nextStep) setTimeout(() => setStep(nextStep), 450);
+          return;
+        }
+      }
       setShake(true); setTimeout(() => setShake(false), 250);
       return;
     }
@@ -332,6 +346,7 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
     const inRange = targetCell && Math.abs(x - targetCell.x) <= 1 && Math.abs(y - targetCell.y) <= 1;
     const placeable = !!targetCell && !!requiredUnit && !isPath && !unit && !!inRange;
     const isPowerPlacementStep = step === 3 || step === 6;
+    const isPowerTargetZone = isPowerPlacementStep && !!targetCell && !!inRange && !isPath && !unit;
     const isKettleOn = unit === 'kettle' && power.ok;
     const isKettleOff = unit === 'kettle' && !power.ok;
 
@@ -342,15 +357,15 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
         disabled={!placeable && !isPowerPlacementStep}
         className="relative aspect-square rounded-md transition-all"
         style={{
-          background: isPath ? '#3a2c1a' : isTarget ? '#3a2c00' : placeable && isPowerPlacementStep ? '#082f49' : '#1a1a2e',
-          border: `2px solid ${isTarget ? '#fbbf24' : placeable && isPowerPlacementStep ? '#38bdf8' : isPath ? '#5a4030' : '#2a2a44'}`,
+          background: isPath ? '#3a2c1a' : isTarget ? '#3a2c00' : isPowerTargetZone ? '#082f49' : '#1a1a2e',
+          border: `2px solid ${isTarget ? '#fbbf24' : isPowerTargetZone ? '#38bdf8' : isPath ? '#5a4030' : '#2a2a44'}`,
           boxShadow: isTarget
             ? '0 0 24px #fbbf24cc, inset 0 0 16px #fbbf2477'
-            : placeable && isPowerPlacementStep ? '0 0 14px #38bdf866, inset 0 0 10px #38bdf833'
+            : isPowerTargetZone ? '0 0 18px #38bdf899, inset 0 0 14px #38bdf844'
             : flash ? '0 0 12px #ff7043'
             : isKettleOn ? '0 0 14px #ffd54f, inset 0 0 8px #ffb74d88'
             : 'none',
-          animation: isTarget || (placeable && isPowerPlacementStep) ? 'glow-pulse 0.9s infinite' : 'none',
+          animation: isTarget || isPowerTargetZone ? 'glow-pulse 0.9s infinite' : 'none',
           cursor: placeable || isPowerPlacementStep ? 'pointer' : 'default',
           opacity: isKettleOff ? 0.45 : 1,
           filter: isKettleOff ? 'grayscale(0.7)' : 'none',
