@@ -14,10 +14,7 @@ interface TeamScreenProps {
 }
 
 const TeamScreen = ({ owned, team, maxTeam, onToggle, onStart, onBack }: TeamScreenProps) => {
-  const grouped = RARITY_ORDER.map(r => ({
-    rarity: r,
-    units: owned.filter(tid => TDEFS[tid].r === r),
-  })).filter(g => g.units.length > 0);
+  const sortedOwned = [...owned].sort((a, b) => RARITY_ORDER.indexOf(TDEFS[a].r) - RARITY_ORDER.indexOf(TDEFS[b].r));
 
   const activeSynergies = getActiveSynergies(team);
 
@@ -111,15 +108,9 @@ const TeamScreen = ({ owned, team, maxTeam, onToggle, onStart, onBack }: TeamScr
         </button>
 
         {/* Unit list by rarity */}
-        <div className="flex-1 overflow-hidden space-y-1.5 pb-1">
-          {grouped.map(({ rarity, units }) => (
-            <div key={rarity}>
-              <div className="text-[9px] font-black mb-0.5 flex items-center gap-1" style={{ color: RARITY_COLOR[rarity] }}>
-                <span className="inline-block w-2 h-2 rounded-full" style={{ background: RARITY_COLOR[rarity] }} />
-                {RARITY_LABEL[rarity]}
-              </div>
-              <div className="grid grid-cols-5 gap-1">
-                {units.map(tid => {
+        <div className="flex-1 overflow-hidden pb-1">
+          <div className="grid grid-cols-5 gap-1">
+                {sortedOwned.map(tid => {
                   const def = TDEFS[tid];
                   const inTeam = team.includes(tid);
                   const S = st(tid, 0);
@@ -155,9 +146,7 @@ const TeamScreen = ({ owned, team, maxTeam, onToggle, onStart, onBack }: TeamScr
                     </motion.button>
                   );
                 })}
-              </div>
-            </div>
-          ))}
+          </div>
         </div>
       </div>
     </div>
