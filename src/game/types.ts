@@ -24,7 +24,16 @@ export type TowerID =
   | 'theater' | 'projector'               // M
   | 'superpc' | 'tesla'                   // G
   | 'plasma'                              // OD
-  | 'ricecooker' | 'dishwasher' | 'oven' | 'coffeemaker' | 'ihcooker';
+  | 'ricecooker' | 'dishwasher' | 'oven' | 'coffeemaker' | 'ihcooker'
+  // ── v1.5 expansion (+20) ──
+  | 'shaver' | 'printer'
+  | 'heater' | 'humidifier' | 'iron' | 'blender' | 'waffleiron'
+  | 'air_purifier' | 'juicer' | 'waterserver' | 'fryer'
+  | 'solarpanel' | 'battery' | 'gameconsole'
+  | 'drone' | 'heatpump'
+  | 'vrheadset' | 'holodeck'
+  | 'robotarm'
+  | 'quantumchip';
 
 export type Rarity = 'C' | 'U' | 'R' | 'E' | 'L' | 'M' | 'G' | 'OD';
 
