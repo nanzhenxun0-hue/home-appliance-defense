@@ -123,6 +123,7 @@ export const TOWER_USAGE: Record<TowerID, TowerUsage> = {
     synergy: 'ヴァキューム・スピーカーで敵を集めて連鎖を最大化。',
     tips: 'Lv3でチェーン数+1。集団戦で1体で殲滅可能。',
   },
+  plasma: { placement: '最終ライン。全体貫通の最終兵器。', synergy: 'シアター＋ルーター＋スーパーPCで最強チーム。', tips: 'Lv3で「世界を焼く」発動。電力12消費、コード並べて運用。' },
   shaver:      { placement: '道に密着。連続斬りで雑魚を瞬殺。',           synergy: 'ルーターの攻速バフでDPS爆上げ。',                           tips: 'Lv3で出血DoT。タンクに刺すとじわじわ削れる。' },
   printer:     { placement: '中盤に置き、敵集団へインクスプレー。',         synergy: 'ライト系と組ませてデバフ＋狙撃。',                           tips: 'Lv3で命中DOWN。ボス前に置くと貫通対策。' },
   heater:      { placement: '通路の交差点。範囲炎上で集団処理。',           synergy: 'オーブン・電子レンジと炎チェーン。',                         tips: 'Lv3で炎が拡散。密集した敵に大ダメージ。' },
