@@ -1,4 +1,4 @@
-export const APP_VERSION = 'v1.4.0';
+export const APP_VERSION = 'v1.5.0';
 
 export type PatchCategory = 'feature' | 'balance' | 'enemy' | 'gacha' | 'fix';
 
@@ -18,6 +18,22 @@ export const PATCH_CATEGORY_META: Record<PatchCategory, { label: string; color: 
 };
 
 export const PATCH_NOTES: PatchNote[] = [
+  {
+    version: 'v1.5.0',
+    date: '2026-05-07',
+    highlights: ['新キャラ20体追加（計43ユニット）', 'ガチャ演出を超強化', '画面全体のド派手エフェクト'],
+    changes: {
+      feature: [
+        '新家電20体を追加：シェーバー／プリンター／ヒーター／加湿器／アイロン／ミキサー／ワッフル焼き機／空気清浄機／ジューサー／ウォーターサーバー／フライヤー／ソーラーパネル／蓄電池／ゲーム機／ドローン／ヒートポンプ／VRヘッドセット／ホロデッキ／ロボットアーム／量子チップ',
+        '全新キャラに固有スキル・3段階アップグレード・図鑑エントリ・扱い方ガイドを実装',
+      ],
+      gacha: [
+        'ガチャ演出を全面リニューアル：レアリティ別の放射状フラッシュ＆スターバースト、画面フラッシュ、降り注ぐスパークル粒子',
+        'OD/G/M/Lのカードリビールにバウンドスケール＋光輪ハロー追加',
+      ],
+      balance: ['ホーム表示を43ユニットに更新'],
+    },
+  },
   {
     version: 'v1.4.0',
     date: '2026-05-07',
