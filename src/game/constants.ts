@@ -217,9 +217,28 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     { c:60,  pg:0, pc:10,dmg:200,rng:5.0, spd:1.2, lbl:'メガプラズマ',     eff:'攻速UP' },
     { c:300, pg:0, pc:12,dmg:300,rng:6.0, spd:1.8, lbl:'ギガプラズマ',     eff:'★世界を焼く！', abilityUnlock:true },
   ],
+  // ── v1.5 expansion upgrades ──
+  shaver:     [{c:0,pg:0,pc:1,dmg:14,rng:1.6,spd:2.4,lbl:'シェーバー',eff:'高速斬り'},{c:50,pg:0,pc:1,dmg:22,rng:1.8,spd:2.8,lbl:'5枚刃',eff:'攻速UP'},{c:240,pg:0,pc:2,dmg:35,rng:2.0,spd:3.2,lbl:'プロシェーバー',eff:'★出血DoT',abilityUnlock:true}],
+  printer:    [{c:0,pg:0,pc:1,dmg:8,rng:2.4,spd:1.0,lbl:'プリンター',eff:'インク妨害'},{c:60,pg:0,pc:1,dmg:14,rng:2.6,spd:1.2,lbl:'レーザー',eff:'攻速UP'},{c:260,pg:0,pc:2,dmg:24,rng:2.8,spd:1.5,lbl:'業務用複合機',eff:'★命中DOWN',abilityUnlock:true}],
+  heater:     [{c:0,pg:0,pc:2,dmg:22,rng:2.4,spd:1.1,lbl:'ヒーター',eff:'範囲炎上'},{c:70,pg:0,pc:2,dmg:36,rng:2.7,spd:1.4,lbl:'石油ヒーター',eff:'攻速UP'},{c:280,pg:0,pc:3,dmg:55,rng:3.0,spd:1.7,lbl:'ファンヒーター',eff:'★炎拡散',abilityUnlock:true}],
+  humidifier: [{c:0,pg:0,pc:2,dmg:6,rng:3.0,spd:1.4,lbl:'加湿器',eff:'霧スロー'},{c:70,pg:0,pc:2,dmg:12,rng:3.4,spd:1.7,lbl:'超音波加湿器',eff:'攻速UP'},{c:280,pg:0,pc:3,dmg:20,rng:3.8,spd:2.0,lbl:'蒸気加湿器',eff:'★凍結確率',abilityUnlock:true}],
+  iron:       [{c:0,pg:0,pc:2,dmg:30,rng:1.6,spd:0.8,lbl:'アイロン',eff:'重撃'},{c:70,pg:0,pc:2,dmg:50,rng:1.8,spd:1.0,lbl:'スチームアイロン',eff:'攻速UP'},{c:300,pg:0,pc:3,dmg:75,rng:2.0,spd:1.3,lbl:'業務用アイロン',eff:'★スタン',abilityUnlock:true}],
+  blender:    [{c:0,pg:0,pc:2,dmg:20,rng:2.0,spd:1.5,lbl:'ミキサー',eff:'回転AOE'},{c:70,pg:0,pc:2,dmg:32,rng:2.2,spd:1.8,lbl:'高速ミキサー',eff:'攻速UP'},{c:300,pg:0,pc:3,dmg:50,rng:2.5,spd:2.1,lbl:'真空ミキサー',eff:'★吸引',abilityUnlock:true}],
+  waffleiron: [{c:0,pg:0,pc:2,dmg:24,rng:2.2,spd:1.0,lbl:'ワッフル焼き機',eff:'格子AOE'},{c:70,pg:0,pc:2,dmg:38,rng:2.5,spd:1.3,lbl:'プロ用',eff:'攻速UP'},{c:300,pg:0,pc:3,dmg:58,rng:2.8,spd:1.6,lbl:'業務用ワッフル',eff:'★焼印スタン',abilityUnlock:true}],
+  air_purifier:[{c:0,pg:0,pc:2,dmg:15,rng:3.0,spd:1.2,lbl:'空気清浄機',eff:'浄化スロー'},{c:80,pg:0,pc:3,dmg:24,rng:3.4,spd:1.5,lbl:'HEPA',eff:'攻速UP'},{c:340,pg:0,pc:4,dmg:38,rng:3.8,spd:1.8,lbl:'プラズマクラスタ',eff:'★味方デバフ解除',abilityUnlock:true}],
+  juicer:     [{c:0,pg:0,pc:2,dmg:26,rng:2.2,spd:1.0,lbl:'ジューサー',eff:'吸収'},{c:80,pg:0,pc:3,dmg:42,rng:2.5,spd:1.3,lbl:'低速ジューサー',eff:'攻速UP'},{c:340,pg:0,pc:4,dmg:62,rng:2.8,spd:1.6,lbl:'コールドプレス',eff:'★HP変換UP',abilityUnlock:true}],
+  waterserver:[{c:0,pg:1,pc:2,dmg:0,rng:3.2,spd:0,lbl:'ウォーターサーバー',eff:'クールダウン'},{c:80,pg:2,pc:2,dmg:0,rng:3.6,spd:0,lbl:'温冷型',eff:'範囲UP'},{c:340,pg:3,pc:3,dmg:8,rng:4.0,spd:1.0,lbl:'高機能型',eff:'★基地HP回復',abilityUnlock:true}],
+  fryer:      [{c:0,pg:0,pc:3,dmg:34,rng:2.4,spd:0.9,lbl:'フライヤー',eff:'油爆AOE'},{c:80,pg:0,pc:3,dmg:55,rng:2.8,spd:1.2,lbl:'業務用',eff:'攻速UP'},{c:340,pg:0,pc:4,dmg:82,rng:3.2,spd:1.5,lbl:'圧力フライヤー',eff:'★延焼拡大',abilityUnlock:true}],
+  solarpanel: [{c:0,pg:6,pc:0,dmg:0,rng:0,spd:0,lbl:'ソーラーパネル',eff:'+6W/秒'},{c:90,pg:10,pc:0,dmg:0,rng:0,spd:0,lbl:'高効率パネル',eff:'+10W/秒'},{c:380,pg:15,pc:0,dmg:0,rng:0,spd:0,lbl:'ソーラーアレイ',eff:'★晴天バフ全体ATK+5%',abilityUnlock:true}],
+  battery:    [{c:0,pg:4,pc:0,dmg:0,rng:0,spd:0,lbl:'蓄電池',eff:'非常電源(短)'},{c:90,pg:7,pc:0,dmg:0,rng:0,spd:0,lbl:'リチウム電池',eff:'+7W/秒'},{c:380,pg:12,pc:0,dmg:0,rng:0,spd:0,lbl:'グリッドバッテリー',eff:'★ブレーカー時電力供給',abilityUnlock:true}],
+  gameconsole:[{c:0,pg:0,pc:3,dmg:0,rng:3.0,spd:0,lbl:'ゲーム機',eff:'コンボバフ',bf:1.20},{c:90,pg:0,pc:4,dmg:0,rng:3.4,spd:0,lbl:'次世代機',eff:'+35%',bf:1.35},{c:380,pg:0,pc:5,dmg:10,rng:4.0,spd:1.0,lbl:'クラウドゲーム機',eff:'★最大+50%',bf:1.50,abilityUnlock:true}],
+  drone:      [{c:0,pg:0,pc:4,dmg:40,rng:5.0,spd:1.0,lbl:'ドローン',eff:'空中狙撃'},{c:100,pg:0,pc:5,dmg:65,rng:6.0,spd:1.3,lbl:'軍用ドローン',eff:'攻速UP'},{c:420,pg:0,pc:6,dmg:95,rng:7.0,spd:1.7,lbl:'戦略ドローン',eff:'★同時2体狙い',abilityUnlock:true}],
+  heatpump:   [{c:0,pg:0,pc:4,dmg:35,rng:2.8,spd:1.0,lbl:'ヒートポンプ',eff:'冷熱両用'},{c:100,pg:0,pc:5,dmg:55,rng:3.2,spd:1.3,lbl:'高効率ポンプ',eff:'攻速UP'},{c:420,pg:0,pc:6,dmg:82,rng:3.6,spd:1.6,lbl:'業務用',eff:'★凍結+炎上同時',abilityUnlock:true}],
+  vrheadset:  [{c:0,pg:0,pc:4,dmg:22,rng:3.5,spd:1.2,lbl:'VRヘッドセット',eff:'混乱'},{c:100,pg:0,pc:5,dmg:36,rng:4.0,spd:1.5,lbl:'4K VR',eff:'攻速UP'},{c:420,pg:0,pc:6,dmg:55,rng:4.5,spd:1.8,lbl:'8K VR',eff:'★範囲混乱',abilityUnlock:true}],
+  holodeck:   [{c:0,pg:0,pc:5,dmg:0,rng:4.0,spd:0,lbl:'ホロデッキ',eff:'分身召喚',bf:1.30},{c:100,pg:0,pc:6,dmg:0,rng:5.0,spd:0,lbl:'ホログラム劇場',eff:'+50%',bf:1.50},{c:420,pg:0,pc:7,dmg:18,rng:5.5,spd:1.0,lbl:'リアルホロ',eff:'★実体化ダメ',bf:1.70,abilityUnlock:true}],
+  robotarm:   [{c:0,pg:0,pc:6,dmg:55,rng:3.0,spd:1.6,lbl:'ロボットアーム',eff:'多腕DPS'},{c:100,pg:0,pc:7,dmg:90,rng:3.5,spd:2.0,lbl:'8軸アーム',eff:'攻速UP'},{c:440,pg:0,pc:8,dmg:140,rng:4.0,spd:2.5,lbl:'量子アーム',eff:'★アーム+1',abilityUnlock:true}],
+  quantumchip:[{c:0,pg:0,pc:8,dmg:100,rng:4.0,spd:1.0,lbl:'量子チップ',eff:'量子消滅'},{c:120,pg:0,pc:10,dmg:170,rng:5.0,spd:1.4,lbl:'もつれチップ',eff:'攻速UP'},{c:520,pg:0,pc:12,dmg:260,rng:6.0,spd:1.8,lbl:'観測者チップ',eff:'★対ボス即消滅UP',abilityUnlock:true}],
 };
-
-// Enemies with 3 mob types + named bosses
 export const EDEFS: Record<EnemyType, EnemyDef> = {
   dust:       { em:'🌫️', hp:80,   spd:45,  rew:10, dmg:1, col:'#b0b0a0', name:'ダスト', role:'基本型', skillName:'粉塵行進', skillDesc:'特別な能力はないが数で押し寄せる。', guide:'ケトルやランプの基礎火力で早めに処理。序盤の資金源。', pixel:true },
   fast_dust:  { em:'💨',  hp:50,   spd:80,  rew:12, dmg:1, col:'#e0d090', name:'スピードダスト', role:'高速型', skillName:'高速すり抜け', skillDesc:'HPは低いが移動が速く、終盤ラインを抜けやすい。', guide:'扇風機・スピーカー・エアコンで減速してから狙撃。', pixel:true },
