@@ -62,6 +62,36 @@ export const TDEFS: Record<TowerID, TowerDef> = {
   tesla:     { n:'テスラコイル',     em:'⚡', r:'G',  rc:'#7c4dff', baseCost:400, req:'dryer',    ability:'chainlightning', personality:'狂天才', quote:'「神をも超える電撃！食らえ、バカ共！」', role:'チェーンDPS', skillName:'チェーンライトニング', skillDesc:'雷が複数敵を連鎖。Lv3でヒット数+1、雷の跳躍範囲も拡大。' },
   // OD - Overdrive
   plasma:    { n:'プラズマキャノン', em:'🔱', r:'OD', rc:'#ffd700', baseCost:500, req:'superpc',  personality:'破壊神', quote:'「宇宙の終わりを見たいか？これが答えだ！！」', role:'AOE殲滅', skillName:'プラズマアポカリプス', skillDesc:'全体貫通の破壊光線。Lv3で「世界を焼く」発動、AOE+30%。' },
+
+  // ── v1.5 expansion: 20 new appliances ──
+  // C
+  shaver:     { n:'シェーバー',       em:'🪒', r:'C', rc:'#bdbdbd', baseCost:30,  req:null,        personality:'快活',         quote:'「サクッと刈り取る！」', role:'高速近接', skillName:'クイックトリム', skillDesc:'素早い連続斬り。Lv3で出血DoT付与。' },
+  printer:    { n:'プリンター',       em:'🖨️', r:'C', rc:'#90a4ae', baseCost:35,  req:null,        personality:'職人気質',     quote:'「インク満タン、いつでも出力可能！」', role:'設置補助', skillName:'インクスプレー', skillDesc:'インクで視界妨害。Lv3で命中率DOWN付与。' },
+  // U
+  heater:     { n:'ヒーター',         em:'🔥', r:'U', rc:'#ff8a65', baseCost:55,  req:'kettle',    personality:'熱血漢',       quote:'「全身全霊で温めるぜ！」', role:'範囲炎上', skillName:'ヒートウェーブ', skillDesc:'周囲を加熱。Lv3で炎上拡散。' },
+  humidifier: { n:'加湿器',           em:'💦', r:'U', rc:'#80deea', baseCost:50,  req:'cord',      personality:'冷静沈着',     quote:'「乾いた敵を、霧で覆う。」', role:'霧スロー', skillName:'ミストフォグ', skillDesc:'霧で減速＋命中DOWN。Lv3で凍結確率UP。' },
+  iron:       { n:'アイロン',         em:'♨️', r:'U', rc:'#ffb74d', baseCost:60,  req:'kettle',    personality:'完璧主義者',   quote:'「シワも敵も、平らに伸ばす。」', role:'近接重撃', skillName:'プレスダウン', skillDesc:'重い一撃で敵を圧潰。Lv3でスタン付与。' },
+  blender:    { n:'ミキサー',         em:'🥤', r:'U', rc:'#ce93d8', baseCost:65,  req:'kettle',    personality:'狂天才',       quote:'「全部、混ぜちまえ！」', role:'回転AOE', skillName:'ブレンドストーム', skillDesc:'刃物の渦で周囲を切り刻む。Lv3で吸引付き。' },
+  waffleiron: { n:'ワッフル焼き機',   em:'🧇', r:'U', rc:'#d7ccc8', baseCost:55,  req:'toaster',   personality:'職人気質',     quote:'「カリッとふわっと、絶妙に。」', role:'グリッドDPS', skillName:'グリッドプレス', skillDesc:'格子状に範囲攻撃。Lv3で焼印スタン。' },
+  // R
+  air_purifier:{ n:'空気清浄機',      em:'🫧', r:'R', rc:'#b3e5fc', baseCost:90,  req:'fan',       personality:'冷静沈着',     quote:'「不純物は許容しない。」', role:'浄化/弱体', skillName:'クリーンエア', skillDesc:'敵バフを除去＋スロー。Lv3で味方デバフも解除。' },
+  juicer:     { n:'ジューサー',       em:'🍹', r:'R', rc:'#ef9a9a', baseCost:85,  req:'kettle',    personality:'快活',         quote:'「絞り尽くしてやる！」', role:'吸収DPS', skillName:'スクイーズドレイン', skillDesc:'敵HPを削って自陣HPに変換。Lv3で回復量UP。' },
+  waterserver:{ n:'ウォーターサーバー',em:'🚰', r:'R', rc:'#4dd0e1', baseCost:95,  req:'cord',      personality:'頼れる兄貴',   quote:'「水分補給は基本だ。」', role:'回復/サポ', skillName:'ハイドレーション', skillDesc:'周囲味方の発熱クールダウン。Lv3で基地HP少回復。' },
+  fryer:      { n:'フライヤー',       em:'🍟', r:'R', rc:'#ffca28', baseCost:90,  req:'toaster',   personality:'職人気質',     quote:'「カラッと揚げてやる！」', role:'油爆AOE', skillName:'オイルバースト', skillDesc:'油を撒いて炎上爆発。Lv3で延焼範囲UP。' },
+  // E
+  solarpanel: { n:'ソーラーパネル',   em:'🔆', r:'E', rc:'#ffeb3b', baseCost:140, req:'cord',      personality:'縁の下の力持ち', quote:'「太陽がある限り、無限の電力を。」', role:'発電強化', skillName:'ソーラーチャージ', skillDesc:'供給+大幅。Lv3で晴天バフ全体ATK+5%。' },
+  battery:    { n:'蓄電池',           em:'🔋', r:'E', rc:'#aed581', baseCost:135, req:'cord',      personality:'冷静沈着',     quote:'「危機の時こそ、蓄えが力。」', role:'非常電源', skillName:'エマージェンシーパワー', skillDesc:'ブレーカー時に一定時間電力供給。Lv3で持続UP。' },
+  gameconsole:{ n:'ゲーム機',         em:'🎮', r:'E', rc:'#7e57c2', baseCost:130, req:'router',    personality:'天才型',       quote:'「コンボ決めるぜ、見とけよ！」', role:'コンボバフ', skillName:'コンボフィーバー', skillDesc:'連続撃破でATK倍率上昇。Lv3で最大+50%。' },
+  // L
+  drone:      { n:'ドローン',         em:'🛸', r:'L', rc:'#90caf9', baseCost:200, req:'router',    personality:'自由奔放',     quote:'「空から狙い撃つ！」', role:'空中DPS', skillName:'スカイストライク', skillDesc:'マップ全域から敵を狙撃。Lv3で同時2体狙い。' },
+  heatpump:   { n:'ヒートポンプ',     em:'♻️', r:'L', rc:'#80cbc4', baseCost:210, req:'aircon',    personality:'超論理型',     quote:'「熱は移すもの、無駄にしない。」', role:'冷熱両用', skillName:'デュアルサイクル', skillDesc:'凍結と炎上を交互に付与。Lv3で同時付与可能。' },
+  // M
+  vrheadset:  { n:'VRヘッドセット',   em:'🥽', r:'M', rc:'#ec407a', baseCost:280, req:'projector', personality:'幻想家',       quote:'「現実も虚構も、私の手中だ。」', role:'幻惑/混乱', skillName:'バーチャルマインド', skillDesc:'敵を混乱させ進路を逆走。Lv3で範囲拡大。' },
+  holodeck:   { n:'ホロデッキ',       em:'🌌', r:'M', rc:'#f06292', baseCost:300, req:'theater',   personality:'カリスマ',     quote:'「世界そのものを描き直す。」', role:'分身召喚', skillName:'ホログラフィック・アーミー', skillDesc:'味方の幻影を出現させ攻撃。Lv3で実体化ダメージ。' },
+  // G
+  robotarm:   { n:'ロボットアーム',   em:'🦾', r:'G', rc:'#26c6da', baseCost:380, req:'superpc',   personality:'頼れる兄貴',   quote:'「正確無比、誤差ゼロ。」', role:'多腕DPS', skillName:'マルチアームストライク', skillDesc:'複数の敵を同時に殴打。Lv3でアーム数+1。' },
+  // OD
+  quantumchip:{ n:'量子チップ',       em:'⚛️', r:'OD', rc:'#00e5ff', baseCost:520, req:'quantumchip_unused' as TowerID, personality:'破壊神', quote:'「観測した瞬間、敵は消滅する。」', role:'量子殲滅', skillName:'クァンタムイレース', skillDesc:'確率で敵を即時消滅。Lv3で対ボス確率UP。' },
 };
 
 export const RCOLOR = Object.fromEntries(
