@@ -62,6 +62,36 @@ export const TDEFS: Record<TowerID, TowerDef> = {
   tesla:     { n:'テスラコイル',     em:'⚡', r:'G',  rc:'#7c4dff', baseCost:400, req:'dryer',    ability:'chainlightning', personality:'狂天才', quote:'「神をも超える電撃！食らえ、バカ共！」', role:'チェーンDPS', skillName:'チェーンライトニング', skillDesc:'雷が複数敵を連鎖。Lv3でヒット数+1、雷の跳躍範囲も拡大。' },
   // OD - Overdrive
   plasma:    { n:'プラズマキャノン', em:'🔱', r:'OD', rc:'#ffd700', baseCost:500, req:'superpc',  personality:'破壊神', quote:'「宇宙の終わりを見たいか？これが答えだ！！」', role:'AOE殲滅', skillName:'プラズマアポカリプス', skillDesc:'全体貫通の破壊光線。Lv3で「世界を焼く」発動、AOE+30%。' },
+
+  // ── v1.5 expansion: 20 new appliances ──
+  // C
+  shaver:     { n:'シェーバー',       em:'🪒', r:'C', rc:'#bdbdbd', baseCost:30,  req:null,        personality:'快活',         quote:'「サクッと刈り取る！」', role:'高速近接', skillName:'クイックトリム', skillDesc:'素早い連続斬り。Lv3で出血DoT付与。' },
+  printer:    { n:'プリンター',       em:'🖨️', r:'C', rc:'#90a4ae', baseCost:35,  req:null,        personality:'職人気質',     quote:'「インク満タン、いつでも出力可能！」', role:'設置補助', skillName:'インクスプレー', skillDesc:'インクで視界妨害。Lv3で命中率DOWN付与。' },
+  // U
+  heater:     { n:'ヒーター',         em:'🔥', r:'U', rc:'#ff8a65', baseCost:55,  req:'kettle',    personality:'熱血漢',       quote:'「全身全霊で温めるぜ！」', role:'範囲炎上', skillName:'ヒートウェーブ', skillDesc:'周囲を加熱。Lv3で炎上拡散。' },
+  humidifier: { n:'加湿器',           em:'💦', r:'U', rc:'#80deea', baseCost:50,  req:'cord',      personality:'冷静沈着',     quote:'「乾いた敵を、霧で覆う。」', role:'霧スロー', skillName:'ミストフォグ', skillDesc:'霧で減速＋命中DOWN。Lv3で凍結確率UP。' },
+  iron:       { n:'アイロン',         em:'♨️', r:'U', rc:'#ffb74d', baseCost:60,  req:'kettle',    personality:'完璧主義者',   quote:'「シワも敵も、平らに伸ばす。」', role:'近接重撃', skillName:'プレスダウン', skillDesc:'重い一撃で敵を圧潰。Lv3でスタン付与。' },
+  blender:    { n:'ミキサー',         em:'🥤', r:'U', rc:'#ce93d8', baseCost:65,  req:'kettle',    personality:'狂天才',       quote:'「全部、混ぜちまえ！」', role:'回転AOE', skillName:'ブレンドストーム', skillDesc:'刃物の渦で周囲を切り刻む。Lv3で吸引付き。' },
+  waffleiron: { n:'ワッフル焼き機',   em:'🧇', r:'U', rc:'#d7ccc8', baseCost:55,  req:'toaster',   personality:'職人気質',     quote:'「カリッとふわっと、絶妙に。」', role:'グリッドDPS', skillName:'グリッドプレス', skillDesc:'格子状に範囲攻撃。Lv3で焼印スタン。' },
+  // R
+  air_purifier:{ n:'空気清浄機',      em:'🫧', r:'R', rc:'#b3e5fc', baseCost:90,  req:'fan',       personality:'冷静沈着',     quote:'「不純物は許容しない。」', role:'浄化/弱体', skillName:'クリーンエア', skillDesc:'敵バフを除去＋スロー。Lv3で味方デバフも解除。' },
+  juicer:     { n:'ジューサー',       em:'🍹', r:'R', rc:'#ef9a9a', baseCost:85,  req:'kettle',    personality:'快活',         quote:'「絞り尽くしてやる！」', role:'吸収DPS', skillName:'スクイーズドレイン', skillDesc:'敵HPを削って自陣HPに変換。Lv3で回復量UP。' },
+  waterserver:{ n:'ウォーターサーバー',em:'🚰', r:'R', rc:'#4dd0e1', baseCost:95,  req:'cord',      personality:'頼れる兄貴',   quote:'「水分補給は基本だ。」', role:'回復/サポ', skillName:'ハイドレーション', skillDesc:'周囲味方の発熱クールダウン。Lv3で基地HP少回復。' },
+  fryer:      { n:'フライヤー',       em:'🍟', r:'R', rc:'#ffca28', baseCost:90,  req:'toaster',   personality:'職人気質',     quote:'「カラッと揚げてやる！」', role:'油爆AOE', skillName:'オイルバースト', skillDesc:'油を撒いて炎上爆発。Lv3で延焼範囲UP。' },
+  // E
+  solarpanel: { n:'ソーラーパネル',   em:'🔆', r:'E', rc:'#ffeb3b', baseCost:140, req:'cord',      personality:'縁の下の力持ち', quote:'「太陽がある限り、無限の電力を。」', role:'発電強化', skillName:'ソーラーチャージ', skillDesc:'供給+大幅。Lv3で晴天バフ全体ATK+5%。' },
+  battery:    { n:'蓄電池',           em:'🔋', r:'E', rc:'#aed581', baseCost:135, req:'cord',      personality:'冷静沈着',     quote:'「危機の時こそ、蓄えが力。」', role:'非常電源', skillName:'エマージェンシーパワー', skillDesc:'ブレーカー時に一定時間電力供給。Lv3で持続UP。' },
+  gameconsole:{ n:'ゲーム機',         em:'🎮', r:'E', rc:'#7e57c2', baseCost:130, req:'router',    personality:'天才型',       quote:'「コンボ決めるぜ、見とけよ！」', role:'コンボバフ', skillName:'コンボフィーバー', skillDesc:'連続撃破でATK倍率上昇。Lv3で最大+50%。' },
+  // L
+  drone:      { n:'ドローン',         em:'🛸', r:'L', rc:'#90caf9', baseCost:200, req:'router',    personality:'自由奔放',     quote:'「空から狙い撃つ！」', role:'空中DPS', skillName:'スカイストライク', skillDesc:'マップ全域から敵を狙撃。Lv3で同時2体狙い。' },
+  heatpump:   { n:'ヒートポンプ',     em:'♻️', r:'L', rc:'#80cbc4', baseCost:210, req:'aircon',    personality:'超論理型',     quote:'「熱は移すもの、無駄にしない。」', role:'冷熱両用', skillName:'デュアルサイクル', skillDesc:'凍結と炎上を交互に付与。Lv3で同時付与可能。' },
+  // M
+  vrheadset:  { n:'VRヘッドセット',   em:'🥽', r:'M', rc:'#ec407a', baseCost:280, req:'projector', personality:'幻想家',       quote:'「現実も虚構も、私の手中だ。」', role:'幻惑/混乱', skillName:'バーチャルマインド', skillDesc:'敵を混乱させ進路を逆走。Lv3で範囲拡大。' },
+  holodeck:   { n:'ホロデッキ',       em:'🌌', r:'M', rc:'#f06292', baseCost:300, req:'theater',   personality:'カリスマ',     quote:'「世界そのものを描き直す。」', role:'分身召喚', skillName:'ホログラフィック・アーミー', skillDesc:'味方の幻影を出現させ攻撃。Lv3で実体化ダメージ。' },
+  // G
+  robotarm:   { n:'ロボットアーム',   em:'🦾', r:'G', rc:'#26c6da', baseCost:380, req:'superpc',   personality:'頼れる兄貴',   quote:'「正確無比、誤差ゼロ。」', role:'多腕DPS', skillName:'マルチアームストライク', skillDesc:'複数の敵を同時に殴打。Lv3でアーム数+1。' },
+  // OD
+  quantumchip:{ n:'量子チップ',       em:'⚛️', r:'OD', rc:'#00e5ff', baseCost:520, req:'superpc', personality:'破壊神', quote:'「観測した瞬間、敵は消滅する。」', role:'量子殲滅', skillName:'クァンタムイレース', skillDesc:'確率で敵を即時消滅。Lv3で対ボス確率UP。' },
 };
 
 export const RCOLOR = Object.fromEntries(
@@ -187,9 +217,28 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     { c:60,  pg:0, pc:10,dmg:200,rng:5.0, spd:1.2, lbl:'メガプラズマ',     eff:'攻速UP' },
     { c:300, pg:0, pc:12,dmg:300,rng:6.0, spd:1.8, lbl:'ギガプラズマ',     eff:'★世界を焼く！', abilityUnlock:true },
   ],
+  // ── v1.5 expansion upgrades ──
+  shaver:     [{c:0,pg:0,pc:1,dmg:14,rng:1.6,spd:2.4,lbl:'シェーバー',eff:'高速斬り'},{c:50,pg:0,pc:1,dmg:22,rng:1.8,spd:2.8,lbl:'5枚刃',eff:'攻速UP'},{c:240,pg:0,pc:2,dmg:35,rng:2.0,spd:3.2,lbl:'プロシェーバー',eff:'★出血DoT',abilityUnlock:true}],
+  printer:    [{c:0,pg:0,pc:1,dmg:8,rng:2.4,spd:1.0,lbl:'プリンター',eff:'インク妨害'},{c:60,pg:0,pc:1,dmg:14,rng:2.6,spd:1.2,lbl:'レーザー',eff:'攻速UP'},{c:260,pg:0,pc:2,dmg:24,rng:2.8,spd:1.5,lbl:'業務用複合機',eff:'★命中DOWN',abilityUnlock:true}],
+  heater:     [{c:0,pg:0,pc:2,dmg:22,rng:2.4,spd:1.1,lbl:'ヒーター',eff:'範囲炎上'},{c:70,pg:0,pc:2,dmg:36,rng:2.7,spd:1.4,lbl:'石油ヒーター',eff:'攻速UP'},{c:280,pg:0,pc:3,dmg:55,rng:3.0,spd:1.7,lbl:'ファンヒーター',eff:'★炎拡散',abilityUnlock:true}],
+  humidifier: [{c:0,pg:0,pc:2,dmg:6,rng:3.0,spd:1.4,lbl:'加湿器',eff:'霧スロー'},{c:70,pg:0,pc:2,dmg:12,rng:3.4,spd:1.7,lbl:'超音波加湿器',eff:'攻速UP'},{c:280,pg:0,pc:3,dmg:20,rng:3.8,spd:2.0,lbl:'蒸気加湿器',eff:'★凍結確率',abilityUnlock:true}],
+  iron:       [{c:0,pg:0,pc:2,dmg:30,rng:1.6,spd:0.8,lbl:'アイロン',eff:'重撃'},{c:70,pg:0,pc:2,dmg:50,rng:1.8,spd:1.0,lbl:'スチームアイロン',eff:'攻速UP'},{c:300,pg:0,pc:3,dmg:75,rng:2.0,spd:1.3,lbl:'業務用アイロン',eff:'★スタン',abilityUnlock:true}],
+  blender:    [{c:0,pg:0,pc:2,dmg:20,rng:2.0,spd:1.5,lbl:'ミキサー',eff:'回転AOE'},{c:70,pg:0,pc:2,dmg:32,rng:2.2,spd:1.8,lbl:'高速ミキサー',eff:'攻速UP'},{c:300,pg:0,pc:3,dmg:50,rng:2.5,spd:2.1,lbl:'真空ミキサー',eff:'★吸引',abilityUnlock:true}],
+  waffleiron: [{c:0,pg:0,pc:2,dmg:24,rng:2.2,spd:1.0,lbl:'ワッフル焼き機',eff:'格子AOE'},{c:70,pg:0,pc:2,dmg:38,rng:2.5,spd:1.3,lbl:'プロ用',eff:'攻速UP'},{c:300,pg:0,pc:3,dmg:58,rng:2.8,spd:1.6,lbl:'業務用ワッフル',eff:'★焼印スタン',abilityUnlock:true}],
+  air_purifier:[{c:0,pg:0,pc:2,dmg:15,rng:3.0,spd:1.2,lbl:'空気清浄機',eff:'浄化スロー'},{c:80,pg:0,pc:3,dmg:24,rng:3.4,spd:1.5,lbl:'HEPA',eff:'攻速UP'},{c:340,pg:0,pc:4,dmg:38,rng:3.8,spd:1.8,lbl:'プラズマクラスタ',eff:'★味方デバフ解除',abilityUnlock:true}],
+  juicer:     [{c:0,pg:0,pc:2,dmg:26,rng:2.2,spd:1.0,lbl:'ジューサー',eff:'吸収'},{c:80,pg:0,pc:3,dmg:42,rng:2.5,spd:1.3,lbl:'低速ジューサー',eff:'攻速UP'},{c:340,pg:0,pc:4,dmg:62,rng:2.8,spd:1.6,lbl:'コールドプレス',eff:'★HP変換UP',abilityUnlock:true}],
+  waterserver:[{c:0,pg:1,pc:2,dmg:0,rng:3.2,spd:0,lbl:'ウォーターサーバー',eff:'クールダウン'},{c:80,pg:2,pc:2,dmg:0,rng:3.6,spd:0,lbl:'温冷型',eff:'範囲UP'},{c:340,pg:3,pc:3,dmg:8,rng:4.0,spd:1.0,lbl:'高機能型',eff:'★基地HP回復',abilityUnlock:true}],
+  fryer:      [{c:0,pg:0,pc:3,dmg:34,rng:2.4,spd:0.9,lbl:'フライヤー',eff:'油爆AOE'},{c:80,pg:0,pc:3,dmg:55,rng:2.8,spd:1.2,lbl:'業務用',eff:'攻速UP'},{c:340,pg:0,pc:4,dmg:82,rng:3.2,spd:1.5,lbl:'圧力フライヤー',eff:'★延焼拡大',abilityUnlock:true}],
+  solarpanel: [{c:0,pg:6,pc:0,dmg:0,rng:0,spd:0,lbl:'ソーラーパネル',eff:'+6W/秒'},{c:90,pg:10,pc:0,dmg:0,rng:0,spd:0,lbl:'高効率パネル',eff:'+10W/秒'},{c:380,pg:15,pc:0,dmg:0,rng:0,spd:0,lbl:'ソーラーアレイ',eff:'★晴天バフ全体ATK+5%',abilityUnlock:true}],
+  battery:    [{c:0,pg:4,pc:0,dmg:0,rng:0,spd:0,lbl:'蓄電池',eff:'非常電源(短)'},{c:90,pg:7,pc:0,dmg:0,rng:0,spd:0,lbl:'リチウム電池',eff:'+7W/秒'},{c:380,pg:12,pc:0,dmg:0,rng:0,spd:0,lbl:'グリッドバッテリー',eff:'★ブレーカー時電力供給',abilityUnlock:true}],
+  gameconsole:[{c:0,pg:0,pc:3,dmg:0,rng:3.0,spd:0,lbl:'ゲーム機',eff:'コンボバフ',bf:1.20},{c:90,pg:0,pc:4,dmg:0,rng:3.4,spd:0,lbl:'次世代機',eff:'+35%',bf:1.35},{c:380,pg:0,pc:5,dmg:10,rng:4.0,spd:1.0,lbl:'クラウドゲーム機',eff:'★最大+50%',bf:1.50,abilityUnlock:true}],
+  drone:      [{c:0,pg:0,pc:4,dmg:40,rng:5.0,spd:1.0,lbl:'ドローン',eff:'空中狙撃'},{c:100,pg:0,pc:5,dmg:65,rng:6.0,spd:1.3,lbl:'軍用ドローン',eff:'攻速UP'},{c:420,pg:0,pc:6,dmg:95,rng:7.0,spd:1.7,lbl:'戦略ドローン',eff:'★同時2体狙い',abilityUnlock:true}],
+  heatpump:   [{c:0,pg:0,pc:4,dmg:35,rng:2.8,spd:1.0,lbl:'ヒートポンプ',eff:'冷熱両用'},{c:100,pg:0,pc:5,dmg:55,rng:3.2,spd:1.3,lbl:'高効率ポンプ',eff:'攻速UP'},{c:420,pg:0,pc:6,dmg:82,rng:3.6,spd:1.6,lbl:'業務用',eff:'★凍結+炎上同時',abilityUnlock:true}],
+  vrheadset:  [{c:0,pg:0,pc:4,dmg:22,rng:3.5,spd:1.2,lbl:'VRヘッドセット',eff:'混乱'},{c:100,pg:0,pc:5,dmg:36,rng:4.0,spd:1.5,lbl:'4K VR',eff:'攻速UP'},{c:420,pg:0,pc:6,dmg:55,rng:4.5,spd:1.8,lbl:'8K VR',eff:'★範囲混乱',abilityUnlock:true}],
+  holodeck:   [{c:0,pg:0,pc:5,dmg:0,rng:4.0,spd:0,lbl:'ホロデッキ',eff:'分身召喚',bf:1.30},{c:100,pg:0,pc:6,dmg:0,rng:5.0,spd:0,lbl:'ホログラム劇場',eff:'+50%',bf:1.50},{c:420,pg:0,pc:7,dmg:18,rng:5.5,spd:1.0,lbl:'リアルホロ',eff:'★実体化ダメ',bf:1.70,abilityUnlock:true}],
+  robotarm:   [{c:0,pg:0,pc:6,dmg:55,rng:3.0,spd:1.6,lbl:'ロボットアーム',eff:'多腕DPS'},{c:100,pg:0,pc:7,dmg:90,rng:3.5,spd:2.0,lbl:'8軸アーム',eff:'攻速UP'},{c:440,pg:0,pc:8,dmg:140,rng:4.0,spd:2.5,lbl:'量子アーム',eff:'★アーム+1',abilityUnlock:true}],
+  quantumchip:[{c:0,pg:0,pc:8,dmg:100,rng:4.0,spd:1.0,lbl:'量子チップ',eff:'量子消滅'},{c:120,pg:0,pc:10,dmg:170,rng:5.0,spd:1.4,lbl:'もつれチップ',eff:'攻速UP'},{c:520,pg:0,pc:12,dmg:260,rng:6.0,spd:1.8,lbl:'観測者チップ',eff:'★対ボス即消滅UP',abilityUnlock:true}],
 };
-
-// Enemies with 3 mob types + named bosses
 export const EDEFS: Record<EnemyType, EnemyDef> = {
   dust:       { em:'🌫️', hp:80,   spd:45,  rew:10, dmg:1, col:'#b0b0a0', name:'ダスト', role:'基本型', skillName:'粉塵行進', skillDesc:'特別な能力はないが数で押し寄せる。', guide:'ケトルやランプの基礎火力で早めに処理。序盤の資金源。', pixel:true },
   fast_dust:  { em:'💨',  hp:50,   spd:80,  rew:12, dmg:1, col:'#e0d090', name:'スピードダスト', role:'高速型', skillName:'高速すり抜け', skillDesc:'HPは低いが移動が速く、終盤ラインを抜けやすい。', guide:'扇風機・スピーカー・エアコンで減速してから狙撃。', pixel:true },
