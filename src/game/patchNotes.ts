@@ -1,4 +1,4 @@
-export const APP_VERSION = 'v1.3.0';
+export const APP_VERSION = 'v1.4.0';
 
 export type PatchCategory = 'feature' | 'balance' | 'enemy' | 'gacha' | 'fix';
 
@@ -18,6 +18,19 @@ export const PATCH_CATEGORY_META: Record<PatchCategory, { label: string; color: 
 };
 
 export const PATCH_NOTES: PatchNote[] = [
+  {
+    version: 'v1.4.0',
+    date: '2026-05-07',
+    highlights: ['チュートリアルUI刷新', '氷ボス「フローズデビル」戦略型に再設計'],
+    changes: {
+      feature: ['チュートリアルにSTEP番号・タイトル・サブ説明・👉アクションラベルを追加し、何をすればよいか一目で分かる構成に'],
+      enemy: [
+        '氷電魔をフローズデビルへ改名し、4種スキル（氷結／暴風／極寒嵐／コスト撹乱）を持つ戦略型ボスに再設計',
+        '攻略：電気ケトルで氷を溶かし、扇風機で暴風を相殺、延長コードで射程拡張＆バフ。十字路でコンボ必須',
+      ],
+      fix: ['チュートリアルの指示文を「読む」から「タップする」へ短縮し離脱を低減'],
+    },
+  },
   {
     version: 'v1.3.0',
     date: '2026-05-06',
