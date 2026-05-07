@@ -434,12 +434,17 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
       {/* バナー */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={`${step}-${stepBanner.text}`}
+          key={`${step}-${stepBanner.title}`}
           initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
           className="glass-panel px-4 py-3 mb-3 max-w-sm w-full text-center relative z-10"
         >
-          <div className="text-3xl mb-1">{stepBanner.em}</div>
-          <div className="text-sm font-bold text-foreground">{stepBanner.text}</div>
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-700 text-white">STEP {step}/8</span>
+            <span className="text-2xl">{stepBanner.em}</span>
+          </div>
+          <div className="text-base font-black text-foreground leading-tight">{stepBanner.title}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">{stepBanner.sub}</div>
+          <div className="text-[10px] mt-1.5 inline-block px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-200 font-bold">👉 {stepBanner.action}</div>
         </motion.div>
       </AnimatePresence>
 
