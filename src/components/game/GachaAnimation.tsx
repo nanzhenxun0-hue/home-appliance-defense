@@ -89,9 +89,53 @@ const GachaAnimation = ({ results, onComplete, playSound, isNew }: GachaAnimatio
   const boxStyle = getBoxStyle(highestRarity);
 
   return (
-    <div className="fixed inset-0 z-[9998] flex items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.85)' }}
+    <div className="fixed inset-0 z-[9998] flex items-center justify-center overflow-hidden"
+      style={{ background: hasOD ? 'radial-gradient(ellipse at center, rgba(80,30,0,0.92), rgba(0,0,0,0.96))' : hasHighRare ? 'radial-gradient(ellipse at center, rgba(40,0,60,0.9), rgba(0,0,0,0.95))' : 'rgba(0,0,0,0.85)' }}
       onClick={phase === 'done' ? onComplete : phase === 'unbox' ? handleTapOpen : undefined}>
+
+      {/* ── BG: animated scanlines + starburst ── */}
+      <div className="absolute inset-0 pointer-events-none opacity-40" style={{
+        background: 'repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(255,255,255,0.04) 3px, rgba(255,255,255,0.04) 4px)',
+      }} />
+      {(phase === 'reveal' || phase === 'done') && (
+        <motion.div className="absolute inset-0 pointer-events-none"
+          initial={{ opacity: 0, scale: 0.6 }}
+          animate={{ opacity: [0, 0.6, 0.3], scale: [0.6, 1.4, 1.6] }}
+          transition={{ duration: 1.6, ease: 'easeOut' }}
+          style={{
+            background: hasOD
+              ? 'radial-gradient(circle at center, rgba(255,215,0,0.55), transparent 55%)'
+              : hasHighRare
+              ? 'radial-gradient(circle at center, rgba(170,80,255,0.5), transparent 55%)'
+              : 'radial-gradient(circle at center, rgba(80,160,255,0.35), transparent 60%)',
+          }} />
+      )}
+      {/* Floating sparkles */}
+      {(phase === 'reveal' || phase === 'done') && Array.from({ length: hasOD ? 24 : hasHighRare ? 14 : 8 }).map((_, i) => (
+        <motion.div key={`spark-${i}`} className="absolute pointer-events-none rounded-full"
+          initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
+          animate={{
+            opacity: [0, 1, 0],
+            x: (Math.random() - 0.5) * 600,
+            y: (Math.random() - 0.5) * 600,
+            scale: [0, 1.2, 0],
+          }}
+          transition={{ duration: 1.6 + Math.random() * 1.2, delay: Math.random() * 0.8, repeat: Infinity, repeatDelay: Math.random() }}
+          style={{
+            left: '50%', top: '50%',
+            width: 4 + Math.random() * 6, height: 4 + Math.random() * 6,
+            background: hasOD ? '#ffd700' : hasHighRare ? '#e070ff' : '#80c0ff',
+            boxShadow: hasOD ? '0 0 12px #ffd700' : hasHighRare ? '0 0 10px #e070ff' : '0 0 8px #80c0ff',
+          }} />
+      ))}
+      {/* Screen flash on reveal start */}
+      {phase === 'reveal' && (
+        <motion.div className="absolute inset-0 pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, hasOD ? 0.95 : hasHighRare ? 0.7 : 0.4, 0] }}
+          transition={{ duration: 0.6 }}
+          style={{ background: hasOD ? '#fffbe6' : hasHighRare ? '#f5e6ff' : '#e6f0ff' }} />
+      )}
 
       <AnimatePresence mode="wait">
         {/* ── Phase: Truck arriving ── */}
