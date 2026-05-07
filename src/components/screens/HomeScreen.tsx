@@ -86,7 +86,7 @@ const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, o
 
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
       className="mt-8 flex gap-2 flex-wrap justify-center relative z-10">
-      {[['🗺️', '5エリア'], ['🎮', '7体編成'], ['⚡', '23ユニット'], ['👹', '敵図鑑']].map(([em, t]) => (
+      {[['🗺️', '5エリア'], ['🎮', '7体編成'], ['⚡', '43ユニット'], ['👹', '敵図鑑']].map(([em, t]) => (
         <span key={t} className="game-badge text-[9px]">{em} {t}</span>
       ))}
     </motion.div>
