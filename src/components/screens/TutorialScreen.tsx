@@ -335,15 +335,15 @@ const TutorialScreen = ({ onComplete }: TutorialScreenProps) => {
 
   const stepBanner = (() => {
     switch (step) {
-      case 0: return { em: '👋', text: 'スタートを押そう' };
-      case 1: return { em: '♨️', text: '光ったマスに「電気ケトル」を置こう' };
-      case 2: return { em: '🤔', text: hint ?? 'あれ？動かない…？' };
-      case 3: return { em: '🔌', text: '電力が必要みたい。延長コードを置こう' };
-      case 4: return { em: '⚡', text: '電力があると動く！' };
-      case 5: return { em: '➕', text: 'もう1体ケトルを置こうとしてみよう' };
-      case 6: return { em: '🔌', text: '延長コードを追加しよう' };
-      case 7: return { em: '🛡️', text: hint ?? '配置を工夫して防衛！' };
-      case 8: return { em: '🎓', text: '電力を管理して防衛しよう！' };
+      case 0: return { em: '👋', title: 'ようこそ！',         sub: '下の「▶ スタート」を押すだけ。',           action: '▶ スタート を押す' };
+      case 1: return { em: '♨️', title: 'まず1体置いてみよう', sub: '黄色く光るマスをタップ → ケトル設置。',     action: '光ったマスをタップ' };
+      case 2: return { em: '🤔', title: 'あれ？動かない…？',  sub: hint ?? 'ケトルが眠ってる💤 何か足りないかも。', action: '少し待って観察しよう' };
+      case 3: return { em: '🔌', title: '電力をつなごう',     sub: '青く光るマスをタップ → 延長コード設置。',   action: '青いマスをタップ' };
+      case 4: return { em: '⚡', title: '動いた！',           sub: '電力⚡ON → ケトルが攻撃開始！',             action: '撃退を見守ろう' };
+      case 5: return { em: '➕', title: 'もう1体ケトルを試す', sub: '光ったマスをタップ → でも電力不足になるかも。', action: '光ったマスをタップ' };
+      case 6: return { em: '🔌', title: 'コードを追加',       sub: '青いマスをタップして電力を増やす。',         action: '青いマスをタップ' };
+      case 7: return { em: '🛡️', title: '本番の防衛！',       sub: hint ?? '光ったマスにケトルを置いて守ろう。',  action: '光ったマスをタップ' };
+      case 8: return { em: '🎓', title: '修了！',             sub: '電力⚡を管理して家電を動かそう。',           action: '🎮 自由プレイへ' };
     }
   })();
 
