@@ -91,7 +91,7 @@ export const TDEFS: Record<TowerID, TowerDef> = {
   // G
   robotarm:   { n:'ロボットアーム',   em:'🦾', r:'G', rc:'#26c6da', baseCost:380, req:'superpc',   personality:'頼れる兄貴',   quote:'「正確無比、誤差ゼロ。」', role:'多腕DPS', skillName:'マルチアームストライク', skillDesc:'複数の敵を同時に殴打。Lv3でアーム数+1。' },
   // OD
-  quantumchip:{ n:'量子チップ',       em:'⚛️', r:'OD', rc:'#00e5ff', baseCost:520, req:'quantumchip_unused' as TowerID, personality:'破壊神', quote:'「観測した瞬間、敵は消滅する。」', role:'量子殲滅', skillName:'クァンタムイレース', skillDesc:'確率で敵を即時消滅。Lv3で対ボス確率UP。' },
+  quantumchip:{ n:'量子チップ',       em:'⚛️', r:'OD', rc:'#00e5ff', baseCost:520, req:'superpc', personality:'破壊神', quote:'「観測した瞬間、敵は消滅する。」', role:'量子殲滅', skillName:'クァンタムイレース', skillDesc:'確率で敵を即時消滅。Lv3で対ボス確率UP。' },
 };
 
 export const RCOLOR = Object.fromEntries(
