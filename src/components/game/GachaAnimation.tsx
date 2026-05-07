@@ -251,13 +251,19 @@ const GachaAnimation = ({ results, onComplete, playSound, isNew }: GachaAnimatio
                 return (
                   <motion.div key={`${i}-${tid}`}
                     className="flex flex-col items-center p-1.5 rounded-lg relative overflow-hidden"
-                    initial={{ scale: 0.3, opacity: 0, rotateY: 180 }}
-                    animate={revealed ? { scale: 1, opacity: 1, rotateY: 0 } : { scale: 0.6, opacity: 0.2 }}
-                    transition={{ duration: 0.4, type: 'spring', damping: 15 }}
+                    initial={{ scale: 0.3, opacity: 0, rotateY: 180, y: 20 }}
+                    animate={revealed
+                      ? (def.r === 'OD'
+                          ? { scale: [0.3, 1.4, 1], opacity: 1, rotateY: 0, y: 0 }
+                          : ['G','M','L'].includes(def.r)
+                          ? { scale: [0.3, 1.2, 1], opacity: 1, rotateY: 0, y: 0 }
+                          : { scale: 1, opacity: 1, rotateY: 0, y: 0 })
+                      : { scale: 0.6, opacity: 0.2 }}
+                    transition={{ duration: 0.55, type: 'spring', damping: 12 }}
                     style={{
                       background: revealed ? RARITY_COLOR[def.r] + '18' : bs.bg + '40',
-                      border: `1.5px solid ${revealed ? RARITY_COLOR[def.r] + '66' : '#333'}`,
-                      boxShadow: revealed ? bs.glow : 'none',
+                      border: `1.5px solid ${revealed ? RARITY_COLOR[def.r] + '88' : '#333'}`,
+                      boxShadow: revealed ? `${bs.glow}, 0 0 24px ${RARITY_COLOR[def.r]}55` : 'none',
                     }}>
                     {revealed ? (
                       <>
