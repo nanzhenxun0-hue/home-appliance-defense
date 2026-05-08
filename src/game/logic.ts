@@ -58,6 +58,9 @@ export const getWaves = (area: AreaKey) => AREA_WAVES[area] || AREA_WAVES['subur
 
 export const mkState = (diff: DifficultyKey, team: TowerID[], area: AreaKey = 'suburb'): GameState => {
   const d = DIFF[diff];
+  const path = getAreaPath(area);
+  const pathSet = getAreaPathSet(area);
+  const endless = diff === 'endless';
   return {
     grid: {}, timers: {}, abilityTimers: {}, enemies: [], projs: [], effs: [], particles: [],
     fireTraps: [],
@@ -73,14 +76,35 @@ export const mkState = (diff: DifficultyKey, team: TowerID[], area: AreaKey = 's
     ultActive: false,
     ultTimer: 0,
     cloggedTowers: new Map(),
+    path, pathSet, endless,
+    totalWaves: endless ? 0 : getWaves(area).length,
   };
+};
+
+// Endless wave generator — scales infinitely
+const endlessWave = (wi: number): { t: EnemyType; n: number; gap: number }[] => {
+  const w = wi + 1;
+  const groups: { t: EnemyType; n: number; gap: number }[] = [];
+  groups.push({ t: 'dust', n: 4 + Math.floor(w * 0.6), gap: Math.max(0.3, 1.2 - w * 0.01) });
+  if (w >= 2) groups.push({ t: 'fast_dust', n: 3 + Math.floor(w * 0.4), gap: 0.6 });
+  if (w >= 4) groups.push({ t: 'slime', n: 2 + Math.floor(w * 0.25), gap: 1.0 });
+  if (w >= 7) groups.push({ t: 'cockroach', n: 2 + Math.floor(w * 0.2), gap: 0.7 });
+  if (w >= 10) groups.push({ t: 'tank_slime', n: 1 + Math.floor(w * 0.12), gap: 1.5 });
+  if (w >= 15) groups.push({ t: 'virus', n: 1 + Math.floor(w * 0.15), gap: 0.9 });
+  if (w >= 20) groups.push({ t: 'surge', n: 1 + Math.floor(w * 0.1), gap: 1.2 });
+  if (w >= 25 && w % 5 === 0) groups.push({ t: 'dust_lord', n: 1 + Math.floor(w / 25), gap: 3.0 });
+  if (w >= 10 && w % 10 === 0) groups.push({ t: 'boss', n: 1 + Math.floor(w / 30), gap: 4.0 });
+  if (w >= 30 && w % 15 === 0) groups.push({ t: 'boss_ice', n: 1, gap: 0 });
+  if (w >= 50 && w % 20 === 0) groups.push({ t: 'boss_fire', n: 1, gap: 0 });
+  if (w >= 100 && w % 25 === 0) groups.push({ t: 'final_boss', n: 1, gap: 0 });
+  return groups;
 };
 
 export const buildQ = (wi: number, diff: DifficultyKey, area: AreaKey = 'suburb'): SpawnItem[] => {
   const d = DIFF[diff];
-  const waves = getWaves(area);
+  const groups = diff === 'endless' ? endlessWave(wi) : (getWaves(area)[wi] || []);
   const q: SpawnItem[] = [];
-  waves[wi].forEach(g => {
+  groups.forEach(g => {
     for (let i = 0; i < g.n; i++) q.push({ type: g.t, at: i * g.gap * d.wg });
   });
   return q.sort((a, b) => a.at - b.at);
