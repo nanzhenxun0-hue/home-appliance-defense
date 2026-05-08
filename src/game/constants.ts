@@ -93,6 +93,10 @@ export const TDEFS: Record<TowerID, TowerDef> = {
   // OD - Overdrive
   plasma:    { n:'プラズマキャノン', em:'🔱', r:'OD', rc:'#ffd700', baseCost:500, req:'superpc',  personality:'破壊神', quote:'「宇宙の終わりを見たいか？これが答えだ！！」', role:'AOE殲滅', skillName:'プラズマアポカリプス', skillDesc:'全体貫通の破壊光線。Lv3で「世界を焼く」発動、AOE+30%。' },
 
+  // ── プロモ限定（チュートリアル/エンドレス報酬）──
+  promo_starter:{ n:'プロト家電', em:'🎁', r:'P', rc:'#ff4081', baseCost:0, req:null, personality:'頼れる兄貴', quote:'「初心者を助けるために生まれた、特別な相棒だ。」', role:'限定／オールラウンダー', skillName:'スターターブースト', skillDesc:'設置だけで電力+2／周囲ATK+10%。チュートリアル修了の証。' },
+  promo_endless:{ n:'∞マスター', em:'🏆', r:'P', rc:'#ff4081', baseCost:0, req:null, personality:'破壊神', quote:'「終わりなき戦いを制した者にのみ、力は宿る。」', role:'限定／殲滅特化', skillName:'インフィニットウェーブ', skillDesc:'波紋AOEで全方向攻撃。エンドレス100W突破の称号。' },
+
   // ── v1.5 expansion: 20 new appliances ──
   // C
   shaver:     { n:'シェーバー',       em:'🪒', r:'C', rc:'#bdbdbd', baseCost:30,  req:null,        personality:'快活',         quote:'「サクッと刈り取る！」', role:'高速近接', skillName:'クイックトリム', skillDesc:'素早い連続斬り。Lv3で出血DoT付与。' },
@@ -268,6 +272,16 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
   holodeck:   [{c:0,pg:0,pc:5,dmg:0,rng:4.0,spd:0,lbl:'ホロデッキ',eff:'分身召喚',bf:1.30},{c:100,pg:0,pc:6,dmg:0,rng:5.0,spd:0,lbl:'ホログラム劇場',eff:'+50%',bf:1.50},{c:420,pg:0,pc:7,dmg:18,rng:5.5,spd:1.0,lbl:'リアルホロ',eff:'★実体化ダメ',bf:1.70,abilityUnlock:true}],
   robotarm:   [{c:0,pg:0,pc:6,dmg:55,rng:3.0,spd:1.6,lbl:'ロボットアーム',eff:'多腕DPS'},{c:100,pg:0,pc:7,dmg:90,rng:3.5,spd:2.0,lbl:'8軸アーム',eff:'攻速UP'},{c:440,pg:0,pc:8,dmg:140,rng:4.0,spd:2.5,lbl:'量子アーム',eff:'★アーム+1',abilityUnlock:true}],
   quantumchip:[{c:0,pg:0,pc:8,dmg:100,rng:4.0,spd:1.0,lbl:'量子チップ',eff:'量子消滅'},{c:120,pg:0,pc:10,dmg:170,rng:5.0,spd:1.4,lbl:'もつれチップ',eff:'攻速UP'},{c:520,pg:0,pc:12,dmg:260,rng:6.0,spd:1.8,lbl:'観測者チップ',eff:'★対ボス即消滅UP',abilityUnlock:true}],
+  promo_starter:[
+    {c:0,pg:2,pc:0,dmg:25,rng:2.5,spd:1.4,lbl:'プロト家電',eff:'+2W／周囲ATK+10%'},
+    {c:50,pg:3,pc:0,dmg:40,rng:2.8,spd:1.6,lbl:'プロトMk-II',eff:'攻速UP'},
+    {c:200,pg:5,pc:0,dmg:65,rng:3.2,spd:1.9,lbl:'プロトEX',eff:'★スターターブースト',abilityUnlock:true},
+  ],
+  promo_endless:[
+    {c:0,pg:0,pc:3,dmg:60,rng:3.2,spd:1.4,lbl:'∞マスター',eff:'波紋AOE'},
+    {c:120,pg:0,pc:4,dmg:100,rng:3.6,spd:1.7,lbl:'∞マスター零式',eff:'攻速UP'},
+    {c:400,pg:0,pc:5,dmg:160,rng:4.0,spd:2.0,lbl:'∞マスターΩ',eff:'★全方向波紋',abilityUnlock:true},
+  ],
 };
 export const EDEFS: Record<EnemyType, EnemyDef> = {
   dust:       { em:'🌫️', hp:80,   spd:45,  rew:10, dmg:1, col:'#b0b0a0', name:'ダスト', role:'基本型', skillName:'粉塵行進', skillDesc:'特別な能力はないが数で押し寄せる。', guide:'ケトルやランプの基礎火力で早めに処理。序盤の資金源。', pixel:true },
