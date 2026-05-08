@@ -533,6 +533,6 @@ export const tickGame = (s: GameState, dt: number): void => {
 
   if (s.waveActive && s.spawnQ.length === 0 && s.enemies.length === 0) {
     s.waveActive = false;
-    if (s.wave >= waves.length) s.win = true;
+    if (!s.endless && s.wave >= waves.length) s.win = true;
   }
 };
