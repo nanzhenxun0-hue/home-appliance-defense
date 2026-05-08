@@ -1,5 +1,5 @@
 import type { GameState, DifficultyKey, Enemy, EnemyType, SpawnItem, TowerID, AreaKey, FireTrap } from './types';
-import { DIFF, TDEFS, UPS, EDEFS, PATH, CELL, PS, st, AREA_WAVES } from './constants';
+import { DIFF, TDEFS, UPS, EDEFS, CELL, st, AREA_WAVES, getAreaPath, getAreaPathSet } from './constants';
 import { getSynergyEffects } from './synergy';
 import { getChainComboEffects } from './chainCombo';
 
@@ -7,10 +7,10 @@ let _eid = 1;
 export const uid = (): number => _eid++;
 export const resetUid = () => { _eid = 1; };
 
-export const pxy = (pi: number, pr: number) => {
-  const i = Math.min(pi, PATH.length - 2);
-  const [c1, r1] = PATH[i];
-  const [c2, r2] = PATH[Math.min(i + 1, PATH.length - 1)];
+export const pxy = (path: [number, number][], pi: number, pr: number) => {
+  const i = Math.min(pi, path.length - 2);
+  const [c1, r1] = path[i];
+  const [c2, r2] = path[Math.min(i + 1, path.length - 1)];
   return { x: (c1 + (c2 - c1) * pr) * CELL + CELL / 2, y: (r1 + (r2 - r1) * pr) * CELL + CELL / 2 };
 };
 
