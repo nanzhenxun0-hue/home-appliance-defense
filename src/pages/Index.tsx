@@ -99,6 +99,7 @@ const Index = () => {
   if (screen === 'team') {
     return <TeamScreen
       owned={gacha.inv.owned}
+      counts={gacha.inv.counts}
       team={team}
       maxTeam={MAX_TEAM}
       onToggle={(tid) => { play('ui_tap'); toggle(tid); }}

@@ -6,6 +6,7 @@ import { getActiveSynergies, SYNERGIES } from '@/game/synergy';
 
 interface TeamScreenProps {
   owned: TowerID[];
+  counts?: Partial<Record<TowerID, number>>;
   team: TowerID[];
   maxTeam: number;
   onToggle: (tid: TowerID) => void;
@@ -13,7 +14,7 @@ interface TeamScreenProps {
   onBack: () => void;
 }
 
-const TeamScreen = ({ owned, team, maxTeam, onToggle, onStart, onBack }: TeamScreenProps) => {
+const TeamScreen = ({ owned, counts = {}, team, maxTeam, onToggle, onStart, onBack }: TeamScreenProps) => {
   const sortedOwned = [...owned].sort((a, b) => RARITY_ORDER.indexOf(TDEFS[a].r) - RARITY_ORDER.indexOf(TDEFS[b].r));
 
   const activeSynergies = getActiveSynergies(team);
@@ -142,6 +143,9 @@ const TeamScreen = ({ owned, team, maxTeam, onToggle, onStart, onBack }: TeamScr
                         {S.pc > 0 && <span className="text-red-400">-{S.pc}W</span>}
                       </div>
                       <span className="text-[7px] text-yellow-400 font-bold leading-none">{def.baseCost}W</span>
+                      {(counts[tid] ?? 1) > 1 && (
+                        <span className="absolute top-0.5 left-0.5 text-[8px] font-black text-pink-300 bg-black/60 px-1 rounded">×{counts[tid]}</span>
+                      )}
                       {inTeam && <span className="absolute bottom-0.5 right-0.5 text-[7px] text-green-400 font-bold">✅</span>}
                     </motion.button>
                   );
