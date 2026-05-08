@@ -17,9 +17,10 @@ interface GameScreenProps {
   onHome: () => void;
   onVoltEarned?: (amount: number) => void;
   onWin?: (area: AreaKey) => void;
+  onEndlessMilestone?: (wave: number) => void;
 }
 
-const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin }: GameScreenProps) => {
+const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMilestone }: GameScreenProps) => {
   const cvs = useRef<HTMLCanvasElement>(null);
   const gs = useRef<GameState>(mkState(diff, team, area));
   const raf = useRef<number>(0);
@@ -135,9 +136,10 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin }: GameScree
     if (prevWaveActive.current && !ui.wActive && !ui.over && !ui.win && ui.wave > 0) {
       const reward = WAVE_VOLT_REWARD(ui.wave);
       onVoltEarned?.(reward);
+      if (diff === 'endless') onEndlessMilestone?.(ui.wave);
     }
     prevWaveActive.current = ui.wActive;
-  }, [ui.wActive, ui.wave, ui.over, ui.win, onVoltEarned]);
+  }, [ui.wActive, ui.wave, ui.over, ui.win, onVoltEarned, onEndlessMilestone, diff]);
 
   useEffect(() => {
     if ((ui.over || ui.win) && !scoreSaved.current) {
