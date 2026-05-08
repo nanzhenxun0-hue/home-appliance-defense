@@ -252,15 +252,18 @@ export interface GameState {
   area: AreaKey;
   screenShake: number;
   team: TowerID[];
-  disabledTowers: Set<string>; // temporarily disabled by boss
+  disabledTowers: Set<string>;
   bossWallActive: boolean;
   bossWallTimer: number;
-  // Ult system
-  ultGauge: number;       // 0-100
+  ultGauge: number;
   ultActive: boolean;
   ultTimer: number;
-  // Clog: cockroach ability - map of tower key -> clog duration remaining
   cloggedTowers: Map<string, number>;
+  // Per-area path & endless state
+  path: [number, number][];
+  pathSet: Set<string>;
+  endless: boolean;
+  totalWaves: number; // 0 = unlimited
 }
 
 export interface UIState {
