@@ -7,7 +7,7 @@ export const CELL = 42;
 export const GW = COLS * CELL;
 export const GH = ROWS * CELL;
 
-// Winding path for 8x10 grid
+// Default winding path (suburb)
 export const PATH: [number, number][] = [
   [0,1],[1,1],[2,1],[3,1],
   [3,2],[3,3],[3,4],
@@ -20,13 +20,43 @@ export const PATH: [number, number][] = [
 
 export const PS = new Set(PATH.map(([c,r]) => `${c},${r}`));
 
-// 5 difficulty levels
+// Per-area paths — gives each stage a unique layout & gimmicks
+export const AREA_PATHS: Record<string, [number, number][]> = {
+  suburb: PATH,
+  factory: [
+    [0,2],[1,2],[2,2],[2,3],[2,4],[3,4],[4,4],[5,4],
+    [5,5],[5,6],[4,6],[3,6],[2,6],[2,7],[2,8],
+    [3,8],[4,8],[5,8],[6,8],[7,8],
+  ],
+  downtown: [
+    [0,0],[1,0],[2,0],[3,0],[4,0],[4,1],[4,2],[4,3],
+    [3,3],[2,3],[1,3],[1,4],[1,5],[1,6],
+    [2,6],[3,6],[4,6],[5,6],[6,6],[6,7],[6,8],[7,8],
+  ],
+  volcano: [
+    [0,4],[1,4],[2,4],[3,4],[3,3],[3,2],[4,2],[5,2],
+    [5,3],[5,4],[5,5],[5,6],[4,6],[3,6],[2,6],
+    [2,7],[2,8],[3,8],[4,8],[5,8],[6,8],[7,8],
+  ],
+  glacier: [
+    [0,9],[1,9],[2,9],[2,8],[2,7],[2,6],[3,6],[4,6],
+    [5,6],[5,5],[5,4],[5,3],[5,2],[6,2],[7,2],
+    [7,3],[7,4],[7,5],[7,6],[7,7],[7,8],
+  ],
+};
+
+export const getAreaPath = (area: string): [number, number][] => AREA_PATHS[area] || PATH;
+export const getAreaPathSet = (area: string): Set<string> =>
+  new Set(getAreaPath(area).map(([c,r]) => `${c},${r}`));
+
+// 6 difficulty levels (incl. endless)
 export const DIFF: Record<DifficultyKey, DifficultyDef> = {
-  easy:    { label:'よわい',       em:'😊', col:'#69f0ae', dark:'#1b3a20', desc:'のんびり楽しめる初心者向け',     hpM:0.5, spdM:0.6, sp:200, shp:40, wg:2.0 },
-  normal:  { label:'ふつう',       em:'😐', col:'#ffd700', dark:'#3a3000', desc:'バランスの取れた標準モード',     hpM:1.0, spdM:1.0, sp:120, shp:25, wg:1.0 },
-  hard:    { label:'つよい',       em:'😤', col:'#ff9800', dark:'#3a1800', desc:'強敵が出現。戦略が重要',         hpM:1.6, spdM:1.3, sp:80,  shp:18, wg:0.75 },
-  vhard:   { label:'かなりつよい', em:'💀', col:'#f44336', dark:'#3a0000', desc:'絶望的な強さ。覚悟して',         hpM:2.5, spdM:1.6, sp:60,  shp:12, wg:0.55 },
-  extreme: { label:'極',           em:'👹', col:'#b71c1c', dark:'#1a0000', desc:'最強の試練。生還者は伝説に残る', hpM:4.0, spdM:2.0, sp:40,  shp:8,  wg:0.4 },
+  easy:    { label:'よわい',       em:'😊', col:'#69f0ae', dark:'#1b3a20', desc:'のんびり楽しめる初心者向け',     hpM:0.45, spdM:0.55, sp:240, shp:50, wg:2.2 },
+  normal:  { label:'ふつう',       em:'😐', col:'#ffd700', dark:'#3a3000', desc:'バランスの取れた標準モード',     hpM:0.85, spdM:0.95, sp:160, shp:30, wg:1.1 },
+  hard:    { label:'つよい',       em:'😤', col:'#ff9800', dark:'#3a1800', desc:'強敵が出現。戦略が重要',         hpM:1.35, spdM:1.2,  sp:110, shp:22, wg:0.85 },
+  vhard:   { label:'かなりつよい', em:'💀', col:'#f44336', dark:'#3a0000', desc:'絶望的な強さ。覚悟して',         hpM:2.0,  spdM:1.45, sp:80,  shp:15, wg:0.65 },
+  extreme: { label:'極',           em:'👹', col:'#b71c1c', dark:'#1a0000', desc:'最強の試練。生還者は伝説に残る', hpM:3.2,  spdM:1.8,  sp:60,  shp:10, wg:0.5  },
+  endless: { label:'エンドレス',   em:'♾️',  col:'#a855f7', dark:'#1a0033', desc:'1Wごとに倍率+0.05。100W突破で限定！', hpM:0.9, spdM:1.0, sp:160, shp:30, wg:1.0 },
 };
 
 // ── Tower definitions with 18 units ──
