@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { COLS, ROWS, CELL, GW, GH, DIFF, TDEFS, UPS, PS, st, sellVal, AREA_WAVES } from '@/game/constants';
+import { COLS, ROWS, CELL, GW, GH, DIFF, TDEFS, UPS, st, sellVal, AREA_WAVES, getAreaPathSet } from '@/game/constants';
 import { mkState, buildQ, tickGame, fireUlt, getEnabled, canPlace, resetUid, calcPowerBalance, getWaves } from '@/game/logic';
 import { drawFrame } from '@/game/renderer';
 import type { DifficultyKey, TowerID, UIState, GameState, AreaKey } from '@/game/types';
@@ -17,9 +17,10 @@ interface GameScreenProps {
   onHome: () => void;
   onVoltEarned?: (amount: number) => void;
   onWin?: (area: AreaKey) => void;
+  onEndlessMilestone?: (wave: number) => void;
 }
 
-const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin }: GameScreenProps) => {
+const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMilestone }: GameScreenProps) => {
   const cvs = useRef<HTMLCanvasElement>(null);
   const gs = useRef<GameState>(mkState(diff, team, area));
   const raf = useRef<number>(0);
@@ -65,7 +66,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin }: GameScree
     if (pmRef.current) {
       const tid = pmRef.current;
       const def = TDEFS[tid];
-      if (PS.has(key) || s.grid[key]) return;
+      if (gs.current.pathSet.has(key) || s.grid[key]) return;
       if (!canPlace(tid, s.grid)) return;
       if (s.power < def.baseCost) return;
       s.power -= def.baseCost;
@@ -112,7 +113,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin }: GameScree
   const startWave = () => {
     initSound();
     const s = gs.current;
-    if (s.waveActive || s.wave >= waves.length) return;
+    if (s.waveActive || (!s.endless && s.wave >= waves.length)) return;
     s.spawnQ = buildQ(s.wave, diff, area);
     s.waveT = 0; s.powerT = 0; s.wave++; s.waveActive = true;
     playSound('wave_start');
@@ -135,9 +136,10 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin }: GameScree
     if (prevWaveActive.current && !ui.wActive && !ui.over && !ui.win && ui.wave > 0) {
       const reward = WAVE_VOLT_REWARD(ui.wave);
       onVoltEarned?.(reward);
+      if (diff === 'endless') onEndlessMilestone?.(ui.wave);
     }
     prevWaveActive.current = ui.wActive;
-  }, [ui.wActive, ui.wave, ui.over, ui.win, onVoltEarned]);
+  }, [ui.wActive, ui.wave, ui.over, ui.win, onVoltEarned, onEndlessMilestone, diff]);
 
   useEffect(() => {
     if ((ui.over || ui.win) && !scoreSaved.current) {

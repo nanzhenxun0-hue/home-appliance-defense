@@ -1,5 +1,5 @@
 import type { GameState, DifficultyKey, Enemy, EnemyType, SpawnItem, TowerID, AreaKey, FireTrap } from './types';
-import { DIFF, TDEFS, UPS, EDEFS, PATH, CELL, PS, st, AREA_WAVES } from './constants';
+import { DIFF, TDEFS, UPS, EDEFS, CELL, st, AREA_WAVES, getAreaPath, getAreaPathSet } from './constants';
 import { getSynergyEffects } from './synergy';
 import { getChainComboEffects } from './chainCombo';
 
@@ -7,10 +7,10 @@ let _eid = 1;
 export const uid = (): number => _eid++;
 export const resetUid = () => { _eid = 1; };
 
-export const pxy = (pi: number, pr: number) => {
-  const i = Math.min(pi, PATH.length - 2);
-  const [c1, r1] = PATH[i];
-  const [c2, r2] = PATH[Math.min(i + 1, PATH.length - 1)];
+export const pxy = (path: [number, number][], pi: number, pr: number) => {
+  const i = Math.min(pi, path.length - 2);
+  const [c1, r1] = path[i];
+  const [c2, r2] = path[Math.min(i + 1, path.length - 1)];
   return { x: (c1 + (c2 - c1) * pr) * CELL + CELL / 2, y: (r1 + (r2 - r1) * pr) * CELL + CELL / 2 };
 };
 
@@ -58,6 +58,9 @@ export const getWaves = (area: AreaKey) => AREA_WAVES[area] || AREA_WAVES['subur
 
 export const mkState = (diff: DifficultyKey, team: TowerID[], area: AreaKey = 'suburb'): GameState => {
   const d = DIFF[diff];
+  const path = getAreaPath(area);
+  const pathSet = getAreaPathSet(area);
+  const endless = diff === 'endless';
   return {
     grid: {}, timers: {}, abilityTimers: {}, enemies: [], projs: [], effs: [], particles: [],
     fireTraps: [],
@@ -73,14 +76,35 @@ export const mkState = (diff: DifficultyKey, team: TowerID[], area: AreaKey = 's
     ultActive: false,
     ultTimer: 0,
     cloggedTowers: new Map(),
+    path, pathSet, endless,
+    totalWaves: endless ? 0 : getWaves(area).length,
   };
+};
+
+// Endless wave generator — scales infinitely
+const endlessWave = (wi: number): { t: EnemyType; n: number; gap: number }[] => {
+  const w = wi + 1;
+  const groups: { t: EnemyType; n: number; gap: number }[] = [];
+  groups.push({ t: 'dust', n: 4 + Math.floor(w * 0.6), gap: Math.max(0.3, 1.2 - w * 0.01) });
+  if (w >= 2) groups.push({ t: 'fast_dust', n: 3 + Math.floor(w * 0.4), gap: 0.6 });
+  if (w >= 4) groups.push({ t: 'slime', n: 2 + Math.floor(w * 0.25), gap: 1.0 });
+  if (w >= 7) groups.push({ t: 'cockroach', n: 2 + Math.floor(w * 0.2), gap: 0.7 });
+  if (w >= 10) groups.push({ t: 'tank_slime', n: 1 + Math.floor(w * 0.12), gap: 1.5 });
+  if (w >= 15) groups.push({ t: 'virus', n: 1 + Math.floor(w * 0.15), gap: 0.9 });
+  if (w >= 20) groups.push({ t: 'surge', n: 1 + Math.floor(w * 0.1), gap: 1.2 });
+  if (w >= 25 && w % 5 === 0) groups.push({ t: 'dust_lord', n: 1 + Math.floor(w / 25), gap: 3.0 });
+  if (w >= 10 && w % 10 === 0) groups.push({ t: 'boss', n: 1 + Math.floor(w / 30), gap: 4.0 });
+  if (w >= 30 && w % 15 === 0) groups.push({ t: 'boss_ice', n: 1, gap: 0 });
+  if (w >= 50 && w % 20 === 0) groups.push({ t: 'boss_fire', n: 1, gap: 0 });
+  if (w >= 100 && w % 25 === 0) groups.push({ t: 'final_boss', n: 1, gap: 0 });
+  return groups;
 };
 
 export const buildQ = (wi: number, diff: DifficultyKey, area: AreaKey = 'suburb'): SpawnItem[] => {
   const d = DIFF[diff];
-  const waves = getWaves(area);
+  const groups = diff === 'endless' ? endlessWave(wi) : (getWaves(area)[wi] || []);
   const q: SpawnItem[] = [];
-  waves[wi].forEach(g => {
+  groups.forEach(g => {
     for (let i = 0; i < g.n; i++) q.push({ type: g.t, at: i * g.gap * d.wg });
   });
   return q.sort((a, b) => a.at - b.at);
@@ -106,11 +130,11 @@ const executeBossAbility = (s: GameState, e: Enemy) => {
   switch (def.bossAbility) {
     case 'warp': {
       // Teleport forward on the path
-      const jump = Math.min(3, PATH.length - 1 - e.pi);
+      const jump = Math.min(3, s.path.length - 1 - e.pi);
       if (jump > 0) {
         e.pi += jump;
         e.pr = 0;
-        const { x, y } = pxy(e.pi, e.pr);
+        const { x, y } = pxy(s.path, e.pi, e.pr);
         s.effs.push({ id: uid(), x, y, txt: '⚡ワープ！', life: 1.5, ml: 1.5, col: '#00bcd4' });
       }
       break;
@@ -118,7 +142,7 @@ const executeBossAbility = (s: GameState, e: Enemy) => {
     case 'wall': {
       s.bossWallActive = true;
       s.bossWallTimer = 3; // 3 seconds of immunity
-      const { x, y } = pxy(e.pi, e.pr);
+      const { x, y } = pxy(s.path, e.pi, e.pr);
       s.effs.push({ id: uid(), x, y, txt: '🛡️バリア！', life: 1.5, ml: 1.5, col: '#ff3d00' });
       break;
     }
@@ -156,7 +180,7 @@ export const fireUlt = (s: GameState): void => {
     e.hp = Math.ceil(e.hp * 0.15); // reduce to 15% HP
     e.frozen = 1.5;
     e.hitFlash = 0.3;
-    const { x, y } = pxy(e.pi, e.pr);
+    const { x, y } = pxy(s.path, e.pi, e.pr);
     s.effs.push({ id: uid(), x, y, txt: '⚡クリーン！', life: 1.5, ml: 1.5, col: '#00e5ff' });
   }
   s.effs.push({ id: uid(), x: 168, y: 210, txt: '🌊全自動洗浄！', life: 3, ml: 3, col: '#00e5ff' });
@@ -199,10 +223,11 @@ export const tickGame = (s: GameState, dt: number): void => {
     while (s.spawnQ.length && s.waveT >= s.spawnQ[0].at) {
       const it = s.spawnQ.shift()!;
       const d = EDEFS[it.type];
+      const scale = s.endless ? (1 + 0.05 * Math.max(0, s.wave - 1)) : 1;
       s.enemies.push({
         id: uid(), type: it.type, em: d.em,
-        hp: Math.ceil(d.hp * dc.hpM), mhp: Math.ceil(d.hp * dc.hpM),
-        spd: d.spd * dc.spdM, rew: d.rew, dmg: d.dmg,
+        hp: Math.ceil(d.hp * dc.hpM * scale), mhp: Math.ceil(d.hp * dc.hpM * scale),
+        spd: d.spd * dc.spdM * scale, rew: d.rew, dmg: d.dmg,
         pi: 0, pr: 0, frozen: 0, burning: 0, burnT: 0, hitFlash: 0,
       });
     }
@@ -222,19 +247,19 @@ export const tickGame = (s: GameState, dt: number): void => {
       }
     }
     let rem = e.spd * dt;
-    while (rem > 0 && e.pi < PATH.length - 1) {
-      const [c1, r1] = PATH[e.pi];
-      const [c2, r2] = PATH[e.pi + 1];
+    while (rem > 0 && e.pi < s.path.length - 1) {
+      const [c1, r1] = s.path[e.pi];
+      const [c2, r2] = s.path[e.pi + 1];
       const seg = Math.hypot(c2 - c1, r2 - r1) * CELL;
       const left = (1 - e.pr) * seg;
       if (rem >= left) { rem -= left; e.pi++; e.pr = 0; }
       else { e.pr += rem / seg; rem = 0; }
     }
-    if (e.pi >= PATH.length - 1) {
+    if (e.pi >= s.path.length - 1) {
       dead.add(e.id);
       s.baseHP = Math.max(0, s.baseHP - e.dmg);
       s.screenShake = 0.3;
-      const { x, y } = pxy(e.pi, e.pr);
+      const { x, y } = pxy(s.path, e.pi, e.pr);
       s.effs.push({ id: uid(), x, y, txt: `-${e.dmg}HP`, life: 1.5, ml: 1.5, col: '#f44336' });
       if (s.baseHP <= 0) s.over = true;
     }
@@ -250,7 +275,7 @@ export const tickGame = (s: GameState, dt: number): void => {
       e.clogTimer = (e.clogTimer ?? (3 + Math.random() * 3)) - dt;
       if (e.clogTimer <= 0) {
         e.clogTimer = 4 + Math.random() * 3;
-        const { x: ex, y: ey } = pxy(e.pi, e.pr);
+        const { x: ex, y: ey } = pxy(s.path, e.pi, e.pr);
         let nearest: string | null = null; let nd = Infinity;
         for (const [k] of Object.entries(s.grid)) {
           const [gc, gr] = k.split(',').map(Number);
@@ -276,7 +301,7 @@ export const tickGame = (s: GameState, dt: number): void => {
 
     if (eDef.special === 'surge_stun' && !dead.has(e.id)) {
       // Surge: stuns nearby towers briefly when it passes a tower
-      const { x: ex, y: ey } = pxy(e.pi, e.pr);
+      const { x: ex, y: ey } = pxy(s.path, e.pi, e.pr);
       for (const [k] of Object.entries(s.grid)) {
         const [gc, gr] = k.split(',').map(Number);
         if (Math.hypot(gc * CELL + CELL/2 - ex, gr * CELL + CELL/2 - ey) < CELL * 1.2) {
@@ -305,7 +330,7 @@ export const tickGame = (s: GameState, dt: number): void => {
     trap.life -= dt;
     for (const e of s.enemies) {
       if (dead.has(e.id)) continue;
-      const { x, y } = pxy(e.pi, e.pr);
+      const { x, y } = pxy(s.path, e.pi, e.pr);
       if (Math.hypot(x - trap.x, y - trap.y) < CELL * 0.8) {
         e.burning = 2;
         e.burnT = 0.5;
@@ -333,7 +358,7 @@ export const tickGame = (s: GameState, dt: number): void => {
         const range = S.rng * CELL;
         for (const e of s.enemies) {
           if (dead.has(e.id)) continue;
-          const { x, y } = pxy(e.pi, e.pr);
+          const { x, y } = pxy(s.path, e.pi, e.pr);
           if (Math.hypot(x - cx, y - cy) <= range) {
             e.pi = 0; e.pr = 0;
             s.effs.push({ id: uid(), x, y, txt: '🌀戻される！', life: 1.5, ml: 1.5, col: '#81d4fa' });
@@ -350,8 +375,8 @@ export const tickGame = (s: GameState, dt: number): void => {
       if (s.abilityTimers[abKey] <= 0) {
         s.abilityTimers[abKey] = 5;
         // Place fire on a random path cell
-        const pathIdx = Math.floor(Math.random() * PATH.length);
-        const [pc, pr] = PATH[pathIdx];
+        const pathIdx = Math.floor(Math.random() * s.path.length);
+        const [pc, pr] = s.path[pathIdx];
         const fx = pc * CELL + CELL / 2, fy = pr * CELL + CELL / 2;
         s.fireTraps.push({ id: uid(), x: fx, y: fy, life: 4, dmg: S.dmg * 0.3 });
         s.effs.push({ id: uid(), x: fx, y: fy, txt: '🔥', life: 0.8, ml: 0.8, col: '#ff5722' });
@@ -400,7 +425,7 @@ export const tickGame = (s: GameState, dt: number): void => {
     for (const e of s.enemies) {
       if (dead.has(e.id)) continue;
       if (s.bossWallActive && EDEFS[e.type].bossAbility) continue; // wall protects boss
-      const { x, y } = pxy(e.pi, e.pr);
+      const { x, y } = pxy(s.path, e.pi, e.pr);
       if (Math.hypot(x - cx, y - cy) > range) continue;
       const sc = e.pi + e.pr;
       if (sc > best) { best = sc; tgt = e; }
@@ -409,7 +434,7 @@ export const tickGame = (s: GameState, dt: number): void => {
       s.timers[key] = 1 / (synSpd * rm);
       tgt.hp -= synDmg;
       tgt.hitFlash = 0.1;
-      const { x: ex, y: ey } = pxy(tgt.pi, tgt.pr);
+      const { x: ex, y: ey } = pxy(s.path, tgt.pi, tgt.pr);
       const projCol: Record<string, string> = {
         fridge:'#80deea', aircon:'#4fc3f7', kettle:'#ff7043', microwave:'#ff5722',
         fan:'#b3e5fc', vacuum:'#ce93d8', washer:'#26c6da', lamp:'#fff176',
@@ -436,19 +461,19 @@ export const tickGame = (s: GameState, dt: number): void => {
       if (cell.tid === 'tesla' && cell.lv >= 2) {
         let chainTarget = tgt;
         for (let chain = 0; chain < 3; chain++) {
-          const { x: cx2, y: cy2 } = pxy(chainTarget.pi, chainTarget.pr);
+          const { x: cx2, y: cy2 } = pxy(s.path, chainTarget.pi, chainTarget.pr);
           let nextTarget: Enemy | null = null;
           let nd = Infinity;
           for (const e of s.enemies) {
             if (dead.has(e.id) || e.id === chainTarget.id) continue;
-            const { x, y } = pxy(e.pi, e.pr);
+            const { x, y } = pxy(s.path, e.pi, e.pr);
             const d = Math.hypot(x - cx2, y - cy2);
             if (d < nd && d < CELL * 3) { nd = d; nextTarget = e; }
           }
           if (nextTarget) {
             nextTarget.hp -= Math.ceil(synDmg * 0.5);
             nextTarget.hitFlash = 0.1;
-            const { x: nx, y: ny } = pxy(nextTarget.pi, nextTarget.pr);
+            const { x: nx, y: ny } = pxy(s.path, nextTarget.pi, nextTarget.pr);
             s.projs.push({ id: uid(), sx: cx2, sy: cy2, ex: nx, ey: ny, life: 0.12, col: '#7c4dff' });
             if (nextTarget.hp <= 0) dead.add(nextTarget.id);
             chainTarget = nextTarget;
@@ -462,7 +487,7 @@ export const tickGame = (s: GameState, dt: number): void => {
         // Ult gauge charge on kill
         const isBoss = tgt.type.startsWith('boss') || tgt.type === 'final_boss';
         s.ultGauge = Math.min(100, s.ultGauge + (isBoss ? 25 : 3));
-        const { x, y } = pxy(tgt.pi, tgt.pr);
+        const { x, y } = pxy(s.path, tgt.pi, tgt.pr);
         s.effs.push({ id: uid(), x, y, txt: `+${tgt.rew}W`, life: 1.0, ml: 1.0, col: '#ffd700' });
         for (let i = 0; i < 8; i++) {
           const angle = (Math.PI * 2 / 8) * i + Math.random() * 0.5;
@@ -492,7 +517,7 @@ export const tickGame = (s: GameState, dt: number): void => {
           em: EDEFS['dust' as EnemyType]?.em ?? '💨',
         });
       }
-      const { x, y } = pxy(e.pi, e.pr);
+      const { x, y } = pxy(s.path, e.pi, e.pr);
       s.effs.push({ id: uid(), x, y, txt: '💨×2分裂！', life: 1.2, ml: 1.2, col: '#90a4ae' });
     }
   }
@@ -508,6 +533,6 @@ export const tickGame = (s: GameState, dt: number): void => {
 
   if (s.waveActive && s.spawnQ.length === 0 && s.enemies.length === 0) {
     s.waveActive = false;
-    if (s.wave >= waves.length) s.win = true;
+    if (!s.endless && s.wave >= waves.length) s.win = true;
   }
 };

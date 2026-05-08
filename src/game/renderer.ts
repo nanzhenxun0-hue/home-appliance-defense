@@ -1,6 +1,6 @@
 import type { GameState, TowerID, EnemyType } from './types';
 import { RARITY_COLOR } from './types';
-import { COLS, ROWS, CELL, GW, GH, PATH, PS, TDEFS, EDEFS, st } from './constants';
+import { COLS, ROWS, CELL, GW, GH, TDEFS, EDEFS, st } from './constants';
 import { getEnabled, findNearest, pxy } from './logic';
 
 const rrect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
@@ -91,7 +91,7 @@ export const drawFrame = (
   // Grid tiles - brighter
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
-      const onP = PS.has(`${c},${r}`);
+      const onP = s.pathSet.has(`${c},${r}`);
       if (onP) {
         ctx.fillStyle = '#1e1830';
         ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
@@ -110,12 +110,12 @@ export const drawFrame = (
   }
 
   // Path glow
-  PATH.forEach(([c, r], i) => {
+  s.path.forEach(([c, r], i) => {
     const pulse = Math.sin(time * 2 + i * 0.3) * 0.5 + 0.5;
     ctx.fillStyle = `rgba(168,85,247,${0.03 + pulse * 0.04})`;
     ctx.fillRect(c * CELL + 1, r * CELL + 1, CELL - 2, CELL - 2);
-    if (i < PATH.length - 1) {
-      const [nc, nr] = PATH[i + 1];
+    if (i < s.path.length - 1) {
+      const [nc, nr] = s.path[i + 1];
       const cx = c * CELL + CELL / 2, cy = r * CELL + CELL / 2;
       const nx = nc * CELL + CELL / 2, ny = nr * CELL + CELL / 2;
       const t = (time * 0.5 + i * 0.1) % 1;
@@ -127,8 +127,8 @@ export const drawFrame = (
   });
 
   // Start/End markers
-  const [sc, sr] = PATH[0];
-  const [ec, er] = PATH[PATH.length - 1];
+  const [sc, sr] = s.path[0];
+  const [ec, er] = s.path[s.path.length - 1];
   ctx.font = `${CELL * 0.5}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('🚪', sc * CELL + CELL / 2, sr * CELL + CELL / 2);
   ctx.fillText('🏠', ec * CELL + CELL / 2, er * CELL + CELL / 2);
@@ -181,14 +181,14 @@ export const drawFrame = (
     }
   }
   if (pm && hc >= 0 && hr >= 0) {
-    const valid = !PS.has(`${hc},${hr}`) && !s.grid[`${hc},${hr}`];
+    const valid = !s.pathSet.has(`${hc},${hr}`) && !s.grid[`${hc},${hr}`];
     const S = st(pm, 0);
     if (S.rng > 0) drawRange(ctx, hc, hr, S.rng, valid ? '#a855f7' : '#ef4444');
   }
 
   // Hover highlight
   if (hc >= 0 && hr >= 0) {
-    const key = `${hc},${hr}`; const onP = PS.has(key); const occ = !!s.grid[key];
+    const key = `${hc},${hr}`; const onP = s.pathSet.has(key); const occ = !!s.grid[key];
     if (pm) {
       const valid = !onP && !occ;
       ctx.fillStyle = valid ? 'rgba(168,85,247,0.1)' : 'rgba(239,68,68,0.1)';
@@ -203,7 +203,7 @@ export const drawFrame = (
 
   // Ghost
   if (pm && hc >= 0 && hr >= 0) {
-    const valid = !PS.has(`${hc},${hr}`) && !s.grid[`${hc},${hr}`];
+    const valid = !s.pathSet.has(`${hc},${hr}`) && !s.grid[`${hc},${hr}`];
     drawTower(ctx, pm, 0, hc, hr, { alpha: 0.5, tint: valid ? '#a855f7' : '#ef4444' });
   }
 
@@ -248,7 +248,7 @@ export const drawFrame = (
 
   // Enemies
   for (const e of s.enemies) {
-    const { x, y } = pxy(e.pi, e.pr);
+    const { x, y } = pxy(s.path, e.pi, e.pr);
     const isBoss = e.type.startsWith('boss') || e.type === 'final_boss';
     const eRadius = isBoss ? 16 : e.type === 'tank_slime' ? 14 : 12;
 

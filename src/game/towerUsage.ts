@@ -144,4 +144,6 @@ export const TOWER_USAGE: Record<TowerID, TowerUsage> = {
   holodeck:    { placement: '広い場所。分身を呼び出して数で押す。',         synergy: 'シアター・ルーターと組み軍隊化。',                           tips: 'Lv3で実体化ダメ。最終局面の切り札。' },
   robotarm:    { placement: '中央。多数同時攻撃の重DPS。',                  synergy: 'スーパーPC・コーヒーメーカーで攻速最大化。',                tips: 'Lv3でアーム+1。1体で2〜3体分の働き。' },
   quantumchip: { placement: '最終ライン。確率即消滅でボス特攻。',           synergy: 'バッテリー・ソーラーで電力確保必須。',                       tips: 'Lv3で対ボス即消滅UP。最強の保険。' },
+  promo_starter: { placement: '初心者の中央拠点。電力+2と周囲バフを兼任。', synergy: '攻撃役の隣に置くと全体ATK+10%。', tips: 'チュートリアル修了で1体プレゼント。序盤の相棒。' },
+  promo_endless: { placement: '密集ポイント。全方向の波紋AOEで殲滅。',     synergy: '加速バフ系（ルーター/コーヒー）で発生間隔を縮める。',  tips: 'エンドレス100W突破の証。所持＝伝説。' },
 };

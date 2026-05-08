@@ -7,7 +7,7 @@ export const CELL = 42;
 export const GW = COLS * CELL;
 export const GH = ROWS * CELL;
 
-// Winding path for 8x10 grid
+// Default winding path (suburb)
 export const PATH: [number, number][] = [
   [0,1],[1,1],[2,1],[3,1],
   [3,2],[3,3],[3,4],
@@ -20,13 +20,43 @@ export const PATH: [number, number][] = [
 
 export const PS = new Set(PATH.map(([c,r]) => `${c},${r}`));
 
-// 5 difficulty levels
+// Per-area paths — gives each stage a unique layout & gimmicks
+export const AREA_PATHS: Record<string, [number, number][]> = {
+  suburb: PATH,
+  factory: [
+    [0,2],[1,2],[2,2],[2,3],[2,4],[3,4],[4,4],[5,4],
+    [5,5],[5,6],[4,6],[3,6],[2,6],[2,7],[2,8],
+    [3,8],[4,8],[5,8],[6,8],[7,8],
+  ],
+  downtown: [
+    [0,0],[1,0],[2,0],[3,0],[4,0],[4,1],[4,2],[4,3],
+    [3,3],[2,3],[1,3],[1,4],[1,5],[1,6],
+    [2,6],[3,6],[4,6],[5,6],[6,6],[6,7],[6,8],[7,8],
+  ],
+  volcano: [
+    [0,4],[1,4],[2,4],[3,4],[3,3],[3,2],[4,2],[5,2],
+    [5,3],[5,4],[5,5],[5,6],[4,6],[3,6],[2,6],
+    [2,7],[2,8],[3,8],[4,8],[5,8],[6,8],[7,8],
+  ],
+  glacier: [
+    [0,9],[1,9],[2,9],[2,8],[2,7],[2,6],[3,6],[4,6],
+    [5,6],[5,5],[5,4],[5,3],[5,2],[6,2],[7,2],
+    [7,3],[7,4],[7,5],[7,6],[7,7],[7,8],
+  ],
+};
+
+export const getAreaPath = (area: string): [number, number][] => AREA_PATHS[area] || PATH;
+export const getAreaPathSet = (area: string): Set<string> =>
+  new Set(getAreaPath(area).map(([c,r]) => `${c},${r}`));
+
+// 6 difficulty levels (incl. endless)
 export const DIFF: Record<DifficultyKey, DifficultyDef> = {
-  easy:    { label:'よわい',       em:'😊', col:'#69f0ae', dark:'#1b3a20', desc:'のんびり楽しめる初心者向け',     hpM:0.5, spdM:0.6, sp:200, shp:40, wg:2.0 },
-  normal:  { label:'ふつう',       em:'😐', col:'#ffd700', dark:'#3a3000', desc:'バランスの取れた標準モード',     hpM:1.0, spdM:1.0, sp:120, shp:25, wg:1.0 },
-  hard:    { label:'つよい',       em:'😤', col:'#ff9800', dark:'#3a1800', desc:'強敵が出現。戦略が重要',         hpM:1.6, spdM:1.3, sp:80,  shp:18, wg:0.75 },
-  vhard:   { label:'かなりつよい', em:'💀', col:'#f44336', dark:'#3a0000', desc:'絶望的な強さ。覚悟して',         hpM:2.5, spdM:1.6, sp:60,  shp:12, wg:0.55 },
-  extreme: { label:'極',           em:'👹', col:'#b71c1c', dark:'#1a0000', desc:'最強の試練。生還者は伝説に残る', hpM:4.0, spdM:2.0, sp:40,  shp:8,  wg:0.4 },
+  easy:    { label:'よわい',       em:'😊', col:'#69f0ae', dark:'#1b3a20', desc:'のんびり楽しめる初心者向け',     hpM:0.45, spdM:0.55, sp:240, shp:50, wg:2.2 },
+  normal:  { label:'ふつう',       em:'😐', col:'#ffd700', dark:'#3a3000', desc:'バランスの取れた標準モード',     hpM:0.85, spdM:0.95, sp:160, shp:30, wg:1.1 },
+  hard:    { label:'つよい',       em:'😤', col:'#ff9800', dark:'#3a1800', desc:'強敵が出現。戦略が重要',         hpM:1.35, spdM:1.2,  sp:110, shp:22, wg:0.85 },
+  vhard:   { label:'かなりつよい', em:'💀', col:'#f44336', dark:'#3a0000', desc:'絶望的な強さ。覚悟して',         hpM:2.0,  spdM:1.45, sp:80,  shp:15, wg:0.65 },
+  extreme: { label:'極',           em:'👹', col:'#b71c1c', dark:'#1a0000', desc:'最強の試練。生還者は伝説に残る', hpM:3.2,  spdM:1.8,  sp:60,  shp:10, wg:0.5  },
+  endless: { label:'エンドレス',   em:'♾️',  col:'#a855f7', dark:'#1a0033', desc:'1Wごとに倍率+0.05。100W突破で限定！', hpM:0.9, spdM:1.0, sp:160, shp:30, wg:1.0 },
 };
 
 // ── Tower definitions with 18 units ──
@@ -62,6 +92,10 @@ export const TDEFS: Record<TowerID, TowerDef> = {
   tesla:     { n:'テスラコイル',     em:'⚡', r:'G',  rc:'#7c4dff', baseCost:400, req:'dryer',    ability:'chainlightning', personality:'狂天才', quote:'「神をも超える電撃！食らえ、バカ共！」', role:'チェーンDPS', skillName:'チェーンライトニング', skillDesc:'雷が複数敵を連鎖。Lv3でヒット数+1、雷の跳躍範囲も拡大。' },
   // OD - Overdrive
   plasma:    { n:'プラズマキャノン', em:'🔱', r:'OD', rc:'#ffd700', baseCost:500, req:'superpc',  personality:'破壊神', quote:'「宇宙の終わりを見たいか？これが答えだ！！」', role:'AOE殲滅', skillName:'プラズマアポカリプス', skillDesc:'全体貫通の破壊光線。Lv3で「世界を焼く」発動、AOE+30%。' },
+
+  // ── プロモ限定（チュートリアル/エンドレス報酬）──
+  promo_starter:{ n:'プロト家電', em:'🎁', r:'P', rc:'#ff4081', baseCost:0, req:null, personality:'頼れる兄貴', quote:'「初心者を助けるために生まれた、特別な相棒だ。」', role:'限定／オールラウンダー', skillName:'スターターブースト', skillDesc:'設置だけで電力+2／周囲ATK+10%。チュートリアル修了の証。' },
+  promo_endless:{ n:'∞マスター', em:'🏆', r:'P', rc:'#ff4081', baseCost:0, req:null, personality:'破壊神', quote:'「終わりなき戦いを制した者にのみ、力は宿る。」', role:'限定／殲滅特化', skillName:'インフィニットウェーブ', skillDesc:'波紋AOEで全方向攻撃。エンドレス100W突破の称号。' },
 
   // ── v1.5 expansion: 20 new appliances ──
   // C
@@ -238,6 +272,16 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
   holodeck:   [{c:0,pg:0,pc:5,dmg:0,rng:4.0,spd:0,lbl:'ホロデッキ',eff:'分身召喚',bf:1.30},{c:100,pg:0,pc:6,dmg:0,rng:5.0,spd:0,lbl:'ホログラム劇場',eff:'+50%',bf:1.50},{c:420,pg:0,pc:7,dmg:18,rng:5.5,spd:1.0,lbl:'リアルホロ',eff:'★実体化ダメ',bf:1.70,abilityUnlock:true}],
   robotarm:   [{c:0,pg:0,pc:6,dmg:55,rng:3.0,spd:1.6,lbl:'ロボットアーム',eff:'多腕DPS'},{c:100,pg:0,pc:7,dmg:90,rng:3.5,spd:2.0,lbl:'8軸アーム',eff:'攻速UP'},{c:440,pg:0,pc:8,dmg:140,rng:4.0,spd:2.5,lbl:'量子アーム',eff:'★アーム+1',abilityUnlock:true}],
   quantumchip:[{c:0,pg:0,pc:8,dmg:100,rng:4.0,spd:1.0,lbl:'量子チップ',eff:'量子消滅'},{c:120,pg:0,pc:10,dmg:170,rng:5.0,spd:1.4,lbl:'もつれチップ',eff:'攻速UP'},{c:520,pg:0,pc:12,dmg:260,rng:6.0,spd:1.8,lbl:'観測者チップ',eff:'★対ボス即消滅UP',abilityUnlock:true}],
+  promo_starter:[
+    {c:0,pg:2,pc:0,dmg:25,rng:2.5,spd:1.4,lbl:'プロト家電',eff:'+2W／周囲ATK+10%'},
+    {c:50,pg:3,pc:0,dmg:40,rng:2.8,spd:1.6,lbl:'プロトMk-II',eff:'攻速UP'},
+    {c:200,pg:5,pc:0,dmg:65,rng:3.2,spd:1.9,lbl:'プロトEX',eff:'★スターターブースト',abilityUnlock:true},
+  ],
+  promo_endless:[
+    {c:0,pg:0,pc:3,dmg:60,rng:3.2,spd:1.4,lbl:'∞マスター',eff:'波紋AOE'},
+    {c:120,pg:0,pc:4,dmg:100,rng:3.6,spd:1.7,lbl:'∞マスター零式',eff:'攻速UP'},
+    {c:400,pg:0,pc:5,dmg:160,rng:4.0,spd:2.0,lbl:'∞マスターΩ',eff:'★全方向波紋',abilityUnlock:true},
+  ],
 };
 export const EDEFS: Record<EnemyType, EnemyDef> = {
   dust:       { em:'🌫️', hp:80,   spd:45,  rew:10, dmg:1, col:'#b0b0a0', name:'ダスト', role:'基本型', skillName:'粉塵行進', skillDesc:'特別な能力はないが数で押し寄せる。', guide:'ケトルやランプの基礎火力で早めに処理。序盤の資金源。', pixel:true },

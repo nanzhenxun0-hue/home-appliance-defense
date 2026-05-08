@@ -1,6 +1,6 @@
 // ── Core Game Types ──
 
-export type DifficultyKey = 'easy' | 'normal' | 'hard' | 'vhard' | 'extreme';
+export type DifficultyKey = 'easy' | 'normal' | 'hard' | 'vhard' | 'extreme' | 'endless';
 
 export interface DifficultyDef {
   label: string;
@@ -33,25 +33,30 @@ export type TowerID =
   | 'drone' | 'heatpump'
   | 'vrheadset' | 'holodeck'
   | 'robotarm'
-  | 'quantumchip';
+  | 'quantumchip'
+  // ── プロモ限定キャラ（ガチャ非対応） ──
+  | 'promo_starter' | 'promo_endless';
 
-export type Rarity = 'C' | 'U' | 'R' | 'E' | 'L' | 'M' | 'G' | 'OD';
+export type Rarity = 'C' | 'U' | 'R' | 'E' | 'L' | 'M' | 'G' | 'OD' | 'P';
 
-export const RARITY_ORDER: Rarity[] = ['C', 'U', 'R', 'E', 'L', 'M', 'G', 'OD'];
+export const RARITY_ORDER: Rarity[] = ['C', 'U', 'R', 'E', 'L', 'M', 'G', 'OD', 'P'];
 
 export const RARITY_LABEL: Record<Rarity, string> = {
   C: 'コモン', U: 'アンコモン', R: 'レア', E: 'エピック',
   L: 'レジェンド', M: 'ミシック', G: 'ギャラクシー', OD: 'オーバードライブ',
+  P: 'プロモ',
 };
 
 export const RARITY_COLOR: Record<Rarity, string> = {
   C: '#9e9e9e', U: '#4caf50', R: '#2196f3', E: '#ab47bc',
   L: '#ff9800', M: '#e91e63', G: '#00e5ff', OD: '#ffd700',
+  P: '#ff4081',
 };
 
 export const RARITY_BG: Record<Rarity, string> = {
   C: '#1a1a1a', U: '#0d2a12', R: '#0a1f3a', E: '#1f0a2a',
   L: '#2a1a00', M: '#2a0a1a', G: '#002a2a', OD: '#2a2200',
+  P: '#2a0a18',
 };
 
 export type PersonalityType = '熱血漢' | '冷静沈着' | '縁の下の力持ち' | '完璧主義者' | '自由奔放' | '情報通' | 'カリスマ' | '幻想家' | '職人気質' | '快活' | '明察眼' | '天才型' | '超論理型' | '狂天才' | '破壊神' | '頼れる兄貴';
@@ -247,15 +252,18 @@ export interface GameState {
   area: AreaKey;
   screenShake: number;
   team: TowerID[];
-  disabledTowers: Set<string>; // temporarily disabled by boss
+  disabledTowers: Set<string>;
   bossWallActive: boolean;
   bossWallTimer: number;
-  // Ult system
-  ultGauge: number;       // 0-100
+  ultGauge: number;
   ultActive: boolean;
   ultTimer: number;
-  // Clog: cockroach ability - map of tower key -> clog duration remaining
   cloggedTowers: Map<string, number>;
+  // Per-area path & endless state
+  path: [number, number][];
+  pathSet: Set<string>;
+  endless: boolean;
+  totalWaves: number; // 0 = unlimited
 }
 
 export interface UIState {
@@ -308,6 +316,7 @@ export const GACHA_COST_10 = 900;
 export const GACHA_RATES: Record<Rarity, number> = {
   C: 0.45, U: 0.279, R: 0.13, E: 0.07,
   L: 0.035, M: 0.02, G: 0.008, OD: 0.004,
+  P: 0, // プロモは入手限定（チュートリアル/エンドレス報酬）
 };
 
 export const GACHA_BANNERS: GachaBanner[] = [
