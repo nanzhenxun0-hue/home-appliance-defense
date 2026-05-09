@@ -298,6 +298,7 @@ export const EDEFS: Record<EnemyType, EnemyDef> = {
   boss:       { em:'🤖',  hp:2000, spd:20,  rew:150,dmg:5, col:'#ff1744', name:'ボスロボット', role:'標準ボス', skillName:'重装進軍', skillDesc:'高HPで正面から押し切る基本ボス。', guide:'冷蔵庫で止め、電子レンジやスーパーPCで集中火力。', pixel:true },
   boss_ice:   { em:'🥶',  hp:3500, spd:18,  rew:300,dmg:7, col:'#00bcd4', name:'氷電魔フローズデビル', role:'戦略型ボス（氷／嵐／全体／不安定）', skillName:'4種スキル：氷結／暴風／極寒嵐／コスト撹乱', skillDesc:'①氷結：範囲を凍結させ家電を停止／弱体化  ②暴風：竜巻で家電配置をずらし射線を乱す  ③極寒嵐：時間経過で全体ダメージ  ④コスト撹乱：家電コストを一時的に上下させ再配置を強要。', guide:'十字路で迎撃。電気ケトルで氷を溶かし、扇風機で暴風を相殺、延長コードで射程拡張＆バフ。スキル発動の予兆（青光＝氷／緑光＝風／赤光＝全体）を見て再配置。単体では絶対に対処不可、家電コンボ前提。', bossAbility:'warp', pixel:true },
   boss_fire:  { em:'🔥',  hp:4000, spd:22,  rew:350,dmg:8, col:'#ff3d00', name:'爆熱魔クリムゾンキング', role:'壁生成ボス', skillName:'炎壁展開', skillDesc:'ボスを守る壁を展開し、攻撃を吸わせる。', guide:'貫通・全体攻撃が有効。プラズマやプロジェクターで壁ごと焼く。', bossAbility:'wall', pixel:true },
+  boss_massetsu:{ em:'🌨️', hp:6000, spd:14, rew:450,dmg:9, col:'#80d8ff', name:'累氷の魔雪', role:'氷結支配ボス', skillName:'四天技：氷の面／暴風／氷の念／絶対零度', skillDesc:'技①氷の面：HP200の氷壁を出現させ、破壊するまで攻撃を吸収する。技②暴風：全家電を4秒間凍結させる。技③氷の念：HP500の呪氷を置き、残る間3秒ごとに基地に1ダメージ。奥義：アブソルート・オプゼロで全家電を10秒停止。電気ケトルが氷壁への有効打。', guide:'電気ケトル（氷を溶かす）・扇風機×4（暴風を相殺）・延長コードを大量配置で対抗。氷の念が出たら真っ先に破壊！アブゼロ中は電力を温存して体力を維持。', bossAbility:'ice_wall', pixel:true },
   final_boss: { em:'👿',  hp:8000, spd:15,  rew:500,dmg:10,col:'#9c27b0', name:'家電大魔王デウスマキナ', role:'最終ボス', skillName:'家電支配', skillDesc:'味方ユニットを停止させ、防衛網を崩壊させる。', guide:'7体編成でコード・食洗機・全体バフを入れ、止められても火力が残る形にする。', bossAbility:'unit_disable', pixel:true },
 };
 
@@ -363,8 +364,8 @@ const WAVES_GLACIER: WaveGroup[][] = [
   [{ t:'boss_fire', n:2, gap:4.0 }, { t:'tank_slime', n:12, gap:0.6 }],
   [{ t:'virus', n:25, gap:0.3 }, { t:'boss', n:4, gap:2.0 }],
   [{ t:'boss_ice', n:1, gap:0 }, { t:'boss_fire', n:1, gap:3.0 }, { t:'virus', n:15, gap:0.5 }],
-  [{ t:'boss', n:5, gap:1.5 }, { t:'boss_ice', n:1, gap:5.0 }, { t:'boss_fire', n:1, gap:5.0 }],
-  [{ t:'virus', n:20, gap:0.3 }, { t:'tank_slime', n:15, gap:0.5 }, { t:'final_boss', n:1, gap:0 }],
+  [{ t:'boss_massetsu', n:1, gap:0 }, { t:'boss', n:3, gap:3.0 }, { t:'virus', n:12, gap:0.5 }],
+  [{ t:'virus', n:20, gap:0.3 }, { t:'tank_slime', n:15, gap:0.5 }, { t:'boss_massetsu', n:1, gap:5.0 }, { t:'final_boss', n:1, gap:8.0 }],
 ];
 
 export const AREA_WAVES: Record<string, WaveGroup[][]> = {

@@ -37,6 +37,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
     power: d.sp, wave: 0, baseHP: d.shp, maxHP: d.shp,
     wActive: false, over: false, win: false, area,
     ultGauge: 0, ultActive: false,
+    freezeTileHP: 0, freezeTileMaxHP: 0, freezeTileMode: null, absoluteZeroTimer: 0,
   }));
   const [placeMode, setPlaceMode] = useState<TowerID | null>(null);
   const [pinKey, setPinKey] = useState<string | null>(null);
@@ -168,6 +169,8 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
           power: Math.floor(s.power), wave: s.wave, baseHP: s.baseHP, maxHP: s.maxHP,
           wActive: s.waveActive, over: s.over, win: s.win, area,
           ultGauge: s.ultGauge, ultActive: s.ultActive,
+          freezeTileHP: s.freezeTileHP, freezeTileMaxHP: s.freezeTileMaxHP,
+          freezeTileMode: s.freezeTileMode, absoluteZeroTimer: s.absoluteZeroTimer,
         });
       }
     };

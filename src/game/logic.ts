@@ -76,6 +76,8 @@ export const mkState = (diff: DifficultyKey, team: TowerID[], area: AreaKey = 's
     ultActive: false,
     ultTimer: 0,
     cloggedTowers: new Map(),
+    freezeTileHP: 0, freezeTileMaxHP: 0, freezeTileMode: null,
+    iceDotTimer: 0, absoluteZeroTimer: 0,
     path, pathSet, endless,
     totalWaves: endless ? 0 : getWaves(area).length,
   };
@@ -129,7 +131,6 @@ const executeBossAbility = (s: GameState, e: Enemy) => {
 
   switch (def.bossAbility) {
     case 'warp': {
-      // Teleport forward on the path
       const jump = Math.min(3, s.path.length - 1 - e.pi);
       if (jump > 0) {
         e.pi += jump;
@@ -141,21 +142,20 @@ const executeBossAbility = (s: GameState, e: Enemy) => {
     }
     case 'wall': {
       s.bossWallActive = true;
-      s.bossWallTimer = 3; // 3 seconds of immunity
+      s.bossWallTimer = 3;
       const { x, y } = pxy(s.path, e.pi, e.pr);
       s.effs.push({ id: uid(), x, y, txt: '🛡️バリア！', life: 1.5, ml: 1.5, col: '#ff3d00' });
       break;
     }
     case 'speed_buff': {
       for (const en of s.enemies) {
-        en.speedBuff = 3; // 3 seconds
+        en.speedBuff = 3;
         en.spd *= 1.5;
       }
       s.effs.push({ id: uid(), x: 168, y: 210, txt: '💨全体加速！', life: 2, ml: 2, col: '#ff9800' });
       break;
     }
     case 'unit_disable': {
-      // Randomly disable a tower for 5 seconds
       const keys = Object.keys(s.grid);
       if (keys.length > 0) {
         const rk = keys[Math.floor(Math.random() * keys.length)];
@@ -164,6 +164,50 @@ const executeBossAbility = (s: GameState, e: Enemy) => {
         const [c, r] = rk.split(',').map(Number);
         s.effs.push({ id: uid(), x: c * CELL + CELL / 2, y: r * CELL + CELL / 2, txt: '⚠️無効化！', life: 2, ml: 2, col: '#9c27b0' });
       }
+      break;
+    }
+    // ── 累氷の魔雪 abilities ──
+    case 'ice_wall': {
+      // 技① 氷の面: spawn ice wall HP=200, absorbs hits, boss takes reduced damage while active
+      if (s.freezeTileHP <= 0) {
+        s.freezeTileHP = 200;
+        s.freezeTileMaxHP = 200;
+        s.freezeTileMode = 'wall';
+        s.effs.push({ id: uid(), x: 168, y: 100, txt: '❄️氷の面出現！', life: 2, ml: 2, col: '#80d8ff' });
+      }
+      // Schedule next ability: blizzard
+      const abKey_iw = `boss_${e.id}`;
+      s.abilityTimers[abKey_iw] = 8 + Math.random() * 4;
+      (def as any)._nextAbility = 'blizzard';
+      break;
+    }
+    case 'blizzard': {
+      // 技② 暴風: freeze all towers for 4 seconds
+      for (const k of Object.keys(s.grid)) {
+        s.disabledTowers.add(k);
+        const rem = k;
+        setTimeout(() => s.disabledTowers.delete(rem), 4000);
+      }
+      s.effs.push({ id: uid(), x: 168, y: 210, txt: '🌨️暴風！全家電凍結4秒', life: 2.5, ml: 2.5, col: '#80d8ff' });
+      s.screenShake = 0.4;
+      break;
+    }
+    case 'ice_curse': {
+      // 技③ 氷の念: spawn curse tile HP=500, base takes 1 dmg every 3s while active
+      if (s.freezeTileHP <= 0) {
+        s.freezeTileHP = 500;
+        s.freezeTileMaxHP = 500;
+        s.freezeTileMode = 'curse';
+        s.iceDotTimer = 3;
+        s.effs.push({ id: uid(), x: 168, y: 130, txt: '❄️氷の念発動！呪氷出現', life: 2.5, ml: 2.5, col: '#4dd0e1' });
+      }
+      break;
+    }
+    case 'absolute_zero': {
+      // 奥義: disable ALL towers for 10s
+      s.absoluteZeroTimer = 10;
+      s.screenShake = 0.8;
+      s.effs.push({ id: uid(), x: 168, y: 180, txt: '🌨️アブソルート・オプゼロ！！', life: 3, ml: 3, col: '#80d8ff' });
       break;
     }
   }
@@ -204,6 +248,28 @@ export const tickGame = (s: GameState, dt: number): void => {
     const next = rem - dt;
     if (next <= 0) s.cloggedTowers.delete(k);
     else s.cloggedTowers.set(k, next);
+  }
+
+  // ── Absolute Zero countdown ──
+  if (s.absoluteZeroTimer > 0) {
+    s.absoluteZeroTimer = Math.max(0, s.absoluteZeroTimer - dt);
+  }
+
+  // ── Freeze tile (氷の面 / 氷の念) processing ──
+  if (s.freezeTileHP <= 0 && s.freezeTileMode !== null) {
+    // Tile just destroyed
+    s.effs.push({ id: uid(), x: 168, y: 150, txt: '💧フリーズタイル破壊！', life: 2, ml: 2, col: '#00e5ff' });
+    s.freezeTileMode = null;
+    s.iceDotTimer = 0;
+  }
+  if (s.freezeTileMode === 'curse' && s.freezeTileHP > 0) {
+    s.iceDotTimer -= dt;
+    if (s.iceDotTimer <= 0) {
+      s.iceDotTimer = 3;
+      s.baseHP = Math.max(0, s.baseHP - 1);
+      s.effs.push({ id: uid(), x: 168, y: 168, txt: '❄️-1HP 氷の念', life: 1.5, ml: 1.5, col: '#4dd0e1' });
+      if (s.baseHP <= 0) s.over = true;
+    }
   }
 
   // Boss wall timer
@@ -319,8 +385,44 @@ export const tickGame = (s: GameState, dt: number): void => {
       const abilityKey = `boss_${e.id}`;
       s.abilityTimers[abilityKey] = (s.abilityTimers[abilityKey] || (5 + Math.random() * 5)) - dt;
       if (s.abilityTimers[abilityKey] <= 0) {
-        s.abilityTimers[abilityKey] = 6 + Math.random() * 6;
-        executeBossAbility(s, e);
+        // boss_massetsu: rotate through 4 abilities in sequence
+        if (e.type === 'boss_massetsu') {
+          const phaseKey = `massetsu_phase_${e.id}`;
+          const phase = (s.abilityTimers[phaseKey] || 0) % 4;
+          s.abilityTimers[phaseKey] = phase + 1;
+          const abilities: Array<typeof EDEFS[typeof e.type]['bossAbility']> = ['ice_wall', 'blizzard', 'ice_curse', 'absolute_zero'];
+          const chosenAbility = abilities[Math.floor(phase)];
+          const fakeDef = { ...EDEFS[e.type], bossAbility: chosenAbility };
+          s.abilityTimers[abilityKey] = phase === 3 ? 12 : 7 + Math.random() * 4;
+          executeBossAbility(s, { ...e } as any);
+          // directly call the chosen ability
+          if (chosenAbility === 'ice_wall') {
+            if (s.freezeTileHP <= 0) {
+              s.freezeTileHP = 200; s.freezeTileMaxHP = 200; s.freezeTileMode = 'wall';
+              s.effs.push({ id: uid(), x: 168, y: 100, txt: '❄️技①氷の面！', life: 2, ml: 2, col: '#80d8ff' });
+            }
+          } else if (chosenAbility === 'blizzard') {
+            for (const k of Object.keys(s.grid)) {
+              s.disabledTowers.add(k);
+              const rem = k;
+              setTimeout(() => s.disabledTowers.delete(rem), 4000);
+            }
+            s.effs.push({ id: uid(), x: 168, y: 210, txt: '🌨️技②暴風！全家電4秒凍結', life: 2.5, ml: 2.5, col: '#80d8ff' });
+            s.screenShake = 0.4;
+          } else if (chosenAbility === 'ice_curse') {
+            if (s.freezeTileHP <= 0) {
+              s.freezeTileHP = 500; s.freezeTileMaxHP = 500; s.freezeTileMode = 'curse'; s.iceDotTimer = 3;
+              s.effs.push({ id: uid(), x: 168, y: 130, txt: '❄️技③氷の念！呪氷出現', life: 2.5, ml: 2.5, col: '#4dd0e1' });
+            }
+          } else if (chosenAbility === 'absolute_zero') {
+            s.absoluteZeroTimer = 10; s.screenShake = 0.8;
+            s.effs.push({ id: uid(), x: 168, y: 180, txt: '🌨️奥義！アブソルート・オプゼロ！！', life: 3, ml: 3, col: '#80d8ff' });
+          }
+          void fakeDef; // suppress unused warning
+        } else {
+          s.abilityTimers[abilityKey] = 6 + Math.random() * 6;
+          executeBossAbility(s, e);
+        }
       }
     }
   }
@@ -343,6 +445,7 @@ export const tickGame = (s: GameState, dt: number): void => {
 
   for (const [key, cell] of Object.entries(s.grid)) {
     if (!en.has(key)) continue;
+    if (s.absoluteZeroTimer > 0) continue; // absolute zero: all towers disabled
     if (s.disabledTowers.has(key)) continue; // boss disabled
     if (s.cloggedTowers.has(key)) continue; // cockroach clogged
     const S = st(cell.tid, cell.lv);
@@ -432,7 +535,20 @@ export const tickGame = (s: GameState, dt: number): void => {
     }
     if (tgt) {
       s.timers[key] = 1 / (synSpd * rm);
-      tgt.hp -= synDmg;
+      // Freeze tile wall redirect: damage goes to the wall instead of boss
+      if (tgt.type === 'boss_massetsu' && s.freezeTileMode === 'wall' && s.freezeTileHP > 0) {
+        const iceDmg = (cell.tid === 'kettle' || cell.tid === 'microwave' || cell.tid === 'oven' || cell.tid === 'ihcooker') ? synDmg * 2 : synDmg;
+        s.freezeTileHP = Math.max(0, s.freezeTileHP - iceDmg);
+        const { x: ex, y: ey } = pxy(s.path, tgt.pi, tgt.pr);
+        s.effs.push({ id: uid(), x: ex, y: ey - 20, txt: `❄️-${Math.ceil(iceDmg)}`, life: 0.8, ml: 0.8, col: '#80d8ff' });
+      } else {
+        // Kettle/hot towers ALSO damage freeze curse tile while hitting boss
+        if (s.freezeTileMode === 'curse' && s.freezeTileHP > 0 &&
+            (cell.tid === 'kettle' || cell.tid === 'microwave' || cell.tid === 'oven' || cell.tid === 'ihcooker')) {
+          s.freezeTileHP = Math.max(0, s.freezeTileHP - Math.ceil(synDmg * 0.5));
+        }
+        tgt.hp -= synDmg;
+      }
       tgt.hitFlash = 0.1;
       const { x: ex, y: ey } = pxy(s.path, tgt.pi, tgt.pr);
       const projCol: Record<string, string> = {

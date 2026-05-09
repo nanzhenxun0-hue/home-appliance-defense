@@ -70,6 +70,25 @@ const HUD = ({ ui, diff, grid, onHome, onStartWave }: HUDProps) => {
       {ui.wActive && (
         <span className="hud-chip text-orange-400 animate-pulse text-[10px]">⚠️侵入中</span>
       )}
+
+      {ui.absoluteZeroTimer > 0 && (
+        <span className="hud-chip animate-pulse text-[10px] font-black"
+          style={{ color: '#80d8ff', borderColor: '#80d8ff44', background: '#001a2a' }}>
+          🌨️アブゼロ {Math.ceil(ui.absoluteZeroTimer)}s
+        </span>
+      )}
+
+      {ui.freezeTileMode !== null && ui.freezeTileHP > 0 && (
+        <div className="hud-chip text-[10px] flex items-center gap-1"
+          style={{ color: ui.freezeTileMode === 'wall' ? '#80d8ff' : '#4dd0e1', borderColor: '#80d8ff44' }}>
+          <span>{ui.freezeTileMode === 'wall' ? '❄️氷の面' : '❄️氷の念'}</span>
+          <div className="w-8 h-1.5 bg-muted rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all"
+              style={{ width: `${(ui.freezeTileHP / ui.freezeTileMaxHP) * 100}%`, background: '#80d8ff' }} />
+          </div>
+          <span className="font-mono">{ui.freezeTileHP}</span>
+        </div>
+      )}
     </div>
   );
 };

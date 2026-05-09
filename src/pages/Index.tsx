@@ -58,15 +58,9 @@ const Index = () => {
     return (
       <>
         <TutorialScreen onComplete={() => {
-          const wasFirst = !localStorage.getItem('kaden-td-tutorial');
           localStorage.setItem('kaden-td-tutorial', '1');
-          if (wasFirst) {
-            const added = gacha.grantUnit('promo_starter');
-            if (added) setPromoReward('promo_starter');
-            else handleScreenChange('home');
-          } else {
-            handleScreenChange('home');
-          }
+          gacha.grantUnit('promo_starter');
+          setPromoReward('promo_starter');
         }} />
         <PromoRewardModal tid={promoReward} onClose={() => { setPromoReward(null); handleScreenChange('home'); }} />
       </>
@@ -122,10 +116,9 @@ const Index = () => {
   return (
     <>
       <GameScreen key={`${diff}-${area}`} diff={diff} team={team} area={area} onHome={() => handleScreenChange('home')} onVoltEarned={onVoltEarned} onWin={unlockNext} onEndlessMilestone={(w) => {
-        if (w >= 100 && !localStorage.getItem('kaden-td-endless100')) {
-          localStorage.setItem('kaden-td-endless100', '1');
-          const added = gacha.grantUnit('promo_endless');
-          if (added) setPromoReward('promo_endless');
+        if (w >= 100 && w % 100 === 0) {
+          gacha.grantUnit('promo_endless');
+          setPromoReward('promo_endless');
         }
       }} />
       <PromoRewardModal tid={promoReward} onClose={() => setPromoReward(null)} />

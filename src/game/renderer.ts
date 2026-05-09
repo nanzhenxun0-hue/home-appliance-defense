@@ -376,5 +376,48 @@ export const drawFrame = (
   }
   ctx.globalAlpha = 1;
 
+  // ── Freeze tile overlay (氷の面 / 氷の念) ──
+  if (s.freezeTileMode !== null && s.freezeTileHP > 0) {
+    const hp = s.freezeTileHP / s.freezeTileMaxHP;
+    const col = s.freezeTileMode === 'wall' ? '#80d8ff' : '#4dd0e1';
+    const pulse = 0.55 + Math.sin(time * 4) * 0.12;
+    // Draw a crystalline tile in the center of the canvas
+    const fx = GW / 2 - 22, fy = GH / 2 - 22, fw = 44, fh = 44;
+    ctx.globalAlpha = pulse;
+    ctx.fillStyle = col + '33';
+    rrect(ctx, fx, fy, fw, fh, 8); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 2;
+    rrect(ctx, fx, fy, fw, fh, 8); ctx.stroke();
+    // HP bar
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = '#111'; ctx.fillRect(fx, fy - 7, fw, 4);
+    ctx.fillStyle = col; ctx.fillRect(fx, fy - 7, fw * hp, 4);
+    // Label
+    ctx.globalAlpha = 1;
+    ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = col;
+    ctx.shadowBlur = 4; ctx.shadowColor = col;
+    ctx.fillText(s.freezeTileMode === 'wall' ? '❄️氷の面' : '❄️氷の念', GW / 2, fy + fh / 2);
+    ctx.fillText(`${s.freezeTileHP}/${s.freezeTileMaxHP}`, GW / 2, fy + fh / 2 + 12);
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+  }
+
+  // ── Absolute Zero overlay ──
+  if (s.absoluteZeroTimer > 0) {
+    const alpha = 0.12 + Math.sin(time * 6) * 0.04;
+    ctx.fillStyle = `rgba(128,216,255,${alpha})`;
+    ctx.fillRect(0, 0, GW, GH);
+    // Ice crystal border
+    ctx.strokeStyle = `rgba(128,216,255,${0.3 + Math.sin(time * 3) * 0.1})`;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(2, 2, GW - 4, GH - 4);
+    // Countdown text
+    ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillStyle = '#80d8ff';
+    ctx.shadowBlur = 8; ctx.shadowColor = '#80d8ff';
+    ctx.fillText(`🌨️アブゼロ ${Math.ceil(s.absoluteZeroTimer)}秒`, GW / 2, 6);
+    ctx.shadowBlur = 0;
+  }
+
   ctx.restore();
 };

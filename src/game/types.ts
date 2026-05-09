@@ -118,7 +118,7 @@ export interface TowerStats extends TowerDef, UpgradeLevel {
 export type EnemyType =
   | 'dust' | 'fast_dust' | 'slime' | 'tank_slime' | 'magnet' | 'virus'
   | 'cockroach' | 'mold' | 'surge' | 'dust_lord'
-  | 'boss' | 'boss_ice' | 'boss_fire' | 'final_boss';
+  | 'boss' | 'boss_ice' | 'boss_fire' | 'boss_massetsu' | 'final_boss';
 
 export interface EnemyDef {
   em: string;
@@ -132,7 +132,7 @@ export interface EnemyDef {
   skillName?: string;
   skillDesc?: string;
   guide?: string;
-  bossAbility?: 'warp' | 'wall' | 'speed_buff' | 'unit_disable';
+  bossAbility?: 'warp' | 'wall' | 'speed_buff' | 'unit_disable' | 'ice_wall' | 'blizzard' | 'ice_curse' | 'absolute_zero';
   special?: 'clog' | 'corrode' | 'surge_stun' | 'multiply'; // new enemy specials
   pixel?: boolean; // draw in pixel art style
 }
@@ -259,6 +259,12 @@ export interface GameState {
   ultActive: boolean;
   ultTimer: number;
   cloggedTowers: Map<string, number>;
+  // Freeze tile state (cumulative ice boss mechanic)
+  freezeTileHP: number;       // 0 = no active freeze tile
+  freezeTileMaxHP: number;
+  freezeTileMode: 'wall' | 'curse' | null;
+  iceDotTimer: number;        // DoT interval for ice_curse
+  absoluteZeroTimer: number;  // >0 = all towers disabled
   // Per-area path & endless state
   path: [number, number][];
   pathSet: Set<string>;
@@ -277,6 +283,10 @@ export interface UIState {
   area: AreaKey;
   ultGauge: number;
   ultActive: boolean;
+  freezeTileHP: number;
+  freezeTileMaxHP: number;
+  freezeTileMode: 'wall' | 'curse' | null;
+  absoluteZeroTimer: number;
 }
 
 export interface HighScoreEntry {

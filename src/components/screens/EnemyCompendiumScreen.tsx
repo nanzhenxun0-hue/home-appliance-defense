@@ -9,7 +9,7 @@ interface EnemyCompendiumScreenProps {
 
 const ENEMY_ORDER: EnemyType[] = [
   'dust', 'fast_dust', 'slime', 'tank_slime', 'magnet', 'virus',
-  'cockroach', 'mold', 'surge', 'dust_lord', 'boss', 'boss_ice', 'boss_fire', 'final_boss',
+  'cockroach', 'mold', 'surge', 'dust_lord', 'boss', 'boss_ice', 'boss_fire', 'boss_massetsu', 'final_boss',
 ];
 
 const ENEMY_GROUPS = [
