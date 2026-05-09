@@ -12,6 +12,7 @@ import AreaSelectScreen from '@/components/screens/AreaSelectScreen';
 import TutorialScreen from '@/components/screens/TutorialScreen';
 import CompendiumScreen from '@/components/screens/CompendiumScreen';
 import EnemyCompendiumScreen from '@/components/screens/EnemyCompendiumScreen';
+import PromoRewardModal from '@/components/screens/PromoRewardModal';
 import { useGacha } from '@/hooks/useGacha';
 import { useTeam } from '@/hooks/useTeam';
 import { useSound } from '@/hooks/useSound';
@@ -28,6 +29,7 @@ const Index = () => {
   });
   const [diff, setDiff] = useState<DifficultyKey>('normal');
   const [area, setArea] = useState<AreaKey>('suburb');
+  const [promoReward, setPromoReward] = useState<TowerID | null>(null);
   const gacha = useGacha();
   const { team, toggle, MAX_TEAM } = useTeam();
   const { play, toggle: toggleSound, init: initSound } = useSound();
@@ -53,15 +55,22 @@ const Index = () => {
   };
 
   if (screen === 'tutorial') {
-    return <TutorialScreen onComplete={() => {
-      const wasFirst = !localStorage.getItem('kaden-td-tutorial');
-      localStorage.setItem('kaden-td-tutorial', '1');
-      if (wasFirst) {
-        const added = gacha.grantUnit('promo_starter');
-        if (added) alert('🎁 限定キャラ「プロト家電（P）」をプレゼント！');
-      }
-      handleScreenChange('home');
-    }} />;
+    return (
+      <>
+        <TutorialScreen onComplete={() => {
+          const wasFirst = !localStorage.getItem('kaden-td-tutorial');
+          localStorage.setItem('kaden-td-tutorial', '1');
+          if (wasFirst) {
+            const added = gacha.grantUnit('promo_starter');
+            if (added) setPromoReward('promo_starter');
+            else handleScreenChange('home');
+          } else {
+            handleScreenChange('home');
+          }
+        }} />
+        <PromoRewardModal tid={promoReward} onClose={() => { setPromoReward(null); handleScreenChange('home'); }} />
+      </>
+    );
   }
   if (screen === 'home') {
     return <HomeScreen
@@ -110,13 +119,18 @@ const Index = () => {
   if (screen === 'combo') {
     return <ComboRecipeScreen owned={gacha.inv.owned} onBack={() => handleScreenChange('home')} />;
   }
-  return <GameScreen key={`${diff}-${area}`} diff={diff} team={team} area={area} onHome={() => handleScreenChange('home')} onVoltEarned={onVoltEarned} onWin={unlockNext} onEndlessMilestone={(w) => {
-    if (w >= 100 && !localStorage.getItem('kaden-td-endless100')) {
-      localStorage.setItem('kaden-td-endless100', '1');
-      const added = gacha.grantUnit('promo_endless');
-      if (added) alert('🏆 エンドレス100W突破！限定キャラ「∞マスター（P）」獲得！');
-    }
-  }} />;
+  return (
+    <>
+      <GameScreen key={`${diff}-${area}`} diff={diff} team={team} area={area} onHome={() => handleScreenChange('home')} onVoltEarned={onVoltEarned} onWin={unlockNext} onEndlessMilestone={(w) => {
+        if (w >= 100 && !localStorage.getItem('kaden-td-endless100')) {
+          localStorage.setItem('kaden-td-endless100', '1');
+          const added = gacha.grantUnit('promo_endless');
+          if (added) setPromoReward('promo_endless');
+        }
+      }} />
+      <PromoRewardModal tid={promoReward} onClose={() => setPromoReward(null)} />
+    </>
+  );
 };
 
 export default Index;
