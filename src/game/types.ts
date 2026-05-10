@@ -132,7 +132,7 @@ export interface EnemyDef {
   skillName?: string;
   skillDesc?: string;
   guide?: string;
-  bossAbility?: 'warp' | 'wall' | 'speed_buff' | 'unit_disable' | 'ice_wall' | 'blizzard' | 'ice_curse' | 'absolute_zero';
+  bossAbility?: 'warp' | 'wall' | 'speed_buff' | 'unit_disable' | 'ice_wall' | 'blizzard' | 'ice_curse' | 'absolute_zero' | 'power_drain' | 'regen';
   special?: 'clog' | 'corrode' | 'surge_stun' | 'multiply'; // new enemy specials
   pixel?: boolean; // draw in pixel art style
 }
@@ -216,7 +216,7 @@ export interface SpawnItem {
 }
 
 // Area system
-export type AreaKey = 'suburb' | 'factory' | 'downtown' | 'volcano' | 'glacier';
+export type AreaKey = 'suburb' | 'factory' | 'downtown' | 'volcano' | 'glacier' | 'sky';
 
 export interface AreaDef {
   name: string;

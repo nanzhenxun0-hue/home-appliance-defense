@@ -204,10 +204,25 @@ const executeBossAbility = (s: GameState, e: Enemy) => {
       break;
     }
     case 'absolute_zero': {
-      // 奥義: disable ALL towers for 10s
       s.absoluteZeroTimer = 10;
       s.screenShake = 0.8;
       s.effs.push({ id: uid(), x: 168, y: 180, txt: '🌨️アブソルート・オプゼロ！！', life: 3, ml: 3, col: '#80d8ff' });
+      break;
+    }
+    case 'power_drain': {
+      // 電力収奪: steal 30-50W from player
+      const drain = e.type === 'final_boss' ? 50 : 30;
+      s.power = Math.max(0, s.power - drain);
+      s.screenShake = 0.3;
+      s.effs.push({ id: uid(), x: 168, y: 180, txt: `⚡-${drain}W 電力収奪！`, life: 2, ml: 2, col: '#ffd700' });
+      break;
+    }
+    case 'regen': {
+      // 自己回復: restore 8% of max HP
+      const healAmt = Math.ceil(e.mhp * 0.08);
+      e.hp = Math.min(e.mhp, e.hp + healAmt);
+      const { x, y } = pxy(s.path, e.pi, e.pr);
+      s.effs.push({ id: uid(), x, y, txt: `💙+${healAmt} 回復！`, life: 1.8, ml: 1.8, col: '#00bcd4' });
       break;
     }
   }
@@ -385,8 +400,67 @@ export const tickGame = (s: GameState, dt: number): void => {
       const abilityKey = `boss_${e.id}`;
       s.abilityTimers[abilityKey] = (s.abilityTimers[abilityKey] || (5 + Math.random() * 5)) - dt;
       if (s.abilityTimers[abilityKey] <= 0) {
+        // boss_ice: rotate between warp and regen
+        if (e.type === 'boss_ice') {
+          const phaseKey = `boss_ice_phase_${e.id}`;
+          const phase = (s.abilityTimers[phaseKey] || 0) % 2;
+          s.abilityTimers[phaseKey] = phase + 1;
+          s.abilityTimers[abilityKey] = 7 + Math.random() * 4;
+          if (phase < 1) {
+            // warp
+            const jump = Math.min(3, s.path.length - 1 - e.pi);
+            if (jump > 0) { e.pi += jump; e.pr = 0; }
+            const { x, y } = pxy(s.path, e.pi, e.pr);
+            s.effs.push({ id: uid(), x, y, txt: '⚡ワープ！', life: 1.5, ml: 1.5, col: '#00bcd4' });
+          } else {
+            // regen
+            const healAmt = Math.ceil(e.mhp * 0.08);
+            e.hp = Math.min(e.mhp, e.hp + healAmt);
+            const { x, y } = pxy(s.path, e.pi, e.pr);
+            s.effs.push({ id: uid(), x, y, txt: `💙+${healAmt} 回復！`, life: 1.8, ml: 1.8, col: '#00bcd4' });
+          }
+        // boss_fire: rotate between wall and power_drain
+        } else if (e.type === 'boss_fire') {
+          const phaseKey = `boss_fire_phase_${e.id}`;
+          const phase = (s.abilityTimers[phaseKey] || 0) % 2;
+          s.abilityTimers[phaseKey] = phase + 1;
+          s.abilityTimers[abilityKey] = 7 + Math.random() * 4;
+          if (phase < 1) {
+            // wall
+            s.bossWallActive = true; s.bossWallTimer = 3;
+            const { x, y } = pxy(s.path, e.pi, e.pr);
+            s.effs.push({ id: uid(), x, y, txt: '🛡️炎壁！', life: 1.5, ml: 1.5, col: '#ff3d00' });
+          } else {
+            // power_drain
+            s.power = Math.max(0, s.power - 30);
+            s.screenShake = 0.3;
+            s.effs.push({ id: uid(), x: 168, y: 180, txt: '⚡-30W 電力収奪！', life: 2, ml: 2, col: '#ffd700' });
+          }
+        // final_boss: rotate between unit_disable and power_drain
+        } else if (e.type === 'final_boss') {
+          const phaseKey = `final_boss_phase_${e.id}`;
+          const phase = (s.abilityTimers[phaseKey] || 0) % 2;
+          s.abilityTimers[phaseKey] = phase + 1;
+          s.abilityTimers[abilityKey] = 8 + Math.random() * 4;
+          if (phase < 1) {
+            // unit_disable
+            const keys = Object.keys(s.grid);
+            if (keys.length > 0) {
+              const rk = keys[Math.floor(Math.random() * keys.length)];
+              s.disabledTowers.add(rk);
+              const rem = rk;
+              setTimeout(() => s.disabledTowers.delete(rem), 5000);
+              const [c, r] = rk.split(',').map(Number);
+              s.effs.push({ id: uid(), x: c * CELL + CELL / 2, y: r * CELL + CELL / 2, txt: '⚠️無効化！', life: 2, ml: 2, col: '#9c27b0' });
+            }
+          } else {
+            // power_drain
+            s.power = Math.max(0, s.power - 50);
+            s.screenShake = 0.4;
+            s.effs.push({ id: uid(), x: 168, y: 180, txt: '⚡-50W 電力収奪！！', life: 2.5, ml: 2.5, col: '#ffd700' });
+          }
         // boss_massetsu: rotate through 4 abilities in sequence
-        if (e.type === 'boss_massetsu') {
+        } else if (e.type === 'boss_massetsu') {
           const phaseKey = `massetsu_phase_${e.id}`;
           const phase = (s.abilityTimers[phaseKey] || 0) % 4;
           s.abilityTimers[phaseKey] = phase + 1;

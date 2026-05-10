@@ -13,7 +13,7 @@ export const AREAS: Record<AreaKey, AreaDef> = {
   factory: {
     name: '工場地帯',
     em: '🏭',
-    desc: '機械の悪魔が蠢く。氷電魔フローズワンダー出現',
+    desc: '機械の悪魔が蠢く。氷電魔フローズデビル出現',
     col: '#ff9800',
     waves: [],
     unlockArea: 'suburb',
@@ -43,13 +43,23 @@ export const AREAS: Record<AreaKey, AreaDef> = {
   glacier: {
     name: '氷河',
     em: '🧊',
-    desc: '最終エリア。家電大魔王デウスマキナが君臨する',
+    desc: '累氷の魔雪が支配する極寒エリア。家電大魔王も降臨',
     col: '#00bcd4',
     waves: [],
     unlockArea: 'volcano',
     hasBoss: true,
-    bossType: 'final_boss',
+    bossType: 'boss_massetsu',
+  },
+  sky: {
+    name: '空中要塞',
+    em: '🌤️',
+    desc: '雲の上の魔要塞。累氷の魔雪と家電大魔王が最終決戦を挑む',
+    col: '#e0e0ff',
+    waves: [],
+    unlockArea: 'glacier',
+    hasBoss: true,
+    bossType: 'boss_massetsu',
   },
 };
 
-export const AREA_ORDER: AreaKey[] = ['suburb', 'factory', 'downtown', 'volcano', 'glacier'];
+export const AREA_ORDER: AreaKey[] = ['suburb', 'factory', 'downtown', 'volcano', 'glacier', 'sky'];

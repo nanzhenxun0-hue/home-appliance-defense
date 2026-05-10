@@ -43,6 +43,13 @@ export const AREA_PATHS: Record<string, [number, number][]> = {
     [5,6],[5,5],[5,4],[5,3],[5,2],[6,2],[7,2],
     [7,3],[7,4],[7,5],[7,6],[7,7],[7,8],
   ],
+  sky: [
+    [0,1],[1,1],[2,1],[3,1],[3,2],[3,3],
+    [4,3],[5,3],[6,3],[6,4],[6,5],[6,6],
+    [5,6],[4,6],[3,6],[2,6],[1,6],[0,6],
+    [0,7],[0,8],[1,8],[2,8],[3,8],[4,8],
+    [5,8],[6,8],[7,8],
+  ],
 };
 
 export const getAreaPath = (area: string): [number, number][] => AREA_PATHS[area] || PATH;
@@ -94,8 +101,8 @@ export const TDEFS: Record<TowerID, TowerDef> = {
   plasma:    { n:'プラズマキャノン', em:'🔱', r:'OD', rc:'#ffd700', baseCost:500, req:'superpc',  personality:'破壊神', quote:'「宇宙の終わりを見たいか？これが答えだ！！」', role:'AOE殲滅', skillName:'プラズマアポカリプス', skillDesc:'全体貫通の破壊光線。Lv3で「世界を焼く」発動、AOE+30%。' },
 
   // ── プロモ限定（チュートリアル/エンドレス報酬）──
-  promo_starter:{ n:'プロト家電', em:'🎁', r:'P', rc:'#ff4081', baseCost:0, req:null, personality:'頼れる兄貴', quote:'「初心者を助けるために生まれた、特別な相棒だ。」', role:'限定／オールラウンダー', skillName:'スターターブースト', skillDesc:'設置だけで電力+2／周囲ATK+10%。チュートリアル修了の証。' },
-  promo_endless:{ n:'∞マスター', em:'🏆', r:'P', rc:'#ff4081', baseCost:0, req:null, personality:'破壊神', quote:'「終わりなき戦いを制した者にのみ、力は宿る。」', role:'限定／殲滅特化', skillName:'インフィニットウェーブ', skillDesc:'波紋AOEで全方向攻撃。エンドレス100W突破の称号。' },
+  promo_starter:{ n:'プロト家電', em:'🎁', r:'P', rc:'#ff4081', baseCost:50, req:null, personality:'頼れる兄貴', quote:'「初心者を助けるために生まれた、特別な相棒だ。」', role:'限定／オールラウンダー', skillName:'スターターブースト', skillDesc:'設置だけで電力+2／周囲ATK+10%。チュートリアル修了の証。' },
+  promo_endless:{ n:'∞マスター', em:'🏆', r:'P', rc:'#ff4081', baseCost:80, req:null, personality:'破壊神', quote:'「終わりなき戦いを制した者にのみ、力は宿る。」', role:'限定／殲滅特化', skillName:'インフィニットウェーブ', skillDesc:'波紋AOEで全方向攻撃。エンドレス100W突破の称号。' },
 
   // ── v1.5 expansion: 20 new appliances ──
   // C
@@ -295,11 +302,11 @@ export const EDEFS: Record<EnemyType, EnemyDef> = {
   mold:       { em:'🍄',  hp:280,  spd:22,  rew:25, dmg:2, col:'#558b2f', name:'カビ', role:'腐食妨害', skillName:'じわじわ腐食', skillDesc:'時間経過で家電の働きを鈍らせる。', guide:'食洗機・洗濯機ラインでケア。長く残さず炎で焼く。', special:'corrode', pixel:true },
   surge:      { em:'⚡',  hp:230,  spd:60,  rew:40, dmg:3, col:'#ffeb3b', name:'過電流モンスター', role:'電撃妨害', skillName:'サージスタン', skillDesc:'電力ラインにショックを与え、家電を一時停止させる。', guide:'コードを分散配置。冷凍・スローで止めてから倒す。', special:'surge_stun', pixel:true },
   dust_lord:  { em:'👻',  hp:850,  spd:30,  rew:100,dmg:4, col:'#9e9e9e', name:'ホコリ大王', role:'分裂中ボス', skillName:'ホコリ分裂', skillDesc:'倒れると小さなダストをばらまく。', guide:'範囲攻撃を残して倒す。オーブン・テスラ・プラズマが有効。', special:'multiply', pixel:true },
-  boss:       { em:'🤖',  hp:2000, spd:20,  rew:150,dmg:5, col:'#ff1744', name:'ボスロボット', role:'標準ボス', skillName:'重装進軍', skillDesc:'高HPで正面から押し切る基本ボス。', guide:'冷蔵庫で止め、電子レンジやスーパーPCで集中火力。', pixel:true },
-  boss_ice:   { em:'🥶',  hp:3500, spd:18,  rew:300,dmg:7, col:'#00bcd4', name:'氷電魔フローズデビル', role:'戦略型ボス（氷／嵐／全体／不安定）', skillName:'4種スキル：氷結／暴風／極寒嵐／コスト撹乱', skillDesc:'①氷結：範囲を凍結させ家電を停止／弱体化  ②暴風：竜巻で家電配置をずらし射線を乱す  ③極寒嵐：時間経過で全体ダメージ  ④コスト撹乱：家電コストを一時的に上下させ再配置を強要。', guide:'十字路で迎撃。電気ケトルで氷を溶かし、扇風機で暴風を相殺、延長コードで射程拡張＆バフ。スキル発動の予兆（青光＝氷／緑光＝風／赤光＝全体）を見て再配置。単体では絶対に対処不可、家電コンボ前提。', bossAbility:'warp', pixel:true },
-  boss_fire:  { em:'🔥',  hp:4000, spd:22,  rew:350,dmg:8, col:'#ff3d00', name:'爆熱魔クリムゾンキング', role:'壁生成ボス', skillName:'炎壁展開', skillDesc:'ボスを守る壁を展開し、攻撃を吸わせる。', guide:'貫通・全体攻撃が有効。プラズマやプロジェクターで壁ごと焼く。', bossAbility:'wall', pixel:true },
-  boss_massetsu:{ em:'🌨️', hp:6000, spd:14, rew:450,dmg:9, col:'#80d8ff', name:'累氷の魔雪', role:'氷結支配ボス', skillName:'四天技：氷の面／暴風／氷の念／絶対零度', skillDesc:'技①氷の面：HP200の氷壁を出現させ、破壊するまで攻撃を吸収する。技②暴風：全家電を4秒間凍結させる。技③氷の念：HP500の呪氷を置き、残る間3秒ごとに基地に1ダメージ。奥義：アブソルート・オプゼロで全家電を10秒停止。電気ケトルが氷壁への有効打。', guide:'電気ケトル（氷を溶かす）・扇風機×4（暴風を相殺）・延長コードを大量配置で対抗。氷の念が出たら真っ先に破壊！アブゼロ中は電力を温存して体力を維持。', bossAbility:'ice_wall', pixel:true },
-  final_boss: { em:'👿',  hp:8000, spd:15,  rew:500,dmg:10,col:'#9c27b0', name:'家電大魔王デウスマキナ', role:'最終ボス', skillName:'家電支配', skillDesc:'味方ユニットを停止させ、防衛網を崩壊させる。', guide:'7体編成でコード・食洗機・全体バフを入れ、止められても火力が残る形にする。', bossAbility:'unit_disable', pixel:true },
+  boss:       { em:'🤖',  hp:3000, spd:22,  rew:180,dmg:5, col:'#ff1744', name:'ボスロボット', role:'標準ボス', skillName:'重装進軍＋全体加速', skillDesc:'高HPで押し切り、一定間隔で全敵を加速させる強化型ボス。', guide:'冷蔵庫で止め、電子レンジやスーパーPCで集中火力。速度バフ発動前に倒す。', bossAbility:'speed_buff', pixel:true },
+  boss_ice:   { em:'🥶',  hp:5000, spd:20,  rew:320,dmg:7, col:'#00bcd4', name:'氷電魔フローズデビル', role:'回復＋ワープ型ボス', skillName:'氷結回生：ワープ＋自己回復', skillDesc:'①ワープ：進路を一気に進む  ②自己回復：最大HPの8%を回復し不死に近い粘り強さを発揮。', guide:'ワープ後の位置に迎撃ラインを用意。回復を上回る火力が必要。プラズマ・電子レンジ推奨。', bossAbility:'warp', pixel:true },
+  boss_fire:  { em:'🔥',  hp:5500, spd:25,  rew:380,dmg:8, col:'#ff3d00', name:'爆熱魔クリムゾンキング', role:'壁生成＋電力吸収ボス', skillName:'炎壁展開＋電力収奪', skillDesc:'①炎壁：攻撃を吸う壁を展開  ②電力収奪：プレイヤーから30Wを奪い取る。', guide:'貫通・全体攻撃が有効。電力を奪われる前に延長コードで補充。プラズマやプロジェクターで壁ごと焼く。', bossAbility:'wall', pixel:true },
+  boss_massetsu:{ em:'🌨️', hp:8000, spd:16, rew:500,dmg:10, col:'#80d8ff', name:'累氷の魔雪', role:'氷結支配ボス', skillName:'四天技：氷の面／暴風／氷の念／絶対零度', skillDesc:'技①氷の面：HP200の氷壁を出現させ、破壊するまで攻撃を吸収する。技②暴風：全家電を4秒間凍結させる。技③氷の念：HP500の呪氷を置き、残る間3秒ごとに基地に1ダメージ。奥義：アブソルート・オプゼロで全家電を10秒停止。電気ケトルが氷壁への有効打。', guide:'電気ケトル（氷を溶かす）・扇風機×4（暴風を相殺）・延長コードを大量配置で対抗。氷の念が出たら真っ先に破壊！アブゼロ中は電力を温存して体力を維持。', bossAbility:'ice_wall', pixel:true },
+  final_boss: { em:'👿',  hp:12000,spd:18,  rew:600,dmg:12,col:'#9c27b0', name:'家電大魔王デウスマキナ', role:'最終ボス', skillName:'家電支配＋電力収奪', skillDesc:'①家電無効化：ランダムな家電を5秒停止  ②電力収奪：プレイヤーから50Wを奪い取る。2種の技を交互に使用し防衛網を崩壊させる。', guide:'7体編成でコード・食洗機・全体バフを入れ、止められても火力が残る形にする。電力収奪に備えてソーラーパネルや蓄電池で予備電力を確保。', bossAbility:'unit_disable', pixel:true },
 };
 
 // Area-specific waves - suburb (basic area)
@@ -368,12 +375,28 @@ const WAVES_GLACIER: WaveGroup[][] = [
   [{ t:'virus', n:20, gap:0.3 }, { t:'tank_slime', n:15, gap:0.5 }, { t:'boss_massetsu', n:1, gap:5.0 }, { t:'final_boss', n:1, gap:8.0 }],
 ];
 
+const WAVES_SKY: WaveGroup[][] = [
+  [{ t:'fast_dust', n:20, gap:0.4 }, { t:'cockroach', n:8, gap:0.6 }],
+  [{ t:'virus', n:12, gap:0.6 }, { t:'surge', n:6, gap:1.0 }],
+  [{ t:'tank_slime', n:10, gap:1.0 }, { t:'fast_dust', n:20, gap:0.3 }],
+  [{ t:'boss', n:2, gap:4.0 }, { t:'virus', n:10, gap:0.7 }],
+  [{ t:'virus', n:18, gap:0.4 }, { t:'surge', n:8, gap:0.8 }, { t:'mold', n:6, gap:1.2 }],
+  [{ t:'boss_ice', n:1, gap:0 }, { t:'tank_slime', n:12, gap:0.8 }],
+  [{ t:'boss_fire', n:1, gap:0 }, { t:'virus', n:15, gap:0.5 }, { t:'surge', n:8, gap:0.8 }],
+  [{ t:'boss', n:4, gap:2.5 }, { t:'virus', n:12, gap:0.5 }],
+  [{ t:'boss_massetsu', n:1, gap:0 }, { t:'virus', n:20, gap:0.4 }, { t:'cockroach', n:10, gap:0.5 }],
+  [{ t:'boss_ice', n:1, gap:0 }, { t:'boss_fire', n:1, gap:4.0 }, { t:'virus', n:15, gap:0.4 }],
+  [{ t:'boss_massetsu', n:2, gap:6.0 }, { t:'tank_slime', n:15, gap:0.6 }, { t:'virus', n:20, gap:0.3 }],
+  [{ t:'boss_massetsu', n:1, gap:0 }, { t:'final_boss', n:1, gap:10.0 }, { t:'virus', n:25, gap:0.3 }, { t:'tank_slime', n:10, gap:0.8 }],
+];
+
 export const AREA_WAVES: Record<string, WaveGroup[][]> = {
   suburb: WAVES_SUBURB,
   factory: WAVES_FACTORY,
   downtown: WAVES_DOWNTOWN,
   volcano: WAVES_VOLCANO,
   glacier: WAVES_GLACIER,
+  sky: WAVES_SKY,
 };
 
 // Legacy WAVES export for backward compat

@@ -10,14 +10,19 @@ interface HUDProps {
   grid: GameState['grid'];
   onHome: () => void;
   onStartWave: () => void;
+  autoWave: boolean;
+  onToggleAutoWave: () => void;
 }
 
-const HUD = ({ ui, diff, grid, onHome, onStartWave }: HUDProps) => {
+const HUD = ({ ui, diff, grid, onHome, onStartWave, autoWave, onToggleAutoWave }: HUDProps) => {
   const dc = DIFF[diff];
   const hpPct = ui.baseHP / ui.maxHP;
   const { net } = calcPowerBalance(grid);
   const waves = getWaves(ui.area);
   const area = AREAS[ui.area];
+  const isEndless = diff === 'endless';
+  const waveLabel = isEndless ? `${ui.wave}/∞` : `${ui.wave}/${waves.length}`;
+  const canStartNext = !ui.wActive && !ui.over && !ui.win && (isEndless || ui.wave < waves.length);
 
   return (
     <div className="flex gap-1 items-center flex-wrap justify-center px-1.5 py-1">
@@ -53,10 +58,10 @@ const HUD = ({ ui, diff, grid, onHome, onStartWave }: HUDProps) => {
       </div>
 
       <div className="hud-chip text-[10px]">
-        🌊<span className="text-blue-300">{ui.wave}</span>/{waves.length}
+        🌊<span className="text-blue-300">{waveLabel}</span>
       </div>
 
-      {!ui.wActive && !ui.over && !ui.win && ui.wave < waves.length && (
+      {canStartNext && !autoWave && (
         <button onClick={onStartWave}
           className="hud-chip cursor-pointer font-black text-[10px]"
           style={{
@@ -66,6 +71,19 @@ const HUD = ({ ui, diff, grid, onHome, onStartWave }: HUDProps) => {
           ▶ Wave{ui.wave + 1}
         </button>
       )}
+
+      <button
+        onClick={onToggleAutoWave}
+        className="hud-chip cursor-pointer text-[10px] font-bold transition-all"
+        style={{
+          background: autoWave ? 'rgba(76,175,80,0.2)' : 'rgba(255,255,255,0.04)',
+          color: autoWave ? '#69f0ae' : '#666',
+          borderColor: autoWave ? '#4caf5055' : '#33333355',
+        }}
+        title="自動ウェーブ開始"
+      >
+        {autoWave ? '⏩自動' : '⏸手動'}
+      </button>
 
       {ui.wActive && (
         <span className="hud-chip text-orange-400 animate-pulse text-[10px]">⚠️侵入中</span>

@@ -98,8 +98,9 @@ const AreaSelectScreen = ({ unlockedAreas, onSelect, onBack }: AreaSelectScreenP
                   )}
                   {!locked && area.bossType && (
                     <div className="text-[9px] text-game-red mt-1">
-                      👹 ボス: {area.bossType === 'boss_ice' ? '氷電魔フローズワンダー' :
+                      👹 ボス: {area.bossType === 'boss_ice' ? '氷電魔フローズデビル' :
                         area.bossType === 'boss_fire' ? '爆熱魔クリムゾンキング' :
+                        area.bossType === 'boss_massetsu' ? '累氷の魔雪' :
                         area.bossType === 'final_boss' ? '家電大魔王デウスマキナ' : 'ボスロボット'}
                     </div>
                   )}

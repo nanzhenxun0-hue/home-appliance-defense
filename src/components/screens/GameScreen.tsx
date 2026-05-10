@@ -42,12 +42,15 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
   const [placeMode, setPlaceMode] = useState<TowerID | null>(null);
   const [pinKey, setPinKey] = useState<string | null>(null);
   const [waveAnnounce, setWaveAnnounce] = useState<string | null>(null);
+  const [autoWave, setAutoWave] = useState(false);
+  const autoWaveRef = useRef(false);
 
   const { play: playSound, init: initSound } = useSound();
   const { addScore } = useHighScore();
 
   useEffect(() => { pmRef.current = placeMode; }, [placeMode]);
   useEffect(() => { pinRef.current = pinKey; }, [pinKey]);
+  useEffect(() => { autoWaveRef.current = autoWave; }, [autoWave]);
 
   const getCell = useCallback((clientX: number, clientY: number) => {
     const el = cvs.current; if (!el) return { c: -1, r: -1 };
@@ -127,7 +130,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
     gs.current = mkState(diff, team, area);
     scoreSaved.current = false;
     const d2 = DIFF[diff];
-    setUi({ power: d2.sp, wave: 0, baseHP: d2.shp, maxHP: d2.shp, wActive: false, over: false, win: false, area, ultGauge: 0, ultActive: false });
+    setUi({ power: d2.sp, wave: 0, baseHP: d2.shp, maxHP: d2.shp, wActive: false, over: false, win: false, area, ultGauge: 0, ultActive: false, freezeTileHP: 0, freezeTileMaxHP: 0, freezeTileMode: null, absoluteZeroTimer: 0 });
     setPlaceMode(null); setPinKey(null);
     hcRef.current = { c: -1, r: -1 };
   };
@@ -138,6 +141,11 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
       const reward = WAVE_VOLT_REWARD(ui.wave);
       onVoltEarned?.(reward);
       if (diff === 'endless') onEndlessMilestone?.(ui.wave);
+      if (autoWaveRef.current) {
+        const isEndless = diff === 'endless';
+        const canContinue = isEndless || ui.wave < waves.length;
+        if (canContinue) setTimeout(() => startWave(), 1500);
+      }
     }
     prevWaveActive.current = ui.wActive;
   }, [ui.wActive, ui.wave, ui.over, ui.win, onVoltEarned, onEndlessMilestone, diff]);
@@ -182,7 +190,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
 
   return (
     <div className="bg-background h-[100dvh] flex flex-col select-none overflow-hidden relative">
-      <HUD ui={ui} diff={diff} grid={s.grid} onHome={onHome} onStartWave={startWave} />
+      <HUD ui={ui} diff={diff} grid={s.grid} onHome={onHome} onStartWave={startWave} autoWave={autoWave} onToggleAutoWave={() => setAutoWave(v => !v)} />
 
       <div className="flex-1 min-h-0 relative mx-1 rounded-lg overflow-hidden"
         style={{ border: '1px solid rgba(168,85,247,0.15)' }}>
