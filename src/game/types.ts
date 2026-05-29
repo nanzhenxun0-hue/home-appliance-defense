@@ -55,6 +55,10 @@ export const RARITY_COLOR: Record<Rarity, string> = {
   OX: '#e040fb', P: '#ff4081',
 };
 
+export const OX_RAINBOW = 'linear-gradient(90deg, #ff0080, #ff8c00, #ffe000, #00e676, #00b0ff, #e040fb, #ff0080)';
+export const OX_RAINBOW_STOPS = ['#ff0080', '#ff8c00', '#ffe000', '#00e676', '#00b0ff', '#e040fb'];
+export const PROMO_GRADIENT = 'linear-gradient(135deg, #e040fb 0%, #ff4081 35%, #ff8c00 60%, #ffe000 80%, #e040fb 100%)';
+
 export const RARITY_BG: Record<Rarity, string> = {
   C: '#1a1a1a', U: '#0d2a12', R: '#0a1f3a', E: '#1f0a2a',
   L: '#2a1a00', M: '#2a0a1a', G: '#002a2a', OD: '#2a2200',

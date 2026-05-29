@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 interface ScreenCrackEffectProps {
   active: boolean;
+  isOX?: boolean;
   onComplete?: () => void;
 }
 
@@ -20,7 +21,9 @@ const BRANCH_LINES = [
   'M 75 58 L 90 62', 'M 42 75 L 38 90', 'M 25 58 L 8 55',
 ];
 
-const ScreenCrackEffect = ({ active, onComplete }: ScreenCrackEffectProps) => {
+const OX_RAINBOW_STOPS = ['#ff0080', '#ff8c00', '#ffe000', '#00e676', '#00b0ff', '#e040fb'];
+
+const ScreenCrackEffect = ({ active, isOX = false, onComplete }: ScreenCrackEffectProps) => {
   const [phase, setPhase] = useState<'idle' | 'flash' | 'crack' | 'shatter' | 'fade'>('idle');
 
   useEffect(() => {
@@ -38,7 +41,7 @@ const ScreenCrackEffect = ({ active, onComplete }: ScreenCrackEffectProps) => {
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[9999] pointer-events-none overflow-hidden">
-        {/* Initial white flash */}
+        {/* Initial flash */}
         {phase === 'flash' && (
           <motion.div
             className="absolute inset-0"
@@ -46,7 +49,7 @@ const ScreenCrackEffect = ({ active, onComplete }: ScreenCrackEffectProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            style={{ background: 'white' }}
+            style={{ background: isOX ? 'linear-gradient(135deg, #ff0080, #ffe000, #00b0ff, #e040fb)' : 'white' }}
           />
         )}
 
@@ -67,14 +70,21 @@ const ScreenCrackEffect = ({ active, onComplete }: ScreenCrackEffectProps) => {
                     <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
+                {isOX && (
+                  <linearGradient id="ox-crack-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    {OX_RAINBOW_STOPS.map((c, i) => (
+                      <stop key={i} offset={`${(i / (OX_RAINBOW_STOPS.length - 1)) * 100}%`} stopColor={c} />
+                    ))}
+                  </linearGradient>
+                )}
               </defs>
               {CRACK_LINES.map((d, i) => (
                 <motion.path
                   key={i}
                   d={d}
                   fill="none"
-                  stroke="rgba(255,215,0,0.9)"
-                  strokeWidth="0.4"
+                  stroke={isOX ? `url(#ox-crack-grad)` : 'rgba(255,215,0,0.9)'}
+                  strokeWidth={isOX ? '0.6' : '0.4'}
                   filter="url(#crack-glow)"
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}
@@ -86,7 +96,7 @@ const ScreenCrackEffect = ({ active, onComplete }: ScreenCrackEffectProps) => {
                   key={`b-${i}`}
                   d={d}
                   fill="none"
-                  stroke="rgba(255,180,0,0.6)"
+                  stroke={isOX ? OX_RAINBOW_STOPS[i % OX_RAINBOW_STOPS.length] : 'rgba(255,180,0,0.6)'}
                   strokeWidth="0.25"
                   filter="url(#crack-glow)"
                   initial={{ pathLength: 0 }}
@@ -101,19 +111,22 @@ const ScreenCrackEffect = ({ active, onComplete }: ScreenCrackEffectProps) => {
         {/* Shatter fragments */}
         {phase === 'shatter' && (
           <>
-            {Array.from({ length: 20 }).map((_, i) => {
-              const angle = (i / 20) * Math.PI * 2;
-              const dist = 60 + Math.random() * 100;
+            {Array.from({ length: isOX ? 30 : 20 }).map((_, i) => {
+              const angle = (i / (isOX ? 30 : 20)) * Math.PI * 2;
+              const dist = 60 + Math.random() * 120;
+              const rainbowColor = OX_RAINBOW_STOPS[i % OX_RAINBOW_STOPS.length];
               return (
                 <motion.div
                   key={`shard-${i}`}
                   className="absolute"
                   style={{
                     left: '50%', top: '50%',
-                    width: 8 + Math.random() * 20,
-                    height: 8 + Math.random() * 20,
-                    background: `linear-gradient(${Math.random() * 360}deg, rgba(255,215,0,0.3), rgba(180,50,255,0.2), transparent)`,
-                    border: '1px solid rgba(255,215,0,0.4)',
+                    width: 8 + Math.random() * 22,
+                    height: 8 + Math.random() * 22,
+                    background: isOX
+                      ? `linear-gradient(${Math.random() * 360}deg, ${rainbowColor}66, ${OX_RAINBOW_STOPS[(i + 2) % OX_RAINBOW_STOPS.length]}33, transparent)`
+                      : `linear-gradient(${Math.random() * 360}deg, rgba(255,215,0,0.3), rgba(180,50,255,0.2), transparent)`,
+                    border: isOX ? `1px solid ${rainbowColor}88` : '1px solid rgba(255,215,0,0.4)',
                     clipPath: `polygon(${Math.random()*30}% 0%, 100% ${Math.random()*30}%, ${70+Math.random()*30}% 100%, 0% ${70+Math.random()*30}%)`,
                   }}
                   initial={{ x: 0, y: 0, opacity: 1, rotate: 0, scale: 1 }}
@@ -131,7 +144,7 @@ const ScreenCrackEffect = ({ active, onComplete }: ScreenCrackEffectProps) => {
           </>
         )}
 
-        {/* Gold radial burst behind cracks */}
+        {/* Radial burst behind cracks */}
         {(phase === 'crack' || phase === 'shatter') && (
           <motion.div
             className="absolute inset-0"
@@ -139,12 +152,26 @@ const ScreenCrackEffect = ({ active, onComplete }: ScreenCrackEffectProps) => {
             animate={{ opacity: [0, 0.6, 0.3] }}
             transition={{ duration: 1.5 }}
             style={{
-              background: 'radial-gradient(circle at 50% 50%, rgba(255,215,0,0.25) 0%, rgba(180,50,255,0.1) 40%, transparent 70%)',
+              background: isOX
+                ? 'radial-gradient(circle at 50% 50%, rgba(255,0,128,0.2) 0%, rgba(255,140,0,0.15) 20%, rgba(0,230,118,0.1) 40%, rgba(0,176,255,0.15) 60%, rgba(224,64,251,0.2) 80%, transparent 100%)'
+                : 'radial-gradient(circle at 50% 50%, rgba(255,215,0,0.25) 0%, rgba(180,50,255,0.1) 40%, transparent 70%)',
             }}
           />
         )}
 
-        {/* OD text reveal */}
+        {/* OX: extra rainbow rings expanding outward */}
+        {isOX && phase === 'shatter' && OX_RAINBOW_STOPS.map((col, i) => (
+          <motion.div
+            key={`ring-${i}`}
+            className="absolute rounded-full pointer-events-none"
+            style={{ left: '50%', top: '50%', border: `2px solid ${col}`, marginLeft: -10, marginTop: -10 }}
+            initial={{ width: 20, height: 20, x: '-50%', y: '-50%', opacity: 0.8 }}
+            animate={{ width: 800, height: 800, x: '-50%', y: '-50%', opacity: 0 }}
+            transition={{ duration: 1.4, delay: i * 0.12, ease: 'easeOut' }}
+          />
+        ))}
+
+        {/* Text reveal */}
         {(phase === 'shatter' || phase === 'fade') && (
           <motion.div
             className="absolute inset-0 flex items-center justify-center"
@@ -152,28 +179,60 @@ const ScreenCrackEffect = ({ active, onComplete }: ScreenCrackEffectProps) => {
             animate={{ opacity: phase === 'fade' ? 0 : 1, scale: 1 }}
             transition={{ duration: 0.5, type: 'spring', damping: 12 }}
           >
-            <div className="text-center">
-              <div
-                className="sf-title text-4xl font-black"
-                style={{
-                  background: 'linear-gradient(135deg, #ffd700, #ff6b00, #ffd700)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  filter: 'drop-shadow(0 0 20px rgba(255,215,0,0.8)) drop-shadow(0 0 40px rgba(255,107,0,0.5))',
-                }}
-              >
-                OVERDRIVE
+            {isOX ? (
+              <div className="text-center select-none">
+                <div
+                  className="font-black"
+                  style={{
+                    fontSize: '5rem',
+                    background: 'linear-gradient(90deg, #ff0080, #ff8c00, #ffe000, #00e676, #00b0ff, #e040fb)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    filter: 'drop-shadow(0 0 24px rgba(224,64,251,0.9)) drop-shadow(0 0 48px rgba(255,0,128,0.6))',
+                    letterSpacing: '0.15em',
+                  }}
+                >
+                  OX
+                </div>
+                <motion.div
+                  className="text-base mt-1 font-bold"
+                  style={{
+                    background: 'linear-gradient(90deg, #ff0080, #ff8c00, #ffe000, #00e676, #00b0ff, #e040fb)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    filter: 'drop-shadow(0 0 8px rgba(224,64,251,0.7))',
+                  }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  ✦ オーバークロス ✦
+                </motion.div>
               </div>
-              <motion.div
-                className="text-sm mt-1 font-bold"
-                style={{ color: '#ffd700', textShadow: '0 0 10px rgba(255,215,0,0.6)' }}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                ★ 超越覚醒 ★
-              </motion.div>
-            </div>
+            ) : (
+              <div className="text-center">
+                <div
+                  className="sf-title text-4xl font-black"
+                  style={{
+                    background: 'linear-gradient(135deg, #ffd700, #ff6b00, #ffd700)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    filter: 'drop-shadow(0 0 20px rgba(255,215,0,0.8)) drop-shadow(0 0 40px rgba(255,107,0,0.5))',
+                  }}
+                >
+                  OVERDRIVE
+                </div>
+                <motion.div
+                  className="text-sm mt-1 font-bold"
+                  style={{ color: '#ffd700', textShadow: '0 0 10px rgba(255,215,0,0.6)' }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  ★ 超越覚醒 ★
+                </motion.div>
+              </div>
+            )}
           </motion.div>
         )}
       </div>

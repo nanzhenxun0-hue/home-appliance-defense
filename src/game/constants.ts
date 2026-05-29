@@ -292,9 +292,9 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     {c:200,pg:5,pc:0,dmg:65,rng:3.2,spd:1.9,lbl:'プロトEX',eff:'★スターターブースト',abilityUnlock:true},
   ],
   promo_endless:[
-    {c:0,pg:0,pc:3,dmg:60,rng:3.2,spd:1.4,lbl:'∞マスター',eff:'波紋AOE'},
-    {c:120,pg:0,pc:4,dmg:100,rng:3.6,spd:1.7,lbl:'∞マスター零式',eff:'攻速UP'},
-    {c:400,pg:0,pc:5,dmg:160,rng:4.0,spd:2.0,lbl:'∞マスターΩ',eff:'★全方向波紋',abilityUnlock:true},
+    {c:0,pg:0,pc:6,dmg:180,rng:4.2,spd:1.6,lbl:'∞マスター',eff:'全方向波紋AOE'},
+    {c:200,pg:0,pc:8,dmg:300,rng:4.8,spd:2.0,lbl:'∞マスター零式',eff:'攻速・範囲UP'},
+    {c:600,pg:0,pc:10,dmg:460,rng:5.5,spd:2.6,lbl:'∞マスターΩ',eff:'★無限波紋・全域壊滅',abilityUnlock:true},
   ],
 };
 export const EDEFS: Record<EnemyType, EnemyDef> = {
