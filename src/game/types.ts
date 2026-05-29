@@ -35,28 +35,30 @@ export type TowerID =
   | 'robotarm'
   | 'quantumchip'
   // ── プロモ限定キャラ（ガチャ非対応） ──
-  | 'promo_starter' | 'promo_endless';
+  | 'promo_starter' | 'promo_endless'
+  // ── OX レアリティ ──
+  | 'tv';
 
-export type Rarity = 'C' | 'U' | 'R' | 'E' | 'L' | 'M' | 'G' | 'OD' | 'P';
+export type Rarity = 'C' | 'U' | 'R' | 'E' | 'L' | 'M' | 'G' | 'OD' | 'OX' | 'P';
 
-export const RARITY_ORDER: Rarity[] = ['C', 'U', 'R', 'E', 'L', 'M', 'G', 'OD', 'P'];
+export const RARITY_ORDER: Rarity[] = ['C', 'U', 'R', 'E', 'L', 'M', 'G', 'OD', 'OX', 'P'];
 
 export const RARITY_LABEL: Record<Rarity, string> = {
   C: 'コモン', U: 'アンコモン', R: 'レア', E: 'エピック',
   L: 'レジェンド', M: 'ミシック', G: 'ギャラクシー', OD: 'オーバードライブ',
-  P: 'プロモ',
+  OX: 'オーバークロス', P: 'プロモ',
 };
 
 export const RARITY_COLOR: Record<Rarity, string> = {
   C: '#9e9e9e', U: '#4caf50', R: '#2196f3', E: '#ab47bc',
   L: '#ff9800', M: '#e91e63', G: '#00e5ff', OD: '#ffd700',
-  P: '#ff4081',
+  OX: '#e040fb', P: '#ff4081',
 };
 
 export const RARITY_BG: Record<Rarity, string> = {
   C: '#1a1a1a', U: '#0d2a12', R: '#0a1f3a', E: '#1f0a2a',
   L: '#2a1a00', M: '#2a0a1a', G: '#002a2a', OD: '#2a2200',
-  P: '#2a0a18',
+  OX: '#200028', P: '#2a0a18',
 };
 
 export type PersonalityType = '熱血漢' | '冷静沈着' | '縁の下の力持ち' | '完璧主義者' | '自由奔放' | '情報通' | 'カリスマ' | '幻想家' | '職人気質' | '快活' | '明察眼' | '天才型' | '超論理型' | '狂天才' | '破壊神' | '頼れる兄貴';
@@ -87,7 +89,7 @@ export interface TowerDef {
   rc: string;
   baseCost: number;
   req: TowerID | null;
-  ability?: 'pushback' | 'firetrap' | 'slowfield' | 'chainlightning' | 'energyshield' | 'steam' | 'wash' | 'bake' | 'caffeine' | 'induction';
+  ability?: 'pushback' | 'firetrap' | 'slowfield' | 'chainlightning' | 'energyshield' | 'steam' | 'wash' | 'bake' | 'caffeine' | 'induction' | 'brainwash';
   personality?: PersonalityType;
   quote?: string;
   /** 固有スキル名（図鑑/UI表示用） */
@@ -173,9 +175,10 @@ export interface Enemy {
   hitFlash: number;
   shielded?: boolean;
   speedBuff?: number;
-  clogTimer?: number;   // cockroach: clogs a tower
-  corrodeTimer?: number; // mold: corrodes towers over time
-  surgeStun?: number;   // electrical surge stun duration
+  clogTimer?: number;
+  corrodeTimer?: number;
+  surgeStun?: number;
+  brainwashed?: number; // tv: reverses movement, deals HP as collision damage
 }
 
 export interface Projectile {
@@ -322,11 +325,11 @@ export interface GachaInventory {
 export const GACHA_COST = 100;
 export const GACHA_COST_10 = 900;
 
-// Commercial-grade stricter rates
+// Rarity rates — higher rarities are precious
 export const GACHA_RATES: Record<Rarity, number> = {
-  C: 0.45, U: 0.279, R: 0.13, E: 0.07,
-  L: 0.035, M: 0.02, G: 0.008, OD: 0.004,
-  P: 0, // プロモは入手限定（チュートリアル/エンドレス報酬）
+  C: 0.5039, U: 0.280, R: 0.130, E: 0.060,
+  L: 0.020,  M: 0.005, G: 0.001, OD: 0.0001,
+  OX: 0,     P: 0,
 };
 
 export const GACHA_BANNERS: GachaBanner[] = [
@@ -336,7 +339,7 @@ export const GACHA_BANNERS: GachaBanner[] = [
     em: '🚚',
     cost1: 100,
     cost10: 900,
-    desc: '標準の家電配送。茶色いダンボールで届きます',
+    desc: '標準の家電配送。OD:0.01% — 高レアは夢のまた夢',
     col: '#7c3aed',
   },
   {
@@ -345,9 +348,9 @@ export const GACHA_BANNERS: GachaBanner[] = [
     em: '🚛',
     cost1: 250,
     cost10: 2250,
-    desc: '「精密機器取り扱い注意」シール付き！レア以上UP',
+    desc: '「精密機器取り扱い注意」シール付き！OD:0.5% レア以上大幅UP',
     col: '#c026d3',
-    rateBoost: { C: 0.20, U: 0.25, R: 0.22, E: 0.15, L: 0.08, M: 0.05, G: 0.03, OD: 0.02 },
+    rateBoost: { C: 0.320, U: 0.250, R: 0.200, E: 0.120, L: 0.060, M: 0.030, G: 0.015, OD: 0.005, OX: 0 },
   },
   {
     id: 'limited',
@@ -355,9 +358,9 @@ export const GACHA_BANNERS: GachaBanner[] = [
     em: '✨',
     cost1: 400,
     cost10: 3600,
-    desc: '化粧箱入り超高級配送！OD確率10倍＋ピックアップ',
+    desc: '最高級配送！OD:2% OX(テレビ):0.2% ピックアップあり',
     col: '#ffd700',
-    rateBoost: { C: 0.15, U: 0.20, R: 0.20, E: 0.15, L: 0.10, M: 0.08, G: 0.05, OD: 0.07 },
+    rateBoost: { C: 0.178, U: 0.220, R: 0.200, E: 0.150, L: 0.100, M: 0.080, G: 0.050, OD: 0.020, OX: 0.002 },
     pickup: 'plasma',
   },
 ];

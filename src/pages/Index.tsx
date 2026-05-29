@@ -20,6 +20,9 @@ import { useBGM } from '@/hooks/useBGM';
 import { useAreaUnlock } from '@/hooks/useAreaUnlock';
 import { useEffect } from 'react';
 
+const ALL_AREAS: AreaKey[] = ['suburb', 'factory', 'downtown', 'volcano', 'glacier', 'sky'];
+const EXTREME_CLEARS_KEY = 'kaden-td-extreme-clears';
+
 type Screen = 'home' | 'howto' | 'area' | 'game' | 'scores' | 'gacha' | 'team' | 'combo' | 'tutorial' | 'patch' | 'compendium' | 'enemyCompendium';
 
 const Index = () => {
@@ -35,6 +38,13 @@ const Index = () => {
   const { play, toggle: toggleSound, init: initSound } = useSound();
   const bgm = useBGM();
   const { unlockedAreas, unlockNext } = useAreaUnlock();
+
+  const [extremeClears, setExtremeClears] = useState<Set<AreaKey>>(() => {
+    try {
+      const raw = localStorage.getItem(EXTREME_CLEARS_KEY);
+      return new Set(raw ? JSON.parse(raw) : []);
+    } catch { return new Set(); }
+  });
 
   const onVoltEarned = useCallback((amount: number) => {
     gacha.addVolts(amount);
@@ -115,7 +125,20 @@ const Index = () => {
   }
   return (
     <>
-      <GameScreen key={`${diff}-${area}`} diff={diff} team={team} area={area} onHome={() => handleScreenChange('home')} onVoltEarned={onVoltEarned} onWin={unlockNext} onEndlessMilestone={(w) => {
+      <GameScreen key={`${diff}-${area}`} diff={diff} team={team} area={area} onHome={() => handleScreenChange('home')} onVoltEarned={onVoltEarned}
+        onWin={(a) => {
+          unlockNext(a);
+          if (diff === 'extreme') {
+            const next = new Set([...extremeClears, a]);
+            setExtremeClears(next);
+            localStorage.setItem(EXTREME_CLEARS_KEY, JSON.stringify([...next]));
+            if (ALL_AREAS.every(ar => next.has(ar)) && !gacha.inv.owned.includes('tv')) {
+              gacha.grantUnit('tv');
+              setPromoReward('tv');
+            }
+          }
+        }}
+        onEndlessMilestone={(w) => {
         if (w >= 100 && w % 100 === 0) {
           gacha.grantUnit('promo_endless');
           setPromoReward('promo_endless');

@@ -88,31 +88,105 @@ export const drawFrame = (
 
   ctx.clearRect(-10, -10, GW + 20, GH + 20);
 
-  // Grid tiles - brighter
+  // ── Area-specific background themes ──
+  type AreaTheme = { pathFill: string; pathStroke: string; evenTile: string; oddTile: string; gridLine: string; glowCol: string; glowRGB: string };
+  const areaThemes: Record<string, AreaTheme> = {
+    suburb:   { pathFill:'#1a240e', pathStroke:'rgba(102,187,106,0.22)', evenTile:'#111c0a', oddTile:'#131e0c', gridLine:'rgba(76,175,80,0.07)',   glowCol:'#66bb6a', glowRGB:'102,187,106' },
+    factory:  { pathFill:'#1e1612', pathStroke:'rgba(255,152,0,0.22)',   evenTile:'#14100a', oddTile:'#16120c', gridLine:'rgba(255,152,0,0.08)',   glowCol:'#ff9800', glowRGB:'255,152,0'   },
+    downtown: { pathFill:'#0e1828', pathStroke:'rgba(33,150,243,0.22)',  evenTile:'#091220', oddTile:'#0b1424', gridLine:'rgba(33,150,243,0.07)',  glowCol:'#2196f3', glowRGB:'33,150,243'  },
+    volcano:  { pathFill:'#200a00', pathStroke:'rgba(255,61,0,0.28)',    evenTile:'#150500', oddTile:'#190700', gridLine:'rgba(255,87,34,0.10)',   glowCol:'#ff3d00', glowRGB:'255,87,34'   },
+    glacier:  { pathFill:'#091a28', pathStroke:'rgba(0,188,212,0.22)',   evenTile:'#061318', oddTile:'#08161e', gridLine:'rgba(0,188,212,0.07)',   glowCol:'#00bcd4', glowRGB:'0,188,212'   },
+    sky:      { pathFill:'#0f0a20', pathStroke:'rgba(179,136,255,0.22)', evenTile:'#08061a', oddTile:'#0a081e', gridLine:'rgba(179,136,255,0.08)', glowCol:'#b388ff', glowRGB:'179,136,255' },
+  };
+  const th: AreaTheme = areaThemes[s.area] || areaThemes.suburb;
+
+  // Grid tiles
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const onP = s.pathSet.has(`${c},${r}`);
       if (onP) {
-        ctx.fillStyle = '#1e1830';
+        ctx.fillStyle = th.pathFill;
         ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
-        ctx.strokeStyle = 'rgba(168,85,247,0.18)';
+        ctx.strokeStyle = th.pathStroke;
         ctx.lineWidth = 0.5;
         ctx.strokeRect(c * CELL, r * CELL, CELL, CELL);
       } else {
-        const shade = (c + r) % 2 ? '#161a28' : '#181d2e';
-        ctx.fillStyle = shade;
+        ctx.fillStyle = (c + r) % 2 ? th.evenTile : th.oddTile;
         ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
-        ctx.strokeStyle = 'rgba(99,102,241,0.06)';
+        ctx.strokeStyle = th.gridLine;
         ctx.lineWidth = 0.5;
         ctx.strokeRect(c * CELL, r * CELL, CELL, CELL);
       }
     }
   }
 
+  // Area-specific decorative background overlay
+  if (s.area === 'volcano') {
+    // Lava glow from bottom
+    const lavaGrad = ctx.createLinearGradient(0, GH * 0.6, 0, GH);
+    lavaGrad.addColorStop(0, 'rgba(255,87,34,0)');
+    lavaGrad.addColorStop(1, `rgba(255,87,34,${0.05 + Math.sin(time * 1.5) * 0.02})`);
+    ctx.fillStyle = lavaGrad; ctx.fillRect(0, 0, GW, GH);
+    // Lava cracks on non-path tiles
+    ctx.strokeStyle = `rgba(255,87,34,${0.08 + Math.sin(time * 2) * 0.03})`;
+    ctx.lineWidth = 0.5;
+    for (let i = 0; i < 8; i++) {
+      const cx2 = (i * 47 + 12) % GW, cy2 = (i * 37 + 20) % GH;
+      ctx.beginPath(); ctx.moveTo(cx2, cy2); ctx.lineTo(cx2 + 15, cy2 + 10); ctx.lineTo(cx2 + 8, cy2 + 22); ctx.stroke();
+    }
+  } else if (s.area === 'glacier') {
+    // Ice frost overlay
+    ctx.fillStyle = `rgba(128,216,255,${0.015 + Math.sin(time * 0.8) * 0.005})`;
+    ctx.fillRect(0, 0, GW, GH);
+    // Ice crystal sparkles
+    for (let i = 0; i < 6; i++) {
+      const sx2 = (i * 61 + 15) % GW, sy2 = (i * 43 + 10) % GH;
+      const spark = Math.sin(time * 3 + i * 1.5) * 0.5 + 0.5;
+      ctx.globalAlpha = spark * 0.12;
+      ctx.fillStyle = '#80d8ff';
+      ctx.beginPath(); ctx.moveTo(sx2, sy2 - 4); ctx.lineTo(sx2 + 2, sy2); ctx.lineTo(sx2, sy2 + 4); ctx.lineTo(sx2 - 2, sy2); ctx.closePath(); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  } else if (s.area === 'sky') {
+    // Stars
+    for (let i = 0; i < 12; i++) {
+      const sx2 = (i * 53 + 7) % GW, sy2 = (i * 31 + 5) % (GH * 0.5);
+      const twinkle = Math.sin(time * 2 + i * 0.8) * 0.5 + 0.5;
+      ctx.globalAlpha = twinkle * 0.25;
+      ctx.fillStyle = '#e8eaf6';
+      ctx.beginPath(); ctx.arc(sx2, sy2, 1, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // Purple sky gradient top
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, GH * 0.3);
+    skyGrad.addColorStop(0, 'rgba(103,58,183,0.06)');
+    skyGrad.addColorStop(1, 'rgba(103,58,183,0)');
+    ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, GW, GH);
+  } else if (s.area === 'downtown') {
+    // City neon window lights
+    for (let i = 0; i < 5; i++) {
+      const wx = (i * 71 + 5) % (GW - 10), wy = (i * 43 + 8) % (GH - 10);
+      const flicker = Math.sin(time * 4 + i * 2) > 0.3 ? 0.07 : 0.03;
+      ctx.fillStyle = `rgba(33,150,243,${flicker})`;
+      ctx.fillRect(wx, wy, 6, 4);
+    }
+  } else if (s.area === 'factory') {
+    // Industrial diagonal lines
+    ctx.strokeStyle = `rgba(255,152,0,${0.04 + Math.sin(time) * 0.01})`;
+    ctx.lineWidth = 0.5;
+    for (let i = -GH; i < GW + GH; i += 28) {
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + GH, GH); ctx.stroke();
+    }
+  } else if (s.area === 'suburb') {
+    // Subtle green ambient
+    ctx.fillStyle = `rgba(76,175,80,${0.018 + Math.sin(time * 0.5) * 0.005})`;
+    ctx.fillRect(0, 0, GW, GH);
+  }
+
   // Path glow
   s.path.forEach(([c, r], i) => {
     const pulse = Math.sin(time * 2 + i * 0.3) * 0.5 + 0.5;
-    ctx.fillStyle = `rgba(168,85,247,${0.03 + pulse * 0.04})`;
+    ctx.fillStyle = `rgba(${th.glowRGB},${0.03 + pulse * 0.05})`;
     ctx.fillRect(c * CELL + 1, r * CELL + 1, CELL - 2, CELL - 2);
     if (i < s.path.length - 1) {
       const [nc, nr] = s.path[i + 1];
@@ -121,7 +195,7 @@ export const drawFrame = (
       const t = (time * 0.5 + i * 0.1) % 1;
       const px = cx + (nx - cx) * t, py = cy + (ny - cy) * t;
       ctx.beginPath(); ctx.arc(px, py, 1.5, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(168,85,247,${0.25 * (1 - t)})`;
+      ctx.fillStyle = `rgba(${th.glowRGB},${0.28 * (1 - t)})`;
       ctx.fill();
     }
   });
@@ -298,19 +372,64 @@ export const drawFrame = (
     }
   }
 
-  // Projectiles
+  // Projectiles — Neo-Cyber style
   for (const p of s.projs) {
     const t = 1 - p.life / 0.18;
     const px2 = p.sx + (p.ex - p.sx) * t;
     const py2 = p.sy + (p.ey - p.sy) * t;
     const arc = Math.sin(t * Math.PI) * 8;
-    ctx.beginPath(); ctx.arc(px2, py2 - arc, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = p.col;
+    const cx2 = px2, cy2 = py2 - arc;
+
+    // Trail gradient line
+    const trailFrac = Math.min(t, 0.55);
+    const trailT0 = Math.max(0, t - trailFrac);
+    const trailX0 = p.sx + (p.ex - p.sx) * trailT0;
+    const trailY0 = p.sy + (p.ey - p.sy) * trailT0 - Math.sin(trailT0 * Math.PI) * 8;
+    ctx.save();
+    const tg = ctx.createLinearGradient(trailX0, trailY0, cx2, cy2);
+    tg.addColorStop(0, p.col + '00');
+    tg.addColorStop(0.5, p.col + '44');
+    tg.addColorStop(1, p.col + 'cc');
+    ctx.strokeStyle = tg;
+    ctx.lineWidth = 2.5;
     ctx.shadowBlur = 10; ctx.shadowColor = p.col;
-    ctx.fill();
-    ctx.beginPath(); ctx.arc(px2, py2 - arc, 6, 0, Math.PI * 2);
-    ctx.fillStyle = p.col + '22'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(trailX0, trailY0); ctx.lineTo(cx2, cy2); ctx.stroke();
+    ctx.restore();
+
+    // Outer glow ring
+    ctx.beginPath(); ctx.arc(cx2, cy2, 10, 0, Math.PI * 2);
+    ctx.fillStyle = p.col + '18'; ctx.fill();
+
+    // Mid ring
+    ctx.beginPath(); ctx.arc(cx2, cy2, 6.5, 0, Math.PI * 2);
+    ctx.fillStyle = p.col + '44'; ctx.fill();
+
+    // Core white dot
+    ctx.shadowBlur = 20; ctx.shadowColor = p.col;
+    ctx.beginPath(); ctx.arc(cx2, cy2, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff'; ctx.fill();
     ctx.shadowBlur = 0;
+
+    // Impact ring when near destination (t > 0.72)
+    if (t > 0.72) {
+      const prog = (t - 0.72) / 0.28;
+      const impR = prog * 18;
+      const impA = Math.floor((1 - prog) * 180).toString(16).padStart(2, '0');
+      ctx.beginPath(); ctx.arc(cx2, cy2, impR, 0, Math.PI * 2);
+      ctx.strokeStyle = p.col + impA;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // Second ring slightly delayed
+      if (prog > 0.3) {
+        const prog2 = (prog - 0.3) / 0.7;
+        const impR2 = prog2 * 12;
+        const impA2 = Math.floor((1 - prog2) * 120).toString(16).padStart(2, '0');
+        ctx.beginPath(); ctx.arc(cx2, cy2, impR2, 0, Math.PI * 2);
+        ctx.strokeStyle = p.col + impA2;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    }
   }
 
   // Particles

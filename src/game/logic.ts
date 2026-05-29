@@ -327,22 +327,57 @@ export const tickGame = (s: GameState, dt: number): void => {
         e.spd = EDEFS[e.type].spd * dc.spdM;
       }
     }
-    let rem = e.spd * dt;
-    while (rem > 0 && e.pi < s.path.length - 1) {
-      const [c1, r1] = s.path[e.pi];
-      const [c2, r2] = s.path[e.pi + 1];
-      const seg = Math.hypot(c2 - c1, r2 - r1) * CELL;
-      const left = (1 - e.pr) * seg;
-      if (rem >= left) { rem -= left; e.pi++; e.pr = 0; }
-      else { e.pr += rem / seg; rem = 0; }
-    }
-    if (e.pi >= s.path.length - 1) {
-      dead.add(e.id);
-      s.baseHP = Math.max(0, s.baseHP - e.dmg);
-      s.screenShake = 0.3;
-      const { x, y } = pxy(s.path, e.pi, e.pr);
-      s.effs.push({ id: uid(), x, y, txt: `-${e.dmg}HP`, life: 1.5, ml: 1.5, col: '#f44336' });
-      if (s.baseHP <= 0) s.over = true;
+    if ((e.brainwashed ?? 0) > 0) {
+      // Brainwash: enemy reverses direction and deals collision damage
+      e.brainwashed = Math.max(0, e.brainwashed! - dt);
+      let brem = e.spd * dt;
+      while (brem > 0 && (e.pi > 0 || e.pr > 0)) {
+        if (e.pi === 0) { e.pr = 0; break; }
+        const segLen = Math.hypot(
+          s.path[e.pi][0] - s.path[e.pi - 1][0],
+          s.path[e.pi][1] - s.path[e.pi - 1][1]
+        ) * CELL;
+        const canBack = e.pr * segLen;
+        if (brem >= canBack) { brem -= canBack; e.pi--; e.pr = 1; }
+        else { e.pr = Math.max(0, e.pr - brem / segLen); brem = 0; }
+      }
+      if (e.pi === 0) e.pr = Math.max(0, e.pr);
+      // Collision damage: brainwashed enemy deals ~80% of its HP to nearby enemies
+      const { x: bx, y: by } = pxy(s.path, e.pi, e.pr);
+      for (const other of s.enemies) {
+        if (other.id === e.id || dead.has(other.id) || (other.brainwashed ?? 0) > 0) continue;
+        const { x: ox, y: oy } = pxy(s.path, other.pi, other.pr);
+        if (Math.hypot(ox - bx, oy - by) < CELL * 0.85) {
+          const bDmg = Math.max(1, Math.ceil(e.hp * 0.8));
+          other.hp -= bDmg;
+          other.hitFlash = 0.25;
+          s.effs.push({ id: uid(), x: ox, y: oy, txt: `📺-${bDmg}洗脳！`, life: 1.5, ml: 1.5, col: '#e040fb' });
+          if (other.hp <= 0) {
+            dead.add(other.id);
+            s.power = Math.min(s.power + other.rew, 999);
+            s.ultGauge = Math.min(100, s.ultGauge + 3);
+          }
+        }
+      }
+      if (e.brainwashed <= 0) e.frozen = 1.5;
+    } else {
+      let rem = e.spd * dt;
+      while (rem > 0 && e.pi < s.path.length - 1) {
+        const [c1, r1] = s.path[e.pi];
+        const [c2, r2] = s.path[e.pi + 1];
+        const seg = Math.hypot(c2 - c1, r2 - r1) * CELL;
+        const left = (1 - e.pr) * seg;
+        if (rem >= left) { rem -= left; e.pi++; e.pr = 0; }
+        else { e.pr += rem / seg; rem = 0; }
+      }
+      if (e.pi >= s.path.length - 1) {
+        dead.add(e.id);
+        s.baseHP = Math.max(0, s.baseHP - e.dmg);
+        s.screenShake = 0.3;
+        const { x, y } = pxy(s.path, e.pi, e.pr);
+        s.effs.push({ id: uid(), x, y, txt: `-${e.dmg}HP`, life: 1.5, ml: 1.5, col: '#f44336' });
+        if (s.baseHP <= 0) s.over = true;
+      }
     }
     if (e.burning > 0) {
       e.burning -= dt; e.burnT -= dt;
@@ -631,14 +666,40 @@ export const tickGame = (s: GameState, dt: number): void => {
         superpc:'#00e5ff', plasma:'#ffd700', theater:'#e91e63',
         toaster:'#ff8a65', dryer:'#ef9a9a', speaker:'#ce93d8', projector:'#ba68c8',
         tesla:'#7c4dff', ricecooker:'#f5f5f5', dishwasher:'#4dd0e1', oven:'#ff7043',
-        coffeemaker:'#8d6e63', ihcooker:'#ffca28',
+        coffeemaker:'#8d6e63', ihcooker:'#ffca28', tv:'#e040fb',
       };
       s.projs.push({ id: uid(), sx: cx, sy: cy, ex, ey, life: 0.18, col: projCol[cell.tid] || '#fff' });
       if (cell.tid === 'kettle' || cell.tid === 'microwave' || cell.tid === 'toaster' || cell.tid === 'dryer' || cell.tid === 'ricecooker' || cell.tid === 'oven' || cell.tid === 'ihcooker') {
         tgt.burning = 3; tgt.burnT = 0.5;
       }
       if (cell.tid === 'fridge' || cell.tid === 'aircon') tgt.frozen = 1.5;
-      if ((cell.tid === 'speaker' && cell.lv >= 2) || cell.tid === 'dishwasher') tgt.frozen = 0.5; // slow field
+      if ((cell.tid === 'speaker' && cell.lv >= 2) || cell.tid === 'dishwasher') tgt.frozen = 0.5;
+      // TV: brainwash target (and 2nd target at Lv3)
+      if (cell.tid === 'tv') {
+        const brainDur = cell.lv >= 2 ? 5 : cell.lv >= 1 ? 4 : 3;
+        if ((tgt.brainwashed ?? 0) <= 0) {
+          tgt.brainwashed = brainDur;
+          s.effs.push({ id: uid(), x: ex, y: ey, txt: '📺洗脳！', life: 1.2, ml: 1.2, col: '#e040fb' });
+        }
+        if (cell.lv >= 2 && S.abilityUnlock) {
+          let second: Enemy | null = null; let sdist = Infinity;
+          for (const e2 of s.enemies) {
+            if (dead.has(e2.id) || e2.id === tgt.id || (e2.brainwashed ?? 0) > 0) continue;
+            const { x: e2x, y: e2y } = pxy(s.path, e2.pi, e2.pr);
+            const d2 = Math.hypot(e2x - cx, e2y - cy);
+            if (d2 <= range && d2 < sdist) { sdist = d2; second = e2; }
+          }
+          if (second) {
+            second.brainwashed = brainDur;
+            second.hp -= Math.ceil(synDmg * 0.5);
+            second.hitFlash = 0.1;
+            const { x: sx2, y: sy2 } = pxy(s.path, second.pi, second.pr);
+            s.projs.push({ id: uid(), sx: cx, sy: cy, ex: sx2, ey: sy2, life: 0.18, col: '#e040fb' });
+            s.effs.push({ id: uid(), x: sx2, y: sy2, txt: '📺洗脳２！', life: 1.2, ml: 1.2, col: '#ce93d8' });
+            if (second.hp <= 0) dead.add(second.id);
+          }
+        }
+      }
       if (cell.tid === 'ihcooker' && cell.lv >= 2 && tgt.burning > 0) tgt.hp -= Math.ceil(synDmg * 0.35);
       if (cell.tid === 'fan' || cell.tid === 'vacuum' || cell.tid === 'washer') {
         const bk = cell.tid === 'fan' ? 0.45 : 0.22;

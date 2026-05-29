@@ -19,7 +19,7 @@ export interface GachaState extends GachaInventory {
 }
 
 const CHIP_ON_DUP: Record<string, number> = {
-  C: 3, U: 5, R: 10, E: 20, L: 50, M: 100, G: 200, OD: 500, P: 0,
+  C: 3, U: 5, R: 10, E: 20, L: 50, M: 100, G: 200, OD: 500, OX: 2000, P: 0,
 };
 
 const loadInventory = (): GachaState => {
@@ -65,6 +65,12 @@ const pickRarity = (pity: number, rateOverride?: Partial<Record<Rarity, number>>
   }
 
   let r = Math.random();
+  // Check OX first (rarest)
+  const oxRate = rates['OX'] ?? 0;
+  if (oxRate > 0) {
+    r -= oxRate;
+    if (r <= 0) return 'OX';
+  }
   r -= odRate;
   if (r <= 0) return 'OD';
   const others: Rarity[] = ['G', 'M', 'L', 'E', 'R', 'U', 'C'];
@@ -116,7 +122,7 @@ export const useGacha = () => {
         counts,
         chips: prev.chips + chipGain,
         volts: prev.volts - banner.cost1,
-        pity: rarity === 'OD' ? 0 : prev.pity + 1,
+        pity: (rarity === 'OD' || rarity === 'OX') ? 0 : prev.pity + 1,
         totalPulls: prev.totalPulls + 1,
       };
     });
@@ -134,7 +140,7 @@ export const useGacha = () => {
       const { tid, rarity } = pullOne(tempPity, pickup, banner.rateBoost);
       results.push(tid);
       rarities.push(rarity);
-      tempPity = rarity === 'OD' ? 0 : tempPity + 1;
+      tempPity = (rarity === 'OD' || rarity === 'OX') ? 0 : tempPity + 1;
     }
     update(prev => {
       const newOwned = [...prev.owned];
@@ -151,7 +157,7 @@ export const useGacha = () => {
         owned: newOwned, counts,
         chips: prev.chips + chipGain,
         volts: prev.volts - banner.cost10,
-        pity: tempPity,
+        pity: tempPity,  // tempPity already reset on OD; OX handled in pull logic above
         totalPulls: prev.totalPulls + 10,
       };
     });

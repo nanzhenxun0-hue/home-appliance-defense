@@ -133,13 +133,15 @@ export const TDEFS: Record<TowerID, TowerDef> = {
   robotarm:   { n:'ロボットアーム',   em:'🦾', r:'G', rc:'#26c6da', baseCost:380, req:'superpc',   personality:'頼れる兄貴',   quote:'「正確無比、誤差ゼロ。」', role:'多腕DPS', skillName:'マルチアームストライク', skillDesc:'複数の敵を同時に殴打。Lv3でアーム数+1。' },
   // OD
   quantumchip:{ n:'量子チップ',       em:'⚛️', r:'OD', rc:'#00e5ff', baseCost:520, req:'superpc', personality:'破壊神', quote:'「観測した瞬間、敵は消滅する。」', role:'量子殲滅', skillName:'クァンタムイレース', skillDesc:'確率で敵を即時消滅。Lv3で対ボス確率UP。' },
+  // OX — オーバークロス（超越レアリティ）
+  tv:          { n:'テレビ',           em:'📺', r:'OX', rc:'#e040fb', baseCost:650, req:null,      ability:'brainwash', personality:'カリスマ', quote:'「全ての波長を支配する。洗脳は始まりにすぎない。」', role:'洗脳AOE', skillName:'マインドコントロール', skillDesc:'敵を洗脳して逆走させ、すれ違う敵に体力分のダメージを与える。Lv3で同時2体洗脳。全ステージ極クリアか限定ガチャ0.2%で入手。' },
 };
 
 export const RCOLOR = Object.fromEntries(
-  Object.entries({ C:'#757575', U:'#4caf50', R:'#2196f3', E:'#ab47bc', L:'#ff9800', M:'#e91e63', G:'#00e5ff', OD:'#ffd700' })
+  Object.entries({ C:'#757575', U:'#4caf50', R:'#2196f3', E:'#ab47bc', L:'#ff9800', M:'#e91e63', G:'#00e5ff', OD:'#ffd700', OX:'#e040fb' })
 );
 export const RBGCOL = Object.fromEntries(
-  Object.entries({ C:'#1a1a1a', U:'#0d2a12', R:'#0a1f3a', E:'#1f0a2a', L:'#2a1a00', M:'#2a0a1a', G:'#002a2a', OD:'#2a2200' })
+  Object.entries({ C:'#1a1a1a', U:'#0d2a12', R:'#0a1f3a', E:'#1f0a2a', L:'#2a1a00', M:'#2a0a1a', G:'#002a2a', OD:'#2a2200', OX:'#200028' })
 );
 
 export const UPS: Record<TowerID, UpgradeLevel[]> = {
@@ -257,6 +259,11 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     { c:0,   pg:0, pc:8, dmg:120,rng:4.0, spd:0.8, lbl:'プラズマキャノン', eff:'全体貫通' },
     { c:60,  pg:0, pc:10,dmg:200,rng:5.0, spd:1.2, lbl:'メガプラズマ',     eff:'攻速UP' },
     { c:300, pg:0, pc:12,dmg:300,rng:6.0, spd:1.8, lbl:'ギガプラズマ',     eff:'★世界を焼く！', abilityUnlock:true },
+  ],
+  tv: [
+    { c:0,   pg:0, pc:12, dmg:80,  rng:3.5, spd:0.6, lbl:'テレビ',           eff:'洗脳(3秒)' },
+    { c:200, pg:0, pc:15, dmg:130, rng:4.0, spd:0.8, lbl:'薄型テレビ',       eff:'洗脳(4秒)' },
+    { c:600, pg:0, pc:18, dmg:200, rng:4.5, spd:1.0, lbl:'8K有機ELテレビ',   eff:'★同時2体洗脳(5秒)', abilityUnlock:true },
   ],
   // ── v1.5 expansion upgrades ──
   shaver:     [{c:0,pg:0,pc:1,dmg:14,rng:1.6,spd:2.4,lbl:'シェーバー',eff:'高速斬り'},{c:50,pg:0,pc:1,dmg:22,rng:1.8,spd:2.8,lbl:'5枚刃',eff:'攻速UP'},{c:240,pg:0,pc:2,dmg:35,rng:2.0,spd:3.2,lbl:'プロシェーバー',eff:'★出血DoT',abilityUnlock:true}],
