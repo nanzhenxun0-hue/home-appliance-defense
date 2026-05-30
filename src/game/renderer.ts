@@ -352,6 +352,18 @@ export const drawFrame = (
     }
     if (e.frozen > 0) { ctx.font = '8px serif'; ctx.fillText('❄️', x + eRadius - 1, y - eRadius + 1); }
     else if (e.burning > 0) { ctx.font = '8px serif'; ctx.fillText('🔥', x + eRadius - 1, y - eRadius + 1); }
+    if ((e as any).brainwashed && (e as any).brainwashed > 0) { ctx.font = '8px serif'; ctx.fillText('📺', x - eRadius + 1, y - eRadius + 1); }
+
+    // Hit flash ring — pulse ring around enemy on every hit
+    if (e.hitFlash > 0) {
+      const hfa = e.hitFlash / 0.1;
+      ctx.globalAlpha = hfa * 0.85;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.shadowBlur = 8; ctx.shadowColor = '#ffffff';
+      ctx.beginPath(); ctx.arc(x, y, eRadius + 5 + (1 - hfa) * 6, 0, Math.PI * 2); ctx.stroke();
+      ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+    }
 
     // HP bar
     const bw = isBoss ? 30 : 22, bh = isBoss ? 3.5 : 2.5;
@@ -432,23 +444,46 @@ export const drawFrame = (
     }
   }
 
-  // Particles
+  // AOE rings (expand outward, fade out)
+  for (const ring of s.rings) {
+    const a = Math.max(0, ring.life / ring.ml);
+    ctx.globalAlpha = a * 0.85;
+    ctx.strokeStyle = ring.col;
+    ctx.lineWidth = ring.thick ?? 2;
+    ctx.shadowBlur = 10; ctx.shadowColor = ring.col;
+    ctx.beginPath(); ctx.arc(ring.x, ring.y, ring.r, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+  ctx.globalAlpha = 1;
+
+  // Particles — double-pass glow rendering
+  ctx.save();
   for (const p of s.particles) {
-    const a = Math.min(1, p.life / p.ml * 2);
-    ctx.globalAlpha = a;
+    const t = p.life / p.ml;
+    const a = Math.min(1, t * 2.2);
+    const radius = p.size * Math.max(0.15, t);
+    // Outer glow pass
+    ctx.globalAlpha = a * 0.35;
     ctx.fillStyle = p.col;
-    ctx.shadowBlur = 3; ctx.shadowColor = p.col;
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (p.life / p.ml), 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 8; ctx.shadowColor = p.col;
+    ctx.beginPath(); ctx.arc(p.x, p.y, radius * 1.9, 0, Math.PI * 2); ctx.fill();
+    // Core pass
+    ctx.globalAlpha = a;
+    ctx.shadowBlur = 4; ctx.shadowColor = p.col;
+    ctx.beginPath(); ctx.arc(p.x, p.y, radius, 0, Math.PI * 2); ctx.fill();
   }
   ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+  ctx.restore();
 
-  // Float effects
+  // Float effects — size scales with text length (boss kills get bigger)
   for (const ef of s.effs) {
-    const rise = (1 - ef.life / ef.ml) * 30;
+    const rise = (1 - ef.life / ef.ml) * 38;
     const a = Math.min(1, ef.life / ef.ml * 2.5);
+    const isBig = ef.life > 1.5 || ef.txt.includes('撃破') || ef.txt.includes('EMP') || ef.txt.includes('感染');
+    const fontSize = isBig ? 13 : 10;
     ctx.globalAlpha = a; ctx.fillStyle = ef.col;
-    ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-    ctx.shadowBlur = 4; ctx.shadowColor = ef.col;
+    ctx.font = `bold ${fontSize}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.shadowBlur = isBig ? 8 : 4; ctx.shadowColor = ef.col;
     ctx.fillText(ef.txt, ef.x, ef.y - rise);
     ctx.shadowBlur = 0;
   }

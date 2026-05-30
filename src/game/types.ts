@@ -182,7 +182,8 @@ export interface Enemy {
   clogTimer?: number;
   corrodeTimer?: number;
   surgeStun?: number;
-  brainwashed?: number; // tv: reverses movement, deals HP as collision damage
+  brainwashed?: number;
+  atkTimer?: number; // generic AOE attack timer (magnet EMP, virus spread, etc.)
 }
 
 export interface Projectile {
@@ -217,6 +218,18 @@ export interface Particle {
   size: number;
 }
 
+export interface Ring {
+  id: number;
+  x: number;
+  y: number;
+  r: number;
+  maxR: number;
+  col: string;
+  life: number;
+  ml: number;
+  thick?: number;
+}
+
 export interface SpawnItem {
   type: EnemyType;
   at: number;
@@ -244,6 +257,7 @@ export interface GameState {
   projs: Projectile[];
   effs: FloatEffect[];
   particles: Particle[];
+  rings: Ring[];
   fireTraps: FireTrap[];
   power: number;
   wave: number;

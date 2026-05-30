@@ -62,7 +62,7 @@ export const mkState = (diff: DifficultyKey, team: TowerID[], area: AreaKey = 's
   const pathSet = getAreaPathSet(area);
   const endless = diff === 'endless';
   return {
-    grid: {}, timers: {}, abilityTimers: {}, enemies: [], projs: [], effs: [], particles: [],
+    grid: {}, timers: {}, abilityTimers: {}, enemies: [], projs: [], effs: [], particles: [], rings: [],
     fireTraps: [],
     power: d.sp, wave: 0, baseHP: d.shp, maxHP: d.shp,
     waveActive: false, spawnQ: [], waveT: 0, powerT: 0,
@@ -386,6 +386,67 @@ export const tickGame = (s: GameState, dt: number): void => {
 
     // New enemy special abilities
     const eDef = EDEFS[e.type];
+    // ── Magnet: periodic EMP pulse — disables nearby towers ──
+    if (e.type === 'magnet' && !dead.has(e.id)) {
+      e.atkTimer = (e.atkTimer ?? (4 + Math.random() * 3)) - dt;
+      if (e.atkTimer <= 0) {
+        e.atkTimer = 5 + Math.random() * 3;
+        const { x: ex, y: ey } = pxy(s.path, e.pi, e.pr);
+        const empRange = CELL * 2.5;
+        s.rings.push({ id: uid(), x: ex, y: ey, r: CELL * 0.5, maxR: empRange, col: '#f48fb1', life: 0.55, ml: 0.55, thick: 2.5 });
+        let hitCount = 0;
+        for (const k of Object.keys(s.grid)) {
+          const [gc, gr] = k.split(',').map(Number);
+          if (Math.hypot(gc * CELL + CELL/2 - ex, gr * CELL + CELL/2 - ey) < empRange) {
+            if (!s.disabledTowers.has(k) && hitCount < 2) {
+              s.disabledTowers.add(k);
+              const rem = k; setTimeout(() => s.disabledTowers.delete(rem), 2000);
+              hitCount++;
+            }
+          }
+        }
+        if (hitCount > 0) {
+          s.effs.push({ id: uid(), x: ex, y: ey - 14, txt: `🧲EMP！(${hitCount}機)`, life: 1.5, ml: 1.5, col: '#f48fb1' });
+          s.screenShake = Math.min(s.screenShake + 0.12, 0.4);
+        }
+        for (let i = 0; i < 10; i++) {
+          const angle = (Math.PI * 2 / 10) * i;
+          s.particles.push({ id: uid(), x: ex, y: ey, vx: Math.cos(angle) * 55, vy: Math.sin(angle) * 55, life: 0.5, ml: 0.5, col: '#f48fb1', size: 3 });
+        }
+      }
+    }
+
+    // ── Virus: periodic infection spread — buffs nearby enemies speed ──
+    if (e.type === 'virus' && !dead.has(e.id)) {
+      e.atkTimer = (e.atkTimer ?? (3 + Math.random() * 2)) - dt;
+      if (e.atkTimer <= 0) {
+        e.atkTimer = 3.5 + Math.random() * 2;
+        const { x: ex, y: ey } = pxy(s.path, e.pi, e.pr);
+        const spreadR = CELL * 3.0;
+        s.rings.push({ id: uid(), x: ex, y: ey, r: CELL * 0.4, maxR: spreadR, col: '#76ff03', life: 0.6, ml: 0.6, thick: 2 });
+        let infected = 0;
+        for (const other of s.enemies) {
+          if (other.id === e.id || dead.has(other.id)) continue;
+          const { x: ox, y: oy } = pxy(s.path, other.pi, other.pr);
+          if (Math.hypot(ox - ex, oy - ey) < spreadR) {
+            if (!(other.speedBuff && other.speedBuff > 0)) {
+              other.speedBuff = 3.5;
+              other.spd *= 1.25;
+              infected++;
+            }
+          }
+        }
+        s.power = Math.max(0, s.power - 3);
+        if (infected > 0) {
+          s.effs.push({ id: uid(), x: ex, y: ey - 14, txt: `🦠感染拡散！(+${infected})`, life: 1.5, ml: 1.5, col: '#76ff03' });
+        }
+        for (let i = 0; i < 8; i++) {
+          const angle = (Math.PI * 2 / 8) * i + Math.random() * 0.4;
+          s.particles.push({ id: uid(), x: ex, y: ey, vx: Math.cos(angle) * 45, vy: Math.sin(angle) * 45 - 15, life: 0.5, ml: 0.5, col: '#76ff03', size: 2.5 });
+        }
+      }
+    }
+
     if (eDef.special === 'clog' && !dead.has(e.id)) {
       // Cockroach: periodically clogs a nearby tower
       e.clogTimer = (e.clogTimer ?? (3 + Math.random() * 3)) - dt;
@@ -732,44 +793,84 @@ export const tickGame = (s: GameState, dt: number): void => {
         }
       }
 
+      // ── Hit particles (every hit, small sparks) ──
+      {
+        const { x: hx, y: hy } = pxy(s.path, tgt.pi, tgt.pr);
+        const hitCol = projCol[cell.tid] || '#fff8';
+        for (let i = 0; i < 4; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          s.particles.push({ id: uid(), x: hx, y: hy, vx: Math.cos(angle) * (25 + Math.random() * 35), vy: Math.sin(angle) * (25 + Math.random() * 35) - 20, life: 0.2 + Math.random() * 0.15, ml: 0.35, col: hitCol, size: 1.5 + Math.random() * 1.5 });
+        }
+      }
+
       if (tgt.hp <= 0) {
         dead.add(tgt.id);
         s.power = Math.min(s.power + tgt.rew, 999);
-        // Ult gauge charge on kill
         const isBoss = tgt.type.startsWith('boss') || tgt.type === 'final_boss';
         s.ultGauge = Math.min(100, s.ultGauge + (isBoss ? 25 : 3));
         const { x, y } = pxy(s.path, tgt.pi, tgt.pr);
-        s.effs.push({ id: uid(), x, y, txt: `+${tgt.rew}W`, life: 1.0, ml: 1.0, col: '#ffd700' });
-        for (let i = 0; i < 8; i++) {
-          const angle = (Math.PI * 2 / 8) * i + Math.random() * 0.5;
-          const speed = 40 + Math.random() * 60;
-          s.particles.push({
-            id: uid(), x, y,
-            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-            life: 0.5 + Math.random() * 0.3, ml: 0.8,
-            col: EDEFS[tgt.type].col, size: 3 + Math.random() * 3,
-          });
+        const eCol = EDEFS[tgt.type].col;
+        // Reward float text
+        s.effs.push({ id: uid(), x, y, txt: isBoss ? `💥+${tgt.rew}W 撃破！` : `+${tgt.rew}W`, life: isBoss ? 2.2 : 1.2, ml: isBoss ? 2.2 : 1.2, col: '#ffd700' });
+        // Kill shockwave ring
+        const killMaxR = isBoss ? 90 : tgt.type === 'dust_lord' ? 55 : 38;
+        s.rings.push({ id: uid(), x, y, r: 4, maxR: killMaxR, col: eCol, life: 0.55, ml: 0.55, thick: isBoss ? 3.5 : 2 });
+        if (isBoss) {
+          s.rings.push({ id: uid(), x, y, r: 4, maxR: 65, col: '#ffd700', life: 0.75, ml: 0.75, thick: 2 });
+          s.screenShake = Math.min(s.screenShake + 0.55, 1.2);
+        }
+        // Kill particle burst
+        const pCount = isBoss ? 28 : tgt.type === 'dust_lord' ? 18 : 14;
+        for (let i = 0; i < pCount; i++) {
+          const angle = (Math.PI * 2 / pCount) * i + Math.random() * 0.4;
+          const spd = isBoss ? (90 + Math.random() * 130) : (55 + Math.random() * 85);
+          s.particles.push({ id: uid(), x, y, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd - 25, life: (isBoss ? 1.3 : 0.75) + Math.random() * 0.3, ml: isBoss ? 1.6 : 1.05, col: eCol, size: isBoss ? (5 + Math.random() * 7) : (3 + Math.random() * 4) });
+        }
+        // Gold accent particles on boss kill
+        if (isBoss) {
+          for (let i = 0; i < 10; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            s.particles.push({ id: uid(), x, y, vx: Math.cos(angle) * (60 + Math.random() * 80), vy: Math.sin(angle) * (60 + Math.random() * 80) - 40, life: 1.0 + Math.random() * 0.4, ml: 1.4, col: '#ffd700', size: 3 + Math.random() * 4 });
+          }
         }
       }
     }
   }
 
-  // Dust lord multiply: spawn small dusts on death
+  // Dust lord multiply: spawn small dusts on death + AOE explosion
   const newSpawns: typeof s.enemies = [];
   for (const e of s.enemies) {
     if (dead.has(e.id) && EDEFS[e.type].special === 'multiply') {
-      const spawnCount = 2;
+      const spawnCount = 3;
       for (let k = 0; k < spawnCount; k++) {
         newSpawns.push({
           id: uid(), type: 'dust' as EnemyType,
-          hp: 30, mhp: 30, spd: 55, rew: 5, dmg: 1,
+          hp: 40, mhp: 40, spd: 58, rew: 6, dmg: 1,
           pi: e.pi, pr: e.pr + (k * 0.01),
           hitFlash: 0, frozen: 0, burning: 0, burnT: 0,
           em: EDEFS['dust' as EnemyType]?.em ?? '💨',
         });
       }
       const { x, y } = pxy(s.path, e.pi, e.pr);
-      s.effs.push({ id: uid(), x, y, txt: '💨×2分裂！', life: 1.2, ml: 1.2, col: '#90a4ae' });
+      s.effs.push({ id: uid(), x, y, txt: '💨×3爆散！', life: 1.5, ml: 1.5, col: '#90a4ae' });
+      // AOE explosion ring + particles
+      s.rings.push({ id: uid(), x, y, r: 5, maxR: 58, col: '#9e9e9e', life: 0.5, ml: 0.5, thick: 2.5 });
+      s.rings.push({ id: uid(), x, y, r: 5, maxR: 35, col: '#eeeeee', life: 0.35, ml: 0.35, thick: 1.5 });
+      for (let i = 0; i < 14; i++) {
+        const angle = (Math.PI * 2 / 14) * i + Math.random() * 0.3;
+        s.particles.push({ id: uid(), x, y, vx: Math.cos(angle) * (60 + Math.random() * 60), vy: Math.sin(angle) * (60 + Math.random() * 60) - 20, life: 0.6 + Math.random() * 0.3, ml: 0.9, col: i % 2 === 0 ? '#9e9e9e' : '#e0e0e0', size: 3 + Math.random() * 3 });
+      }
+      // AOE power drain on nearby towers
+      for (const k of Object.keys(s.grid)) {
+        const [gc, gr] = k.split(',').map(Number);
+        if (Math.hypot(gc * CELL + CELL/2 - x, gr * CELL + CELL/2 - y) < CELL * 2.8) {
+          if (!s.disabledTowers.has(k)) {
+            s.disabledTowers.add(k);
+            const rem = k; setTimeout(() => s.disabledTowers.delete(rem), 1200);
+          }
+        }
+      }
+      s.screenShake = Math.min(s.screenShake + 0.2, 0.6);
     }
   }
 
@@ -779,8 +880,11 @@ export const tickGame = (s: GameState, dt: number): void => {
   s.projs = s.projs.filter(p => p.life > 0);
   s.effs.forEach(e => e.life -= dt);
   s.effs = s.effs.filter(e => e.life > 0);
-  s.particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 80 * dt; p.life -= dt; });
+  s.particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 90 * dt; p.life -= dt; });
   s.particles = s.particles.filter(p => p.life > 0);
+  // Rings: grow outward and fade
+  s.rings.forEach(r => { const grow = (r.maxR - r.r) * Math.min(1, dt * 6); r.r += grow; r.life -= dt; });
+  s.rings = s.rings.filter(r => r.life > 0);
 
   if (s.waveActive && s.spawnQ.length === 0 && s.enemies.length === 0) {
     s.waveActive = false;
