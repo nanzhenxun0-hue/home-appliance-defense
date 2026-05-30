@@ -769,6 +769,118 @@ export const tickGame = (s: GameState, dt: number): void => {
         if (tgt.pr < 0) tgt.pr = 0;
       }
 
+      // ── AOE / Splash / Pierce for multi-target towers ──
+      const aoeDmgMults: Partial<Record<TowerID, number>> = {
+        blender: 0.70, washer: 0.85, aircon: 0.60, oven: 0.75,
+        waffleiron: 0.75, promo_endless: 1.0,
+      };
+      const isTrueAoe = cell.tid in aoeDmgMults;
+      const isDryerAoe = cell.tid === 'dryer' && cell.lv >= 2 && S.abilityUnlock;
+      const isFryer = cell.tid === 'fryer';
+      const isPlasma = cell.tid === 'plasma';
+
+      // Helper: give rewards + light kill FX for AOE secondary kills
+      const aoeKillFx = (e2: Enemy) => {
+        s.power = Math.min(s.power + e2.rew, 999);
+        s.ultGauge = Math.min(100, s.ultGauge + 2);
+        const { x: kx, y: ky } = pxy(s.path, e2.pi, e2.pr);
+        s.rings.push({ id: uid(), x: kx, y: ky, r: 3, maxR: 26, col: EDEFS[e2.type].col, life: 0.3, ml: 0.3, thick: 1.5 });
+        for (let ki = 0; ki < 8; ki++) {
+          const ka = (Math.PI * 2 / 8) * ki + Math.random() * 0.4;
+          s.particles.push({ id: uid(), x: kx, y: ky, vx: Math.cos(ka) * (38 + Math.random() * 42), vy: Math.sin(ka) * (38 + Math.random() * 42) - 18, life: 0.5 + Math.random() * 0.25, ml: 0.75, col: EDEFS[e2.type].col, size: 2.5 + Math.random() * 2 });
+        }
+      };
+
+      if (isTrueAoe || isDryerAoe) {
+        const dmgMult = isDryerAoe ? 0.55 : (aoeDmgMults[cell.tid as TowerID] ?? 0.7);
+        let aoeHits = 0;
+        for (const e2 of s.enemies) {
+          if (dead.has(e2.id) || e2.id === tgt.id) continue;
+          const { x: e2x, y: e2y } = pxy(s.path, e2.pi, e2.pr);
+          if (Math.hypot(e2x - cx, e2y - cy) > range) continue;
+          const aoeDmg = Math.max(1, Math.ceil(synDmg * dmgMult));
+          e2.hp -= aoeDmg;
+          e2.hitFlash = 0.1;
+          // Per-tower AOE status effects
+          if (cell.tid === 'aircon') { e2.frozen = Math.max(e2.frozen, cell.lv >= 2 ? 2.0 : 1.5); }
+          if (cell.tid === 'oven' || isDryerAoe) { e2.burning = Math.max(e2.burning, 2.5); e2.burnT = 0.5; }
+          if (cell.tid === 'washer') {
+            const pushBk = 0.3;
+            e2.pr -= pushBk;
+            while (e2.pr < 0 && e2.pi > 0) { e2.pi--; e2.pr += 1; }
+            if (e2.pr < 0) e2.pr = 0;
+          }
+          if (cell.tid === 'blender') {
+            if (cell.lv >= 2 && S.abilityUnlock) {
+              // Lv3 pull toward tower
+              e2.pr -= 0.15;
+              while (e2.pr < 0 && e2.pi > 0) { e2.pi--; e2.pr += 1; }
+              if (e2.pr < 0) e2.pr = 0;
+            }
+          }
+          if (cell.tid === 'waffleiron' && cell.lv >= 2 && S.abilityUnlock) {
+            // Lv3 焼印スタン: brief disable-like freeze
+            e2.frozen = Math.max(e2.frozen, 1.2);
+          }
+          // Visual: secondary projectiles
+          s.projs.push({ id: uid(), sx: cx, sy: cy, ex: e2x, ey: e2y, life: 0.15, col: projCol[cell.tid as TowerID] || '#fff' });
+          if (e2.hp <= 0) { dead.add(e2.id); aoeKillFx(e2); }
+          aoeHits++;
+        }
+        // AOE ring from tower position
+        const aoeRingCol = projCol[cell.tid as TowerID] || '#fff';
+        s.rings.push({ id: uid(), x: cx, y: cy, r: CELL * 0.4, maxR: range * 0.92, col: aoeRingCol, life: 0.42, ml: 0.42, thick: cell.tid === 'promo_endless' ? 3 : 2 });
+        if (cell.tid === 'washer' && aoeHits > 0) {
+          // Second wave ring for washer
+          s.rings.push({ id: uid(), x: cx, y: cy, r: CELL * 0.4, maxR: range * 0.65, col: '#80deea', life: 0.3, ml: 0.3, thick: 1.5 });
+        }
+        if (cell.tid === 'promo_endless') {
+          // Rainbow extra ring
+          s.rings.push({ id: uid(), x: cx, y: cy, r: CELL * 0.4, maxR: range * 0.7, col: '#ffd700', life: 0.32, ml: 0.32, thick: 1.5 });
+          s.screenShake = Math.min(s.screenShake + 0.04, 0.2);
+        }
+      }
+
+      if (isFryer) {
+        // Splash explosion: damage all enemies near the primary target
+        const { x: tx, y: ty } = pxy(s.path, tgt.pi, tgt.pr);
+        const splashR = CELL * (cell.lv >= 2 ? 2.6 : 1.8);
+        let splashHits = 0;
+        for (const e2 of s.enemies) {
+          if (dead.has(e2.id) || e2.id === tgt.id) continue;
+          const { x: e2x, y: e2y } = pxy(s.path, e2.pi, e2.pr);
+          if (Math.hypot(e2x - tx, e2y - ty) > splashR) continue;
+          e2.hp -= Math.max(1, Math.ceil(synDmg * 0.60));
+          e2.hitFlash = 0.1;
+          e2.burning = Math.max(e2.burning, 2.5); e2.burnT = 0.5;
+          s.projs.push({ id: uid(), sx: tx, sy: ty, ex: e2x, ey: e2y, life: 0.15, col: '#ffca28' });
+          if (e2.hp <= 0) { dead.add(e2.id); aoeKillFx(e2); }
+          splashHits++;
+        }
+        // Explosion rings at target
+        s.rings.push({ id: uid(), x: tx, y: ty, r: CELL * 0.3, maxR: splashR, col: '#ffca28', life: 0.45, ml: 0.45, thick: 2.5 });
+        s.rings.push({ id: uid(), x: tx, y: ty, r: CELL * 0.3, maxR: splashR * 0.55, col: '#ff5722', life: 0.3, ml: 0.3, thick: 1.5 });
+        if (splashHits > 0) s.screenShake = Math.min(s.screenShake + 0.06, 0.25);
+      }
+
+      if (isPlasma) {
+        // Pierce beam: full damage to ALL enemies in range (true AOE殲滅)
+        const pierceMult = cell.lv >= 2 ? 1.3 : 1.0;
+        for (const e2 of s.enemies) {
+          if (dead.has(e2.id) || e2.id === tgt.id) continue;
+          const { x: e2x, y: e2y } = pxy(s.path, e2.pi, e2.pr);
+          if (Math.hypot(e2x - cx, e2y - cy) > range) continue;
+          e2.hp -= Math.max(1, Math.ceil(synDmg * pierceMult));
+          e2.hitFlash = 0.1;
+          s.projs.push({ id: uid(), sx: cx, sy: cy, ex: e2x, ey: e2y, life: 0.22, col: '#ffd700' });
+          if (e2.hp <= 0) { dead.add(e2.id); aoeKillFx(e2); }
+        }
+        // Plasma blast rings
+        s.rings.push({ id: uid(), x: cx, y: cy, r: CELL * 0.5, maxR: range * 0.85, col: '#ffd700', life: 0.42, ml: 0.42, thick: 3 });
+        s.rings.push({ id: uid(), x: cx, y: cy, r: CELL * 0.5, maxR: range * 0.55, col: '#ffffffcc', life: 0.28, ml: 0.28, thick: 1.5 });
+        s.screenShake = Math.min(s.screenShake + 0.06, 0.25);
+      }
+
       // Chain lightning for tesla
       if (cell.tid === 'tesla' && cell.lv >= 2) {
         let chainTarget = tgt;
