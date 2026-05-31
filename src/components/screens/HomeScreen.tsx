@@ -13,10 +13,12 @@ interface HomeScreenProps {
   onPatch: () => void;
   onCompendium: () => void;
   onEnemyCompendium: () => void;
+  onCampaignCode: () => void;
   volts: number;
+  isAdmin?: boolean;
 }
 
-const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, onPatch, onCompendium, onEnemyCompendium, volts }: HomeScreenProps) => (
+const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, onPatch, onCompendium, onEnemyCompendium, onCampaignCode, volts, isAdmin }: HomeScreenProps) => (
   <div className="min-h-[100dvh] flex flex-col items-center justify-center p-5 relative overflow-hidden bg-background">
     <div className="absolute top-2 right-3 z-20 text-[10px] font-bold text-purple-300/80 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30">
       {APP_VERSION}
@@ -78,6 +80,15 @@ const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, o
       </div>
       <button onClick={onHowTo} className="game-btn-secondary w-full text-sm">📖 遊び方</button>
       <button onClick={onPatch} className="game-btn-secondary w-full text-sm">📋 パッチノート</button>
+      <button onClick={onCampaignCode}
+        className="w-full py-2 text-sm font-bold rounded-lg flex items-center justify-center gap-2"
+        style={{
+          background: isAdmin ? 'linear-gradient(135deg,#92400e,#b45309)' : 'rgba(255,255,255,0.04)',
+          color: isAdmin ? '#fcd34d' : '#a1a1aa',
+          border: isAdmin ? '1px solid #d97706aa' : '1px solid rgba(255,255,255,0.08)',
+        }}>
+        {isAdmin ? '🛡️ 管理者パネル' : '🎟️ キャンペーンコード'}
+      </button>
       <div className="flex gap-2 w-full">
         <button onClick={onScores} className="game-btn-ghost flex-1 text-xs">🏆 スコア</button>
         <button onClick={onTutorial} className="game-btn-ghost flex-1 text-xs">📚 チュートリアル</button>

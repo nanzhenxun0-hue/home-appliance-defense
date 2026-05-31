@@ -12,10 +12,16 @@ interface TeamScreenProps {
   onToggle: (tid: TowerID) => void;
   onStart: () => void;
   onBack: () => void;
+  isAdmin?: boolean;
 }
 
-const TeamScreen = ({ owned, counts = {}, team, maxTeam, onToggle, onStart, onBack }: TeamScreenProps) => {
-  const sortedOwned = [...owned].sort((a, b) => RARITY_ORDER.indexOf(TDEFS[a].r) - RARITY_ORDER.indexOf(TDEFS[b].r));
+const ALL_TOWER_IDS = Object.keys(TDEFS) as import('@/game/types').TowerID[];
+
+const TeamScreen = ({ owned, counts = {}, team, maxTeam, onToggle, onStart, onBack, isAdmin = false }: TeamScreenProps) => {
+  const displayList = isAdmin
+    ? [...ALL_TOWER_IDS].sort((a, b) => RARITY_ORDER.indexOf(TDEFS[a].r) - RARITY_ORDER.indexOf(TDEFS[b].r))
+    : [...owned].sort((a, b) => RARITY_ORDER.indexOf(TDEFS[a].r) - RARITY_ORDER.indexOf(TDEFS[b].r));
+  const sortedOwned = displayList;
 
   const activeSynergies = getActiveSynergies(team);
 
@@ -31,6 +37,12 @@ const TeamScreen = ({ owned, counts = {}, team, maxTeam, onToggle, onStart, onBa
           <h1 className="text-lg font-black text-blue-300">🎮 編成</h1>
           <span className="text-xs text-muted-foreground">{team.length}/{maxTeam}</span>
         </div>
+        {isAdmin && (
+          <div className="rounded-lg px-3 py-1.5 text-[10px] font-bold text-center"
+            style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid #d9770666', color: '#fcd34d' }}>
+            🛡️ 管理者モード — 全{ALL_TOWER_IDS.length}ユニット選択可能
+          </div>
+        )}
 
         {/* Current team */}
         <div className="glass-panel p-2 rounded-xl">

@@ -13,17 +13,20 @@ import TutorialScreen from '@/components/screens/TutorialScreen';
 import CompendiumScreen from '@/components/screens/CompendiumScreen';
 import EnemyCompendiumScreen from '@/components/screens/EnemyCompendiumScreen';
 import PromoRewardModal from '@/components/screens/PromoRewardModal';
+import CampaignCodeScreen from '@/components/screens/CampaignCodeScreen';
 import { useGacha } from '@/hooks/useGacha';
 import { useTeam } from '@/hooks/useTeam';
 import { useSound } from '@/hooks/useSound';
 import { useBGM } from '@/hooks/useBGM';
 import { useAreaUnlock } from '@/hooks/useAreaUnlock';
+import { useCampaignCodes } from '@/hooks/useCampaignCodes';
+import type { CodeReward } from '@/hooks/useCampaignCodes';
 import { useEffect } from 'react';
 
 const ALL_AREAS: AreaKey[] = ['suburb', 'factory', 'downtown', 'volcano', 'glacier', 'sky'];
 const EXTREME_CLEARS_KEY = 'kaden-td-extreme-clears';
 
-type Screen = 'home' | 'howto' | 'area' | 'game' | 'scores' | 'gacha' | 'team' | 'combo' | 'tutorial' | 'patch' | 'compendium' | 'enemyCompendium';
+type Screen = 'home' | 'howto' | 'area' | 'game' | 'scores' | 'gacha' | 'team' | 'combo' | 'tutorial' | 'patch' | 'compendium' | 'enemyCompendium' | 'campaign';
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>(() => {
@@ -38,6 +41,7 @@ const Index = () => {
   const { play, toggle: toggleSound, init: initSound } = useSound();
   const bgm = useBGM();
   const { unlockedAreas, unlockNext } = useAreaUnlock();
+  const campaign = useCampaignCodes();
 
   const [extremeClears, setExtremeClears] = useState<Set<AreaKey>>(() => {
     try {
@@ -64,6 +68,13 @@ const Index = () => {
     setScreen(s);
   };
 
+  const handleRewardApply = useCallback((reward: CodeReward) => {
+    if (reward.volts) gacha.addVolts(reward.volts);
+    if (reward.pulls) {
+      for (let i = 0; i < reward.pulls; i++) gacha.addVolts(150);
+    }
+  }, [gacha]);
+
   if (screen === 'tutorial') {
     return (
       <>
@@ -87,7 +98,22 @@ const Index = () => {
       onPatch={() => handleScreenChange('patch')}
       onCompendium={() => handleScreenChange('compendium')}
       onEnemyCompendium={() => handleScreenChange('enemyCompendium')}
+      onCampaignCode={() => handleScreenChange('campaign')}
       volts={gacha.inv.volts}
+      isAdmin={campaign.isAdmin}
+    />;
+  }
+  if (screen === 'campaign') {
+    return <CampaignCodeScreen
+      isAdmin={campaign.isAdmin}
+      codes={campaign.codes}
+      redeemed={campaign.redeemed}
+      onRedeem={campaign.redeemCode}
+      onCreateCode={campaign.createCode}
+      onDeleteCode={campaign.deleteCode}
+      onDeactivateAdmin={campaign.deactivateAdmin}
+      onRewardApply={handleRewardApply}
+      onBack={() => handleScreenChange('home')}
     />;
   }
   if (screen === 'compendium') {
@@ -118,6 +144,7 @@ const Index = () => {
       onToggle={(tid) => { play('ui_tap'); toggle(tid); }}
       onStart={() => handleScreenChange('area')}
       onBack={() => handleScreenChange('home')}
+      isAdmin={campaign.isAdmin}
     />;
   }
   if (screen === 'combo') {
