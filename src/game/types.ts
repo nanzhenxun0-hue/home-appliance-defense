@@ -228,6 +228,8 @@ export interface Ring {
   life: number;
   ml: number;
   thick?: number;
+  arc?: number;    // total sector angle in radians (undefined = full circle)
+  arcDir?: number; // center direction of sector (radians, toward primary target)
 }
 
 export interface SpawnItem {

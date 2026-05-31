@@ -791,13 +791,38 @@ export const tickGame = (s: GameState, dt: number): void => {
         }
       };
 
+      // Sector/fan half-angles (undefined = full 360° circle)
+      const sectorHalfAngles: Partial<Record<TowerID, number>> = {
+        blender: Math.PI / 2,       // ±90°  → 180° fan
+        washer:  Math.PI * 2 / 3,   // ±120° → 240° fan
+        aircon:  Math.PI * 5 / 12,  // ±75°  → 150° fan
+        oven:    Math.PI * 5 / 12,  // ±75°  → 150° fan
+        waffleiron: Math.PI / 3,    // ±60°  → 120° cone
+        dryer:   Math.PI / 2,       // ±90°  → 180° fan
+      };
+      const sectorArcAngles: Partial<Record<TowerID, number>> = {
+        blender: Math.PI,            washer:  Math.PI * 4 / 3,
+        aircon:  Math.PI * 5 / 6,   oven:    Math.PI * 5 / 6,
+        waffleiron: Math.PI * 2 / 3, dryer:  Math.PI,
+      };
+      // Direction from tower to primary target
+      const tgtAngle = Math.atan2(ey - cy, ex - cx);
+
       if (isTrueAoe || isDryerAoe) {
         const dmgMult = isDryerAoe ? 0.55 : (aoeDmgMults[cell.tid as TowerID] ?? 0.7);
+        const halfSect = isDryerAoe ? Math.PI / 2 : sectorHalfAngles[cell.tid as TowerID];
         let aoeHits = 0;
         for (const e2 of s.enemies) {
           if (dead.has(e2.id) || e2.id === tgt.id) continue;
           const { x: e2x, y: e2y } = pxy(s.path, e2.pi, e2.pr);
           if (Math.hypot(e2x - cx, e2y - cy) > range) continue;
+          // Sector check: skip enemies outside the fan angle
+          if (halfSect !== undefined) {
+            const e2Angle = Math.atan2(e2y - cy, e2x - cx);
+            let diff = Math.abs(e2Angle - tgtAngle);
+            if (diff > Math.PI) diff = Math.PI * 2 - diff;
+            if (diff > halfSect) continue;
+          }
           const aoeDmg = Math.max(1, Math.ceil(synDmg * dmgMult));
           e2.hp -= aoeDmg;
           e2.hitFlash = 0.1;
@@ -812,30 +837,31 @@ export const tickGame = (s: GameState, dt: number): void => {
           }
           if (cell.tid === 'blender') {
             if (cell.lv >= 2 && S.abilityUnlock) {
-              // Lv3 pull toward tower
               e2.pr -= 0.15;
               while (e2.pr < 0 && e2.pi > 0) { e2.pi--; e2.pr += 1; }
               if (e2.pr < 0) e2.pr = 0;
             }
           }
           if (cell.tid === 'waffleiron' && cell.lv >= 2 && S.abilityUnlock) {
-            // Lv3 焼印スタン: brief disable-like freeze
             e2.frozen = Math.max(e2.frozen, 1.2);
           }
-          // Visual: secondary projectiles
           s.projs.push({ id: uid(), sx: cx, sy: cy, ex: e2x, ey: e2y, life: 0.15, col: projCol[cell.tid as TowerID] || '#fff' });
           if (e2.hp <= 0) { dead.add(e2.id); aoeKillFx(e2); }
           aoeHits++;
         }
-        // AOE ring from tower position
+        // AOE ring — sector fan for directional towers, full circle for promo_endless
         const aoeRingCol = projCol[cell.tid as TowerID] || '#fff';
-        s.rings.push({ id: uid(), x: cx, y: cy, r: CELL * 0.4, maxR: range * 0.92, col: aoeRingCol, life: 0.42, ml: 0.42, thick: cell.tid === 'promo_endless' ? 3 : 2 });
+        const arcAmt = cell.tid === 'promo_endless' ? undefined : (isDryerAoe ? Math.PI : sectorArcAngles[cell.tid as TowerID]);
+        s.rings.push({
+          id: uid(), x: cx, y: cy, r: CELL * 0.4, maxR: range * 0.92,
+          col: aoeRingCol, life: 0.42, ml: 0.42,
+          thick: cell.tid === 'promo_endless' ? 3 : 2,
+          arc: arcAmt, arcDir: arcAmt !== undefined ? tgtAngle : undefined,
+        });
         if (cell.tid === 'washer' && aoeHits > 0) {
-          // Second wave ring for washer
-          s.rings.push({ id: uid(), x: cx, y: cy, r: CELL * 0.4, maxR: range * 0.65, col: '#80deea', life: 0.3, ml: 0.3, thick: 1.5 });
+          s.rings.push({ id: uid(), x: cx, y: cy, r: CELL * 0.4, maxR: range * 0.65, col: '#80deea', life: 0.3, ml: 0.3, thick: 1.5, arc: Math.PI * 4/3, arcDir: tgtAngle });
         }
         if (cell.tid === 'promo_endless') {
-          // Rainbow extra ring
           s.rings.push({ id: uid(), x: cx, y: cy, r: CELL * 0.4, maxR: range * 0.7, col: '#ffd700', life: 0.32, ml: 0.32, thick: 1.5 });
           s.screenShake = Math.min(s.screenShake + 0.04, 0.2);
         }

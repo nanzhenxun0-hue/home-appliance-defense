@@ -444,14 +444,43 @@ export const drawFrame = (
     }
   }
 
-  // AOE rings (expand outward, fade out)
+  // AOE rings (expand outward, fade out) — full circle OR sector fan
   for (const ring of s.rings) {
     const a = Math.max(0, ring.life / ring.ml);
-    ctx.globalAlpha = a * 0.85;
     ctx.strokeStyle = ring.col;
     ctx.lineWidth = ring.thick ?? 2;
     ctx.shadowBlur = 10; ctx.shadowColor = ring.col;
-    ctx.beginPath(); ctx.arc(ring.x, ring.y, ring.r, 0, Math.PI * 2); ctx.stroke();
+
+    if (ring.arc !== undefined && ring.arcDir !== undefined) {
+      const halfArc = ring.arc / 2;
+      const a0 = ring.arcDir - halfArc;
+      const a1 = ring.arcDir + halfArc;
+      // Low-alpha filled sector (fan flash)
+      ctx.globalAlpha = a * 0.18;
+      ctx.fillStyle = ring.col;
+      ctx.beginPath();
+      ctx.moveTo(ring.x, ring.y);
+      ctx.arc(ring.x, ring.y, ring.r, a0, a1);
+      ctx.closePath();
+      ctx.fill();
+      // Arc leading edge
+      ctx.globalAlpha = a * 0.85;
+      ctx.beginPath();
+      ctx.arc(ring.x, ring.y, ring.r, a0, a1);
+      ctx.stroke();
+      // Two radial edge lines for crisp fan shape
+      ctx.globalAlpha = a * 0.38;
+      ctx.lineWidth = (ring.thick ?? 2) * 0.55;
+      ctx.beginPath();
+      ctx.moveTo(ring.x, ring.y);
+      ctx.lineTo(ring.x + Math.cos(a0) * ring.r, ring.y + Math.sin(a0) * ring.r);
+      ctx.moveTo(ring.x, ring.y);
+      ctx.lineTo(ring.x + Math.cos(a1) * ring.r, ring.y + Math.sin(a1) * ring.r);
+      ctx.stroke();
+    } else {
+      ctx.globalAlpha = a * 0.85;
+      ctx.beginPath(); ctx.arc(ring.x, ring.y, ring.r, 0, Math.PI * 2); ctx.stroke();
+    }
     ctx.shadowBlur = 0;
   }
   ctx.globalAlpha = 1;
