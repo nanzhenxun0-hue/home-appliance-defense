@@ -133,7 +133,7 @@ const CampaignCodeScreen = ({
       setResult({ ok: true, msg: res.reward.desc === '管理者モード有効化' ? '🛡️ 管理者モードを有効化しました' : `✅ コード「${input.trim().toUpperCase()}」を使用しました！`, reward: res.reward });
       setInput('');
     } else {
-      setResult({ ok: false, msg: res.error });
+      setResult({ ok: false, msg: (res as { ok: false; error: string }).error });
     }
   };
 

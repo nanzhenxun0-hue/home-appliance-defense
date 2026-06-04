@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import bgHome from '@/assets/bg-home.jpg';
 import logoImg from '@/assets/logo.png';
 import { APP_VERSION } from '@/game/patchNotes';
+import AudioSettings from '@/components/AudioSettings';
 
 interface HomeScreenProps {
   onPlay: () => void;
@@ -23,6 +24,7 @@ const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, o
     <div className="absolute top-2 right-3 z-20 text-[10px] font-bold text-purple-300/80 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30">
       {APP_VERSION}
     </div>
+    <AudioSettings className="absolute top-2 left-3 z-20" />
     <div className="absolute inset-0 z-0">
       <img src={bgHome} alt="" className="w-full h-full object-cover opacity-40" />
       <div className="absolute inset-0 bg-background/70" />

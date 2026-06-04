@@ -6,6 +6,7 @@ import { drawFrame } from '@/game/renderer';
 import type { DifficultyKey, TowerID, UIState, GameState, AreaKey } from '@/game/types';
 import { WAVE_VOLT_REWARD, RARITY_COLOR } from '@/game/types';
 import { useSound } from '@/hooks/useSound';
+import { useBGM } from '@/hooks/useBGM';
 import { useHighScore } from '@/hooks/useHighScore';
 import HUD from '@/components/game/HUD';
 import UpgradeWindow from '@/components/game/UpgradeWindow';
@@ -46,6 +47,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
   const autoWaveRef = useRef(false);
 
   const { play: playSound, init: initSound } = useSound();
+  const bgm = useBGM();
   const { addScore } = useHighScore();
 
   useEffect(() => { pmRef.current = placeMode; }, [placeMode]);
@@ -120,8 +122,17 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
     if (s.waveActive || (!s.endless && s.wave >= waves.length)) return;
     s.spawnQ = buildQ(s.wave, diff, area);
     s.waveT = 0; s.powerT = 0; s.wave++; s.waveActive = true;
-    playSound('wave_start');
-    setWaveAnnounce(`Wave ${s.wave}`);
+    // Boss wave detection: final wave (non-endless) or every 10th in endless
+    const isBoss = (!s.endless && s.wave === waves.length) || (s.endless && s.wave > 0 && s.wave % 10 === 0);
+    if (isBoss) {
+      playSound('boss_warn');
+      bgm.play('boss');
+      setWaveAnnounce(`⚠ BOSS WAVE ${s.wave}`);
+    } else {
+      playSound('wave_start');
+      if (bgm.current === 'boss') bgm.play('battle');
+      setWaveAnnounce(`Wave ${s.wave}`);
+    }
     setTimeout(() => setWaveAnnounce(null), 1500);
   };
 
@@ -140,6 +151,8 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
     if (prevWaveActive.current && !ui.wActive && !ui.over && !ui.win && ui.wave > 0) {
       const reward = WAVE_VOLT_REWARD(ui.wave);
       onVoltEarned?.(reward);
+      playSound('wave_clear');
+      playSound('coin');
       if (diff === 'endless') onEndlessMilestone?.(ui.wave);
       if (autoWaveRef.current) {
         const isEndless = diff === 'endless';
@@ -150,12 +163,24 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
     prevWaveActive.current = ui.wActive;
   }, [ui.wActive, ui.wave, ui.over, ui.win, onVoltEarned, onEndlessMilestone, diff]);
 
+  // Low HP danger heartbeat
+  const lastDangerT = useRef(0);
+  useEffect(() => {
+    if (ui.wActive && ui.baseHP > 0 && ui.baseHP / ui.maxHP < 0.25) {
+      const now = Date.now();
+      if (now - lastDangerT.current > 1200) {
+        lastDangerT.current = now;
+        playSound('danger');
+      }
+    }
+  }, [ui.baseHP, ui.maxHP, ui.wActive]);
+
   useEffect(() => {
     if ((ui.over || ui.win) && !scoreSaved.current) {
       scoreSaved.current = true;
       addScore({ diff, wave: ui.wave, won: ui.win, date: new Date().toLocaleDateString('ja-JP'), power: ui.power, area });
       playSound(ui.win ? 'victory' : 'game_over');
-      if (ui.win) onWin?.(area);
+      if (ui.win) { bgm.play('victory'); onWin?.(area); }
     }
   }, [ui.over, ui.win]);
 
@@ -251,7 +276,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
         <div className="flex gap-1 items-end justify-center overflow-x-auto">
           {/* Ult button */}
           <button
-            onClick={() => { fireUlt(gs.current); playSound('wave_start'); }}
+            onClick={() => { fireUlt(gs.current); playSound('ult_fire'); }}
             disabled={ui.ultGauge < 100}
             className="flex flex-col items-center px-1.5 py-1 rounded-lg transition-all min-w-[48px] relative"
             style={{

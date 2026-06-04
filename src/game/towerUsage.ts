@@ -146,4 +146,5 @@ export const TOWER_USAGE: Record<TowerID, TowerUsage> = {
   quantumchip: { placement: '最終ライン。確率即消滅でボス特攻。',           synergy: 'バッテリー・ソーラーで電力確保必須。',                       tips: 'Lv3で対ボス即消滅UP。最強の保険。' },
   promo_starter: { placement: '初心者の中央拠点。電力+2と周囲バフを兼任。', synergy: '攻撃役の隣に置くと全体ATK+10%。', tips: 'チュートリアル修了で1体プレゼント。序盤の相棒。' },
   promo_endless: { placement: '密集ポイント。全方向の波紋AOEで殲滅。',     synergy: '加速バフ系（ルーター/コーヒー）で発生間隔を縮める。',  tips: 'エンドレス100W突破の証。所持＝伝説。' },
+  tv:            { placement: '視界の利く中央。広範囲スキャンで全体バフ。',  synergy: '攻撃ユニット密集地で発動率最大化。',                        tips: '全エリア極悪クリアの証。チーム全体ATK+15%。' },
 };

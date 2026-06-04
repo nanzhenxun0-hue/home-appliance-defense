@@ -55,11 +55,10 @@ const Index = () => {
   }, [gacha]);
 
   useEffect(() => {
-    if (screen === 'game') {
-      bgm.play('battle');
-    } else {
-      bgm.play('home');
-    }
+    if (screen === 'game') bgm.play('battle');
+    else if (screen === 'tutorial') bgm.play('tutorial');
+    else if (screen === 'gacha') bgm.play('gacha');
+    else bgm.play('home');
   }, [screen]);
 
   const handleScreenChange = (s: Screen) => {
