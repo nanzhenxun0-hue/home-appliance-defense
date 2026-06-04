@@ -6,6 +6,7 @@ import { drawFrame } from '@/game/renderer';
 import type { DifficultyKey, TowerID, UIState, GameState, AreaKey } from '@/game/types';
 import { WAVE_VOLT_REWARD, RARITY_COLOR } from '@/game/types';
 import { useSound } from '@/hooks/useSound';
+import { useBGM } from '@/hooks/useBGM';
 import { useHighScore } from '@/hooks/useHighScore';
 import HUD from '@/components/game/HUD';
 import UpgradeWindow from '@/components/game/UpgradeWindow';
@@ -46,6 +47,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
   const autoWaveRef = useRef(false);
 
   const { play: playSound, init: initSound } = useSound();
+  const bgm = useBGM();
   const { addScore } = useHighScore();
 
   useEffect(() => { pmRef.current = placeMode; }, [placeMode]);
