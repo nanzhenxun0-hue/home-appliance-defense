@@ -122,8 +122,17 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
     if (s.waveActive || (!s.endless && s.wave >= waves.length)) return;
     s.spawnQ = buildQ(s.wave, diff, area);
     s.waveT = 0; s.powerT = 0; s.wave++; s.waveActive = true;
-    playSound('wave_start');
-    setWaveAnnounce(`Wave ${s.wave}`);
+    // Boss wave detection: final wave (non-endless) or every 10th in endless
+    const isBoss = (!s.endless && s.wave === waves.length) || (s.endless && s.wave > 0 && s.wave % 10 === 0);
+    if (isBoss) {
+      playSound('boss_warn');
+      bgm.play('boss');
+      setWaveAnnounce(`⚠ BOSS WAVE ${s.wave}`);
+    } else {
+      playSound('wave_start');
+      if (bgm.current === 'boss') bgm.play('battle');
+      setWaveAnnounce(`Wave ${s.wave}`);
+    }
     setTimeout(() => setWaveAnnounce(null), 1500);
   };
 
