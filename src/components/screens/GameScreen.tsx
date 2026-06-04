@@ -151,6 +151,8 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
     if (prevWaveActive.current && !ui.wActive && !ui.over && !ui.win && ui.wave > 0) {
       const reward = WAVE_VOLT_REWARD(ui.wave);
       onVoltEarned?.(reward);
+      playSound('wave_clear');
+      playSound('coin');
       if (diff === 'endless') onEndlessMilestone?.(ui.wave);
       if (autoWaveRef.current) {
         const isEndless = diff === 'endless';
@@ -161,12 +163,24 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
     prevWaveActive.current = ui.wActive;
   }, [ui.wActive, ui.wave, ui.over, ui.win, onVoltEarned, onEndlessMilestone, diff]);
 
+  // Low HP danger heartbeat
+  const lastDangerT = useRef(0);
+  useEffect(() => {
+    if (ui.wActive && ui.baseHP > 0 && ui.baseHP / ui.maxHP < 0.25) {
+      const now = Date.now();
+      if (now - lastDangerT.current > 1200) {
+        lastDangerT.current = now;
+        playSound('danger');
+      }
+    }
+  }, [ui.baseHP, ui.maxHP, ui.wActive]);
+
   useEffect(() => {
     if ((ui.over || ui.win) && !scoreSaved.current) {
       scoreSaved.current = true;
       addScore({ diff, wave: ui.wave, won: ui.win, date: new Date().toLocaleDateString('ja-JP'), power: ui.power, area });
       playSound(ui.win ? 'victory' : 'game_over');
-      if (ui.win) onWin?.(area);
+      if (ui.win) { bgm.play('victory'); onWin?.(area); }
     }
   }, [ui.over, ui.win]);
 
