@@ -276,7 +276,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
         <div className="flex gap-1 items-end justify-center overflow-x-auto">
           {/* Ult button */}
           <button
-            onClick={() => { fireUlt(gs.current); playSound('wave_start'); }}
+            onClick={() => { fireUlt(gs.current); playSound('ult_fire'); }}
             disabled={ui.ultGauge < 100}
             className="flex flex-col items-center px-1.5 py-1 rounded-lg transition-all min-w-[48px] relative"
             style={{
