@@ -86,25 +86,62 @@ const TONES: Record<SoundName, Tone[]> = {
 
 // Singleton
 let ctxSingleton: AudioContext | null = null;
+let analyserSingleton: AnalyserNode | null = null;
+let masterGain: GainNode | null = null;
 const ENABLED_KEY = 'kaden-td-sfx-enabled';
 let enabled = typeof localStorage !== 'undefined' ? localStorage.getItem(ENABLED_KEY) !== '0' : true;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
 
+// Onomatopoeia / sound-event bus
+export interface SoundEvent { id: number; name: SoundName; t: number }
+const eventListeners = new Set<(e: SoundEvent) => void>();
+let eventCounter = 0;
+const emitSoundEvent = (name: SoundName) => {
+  const e: SoundEvent = { id: ++eventCounter, name, t: performance.now() };
+  eventListeners.forEach(l => l(e));
+};
+
+export const subscribeSoundEvents = (cb: (e: SoundEvent) => void) => {
+  eventListeners.add(cb);
+  return () => { eventListeners.delete(cb); };
+};
+
+export const getSharedAnalyser = (): AnalyserNode | null => {
+  if (typeof window === 'undefined') return null;
+  if (!ctxSingleton) return null;
+  return analyserSingleton;
+};
+
 const getCtx = () => {
-  if (!ctxSingleton) ctxSingleton = new AudioContext();
+  if (!ctxSingleton) {
+    ctxSingleton = new AudioContext();
+    masterGain = ctxSingleton.createGain();
+    masterGain.gain.value = 1;
+    analyserSingleton = ctxSingleton.createAnalyser();
+    analyserSingleton.fftSize = 256;
+    analyserSingleton.smoothingTimeConstant = 0.75;
+    masterGain.connect(analyserSingleton);
+    analyserSingleton.connect(ctxSingleton.destination);
+  }
   if (ctxSingleton.state === 'suspended') ctxSingleton.resume();
   return ctxSingleton;
+};
+
+export const getMasterNode = (): AudioNode | null => {
+  getCtx();
+  return masterGain;
 };
 
 const playSound = (name: SoundName) => {
   if (!enabled) return;
   try {
     const ctx = getCtx();
+    const dest = masterGain ?? ctx.destination;
     for (const tone of TONES[name]) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
+      osc.connect(gain); gain.connect(dest);
       const start = ctx.currentTime + (tone.delay || 0);
       osc.type = tone.type;
       osc.frequency.setValueAtTime(tone.freq, start);
@@ -114,6 +151,7 @@ const playSound = (name: SoundName) => {
       osc.start(start);
       osc.stop(start + tone.dur + 0.01);
     }
+    emitSoundEvent(name);
   } catch {}
 };
 
