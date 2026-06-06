@@ -206,6 +206,7 @@ const RENDERERS: Record<Exclude<BGMType, 'none'>, (ctx: AudioContext) => AudioBu
 // ---------- Singleton state ----------
 let ctxSingleton: AudioContext | null = null;
 let masterGain: GainNode | null = null;
+let bgmAnalyser: AnalyserNode | null = null;
 let currentTrack: BGMType = 'none';
 let currentNodes: BGMNodes | null = null;
 const bufferCache = new Map<BGMType, AudioBuffer>();
@@ -214,12 +215,18 @@ let enabled = typeof localStorage !== 'undefined' ? localStorage.getItem(ENABLED
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
 
+export const getBGMAnalyser = (): AnalyserNode | null => bgmAnalyser;
+
 const getCtx = () => {
   if (!ctxSingleton) {
     ctxSingleton = new AudioContext();
     masterGain = ctxSingleton.createGain();
     masterGain.gain.value = 0.7;
-    masterGain.connect(ctxSingleton.destination);
+    bgmAnalyser = ctxSingleton.createAnalyser();
+    bgmAnalyser.fftSize = 256;
+    bgmAnalyser.smoothingTimeConstant = 0.8;
+    masterGain.connect(bgmAnalyser);
+    bgmAnalyser.connect(ctxSingleton.destination);
   }
   if (ctxSingleton.state === 'suspended') ctxSingleton.resume();
   return ctxSingleton;
