@@ -10,7 +10,7 @@ interface CampaignCodeScreenProps {
   codes: CampaignCode[];
   redeemed: string[];
   onRedeem: (code: string) => { ok: true; reward: CodeReward } | { ok: false; error: string };
-  onCreateCode: (code: string, reward: CodeReward) => boolean;
+  onCreateCode: (code: string, reward: CodeReward) => boolean | Promise<boolean>;
   onDeleteCode: (code: string) => void;
   onDeactivateAdmin: () => void;
   onRewardApply: (reward: CodeReward) => void;
@@ -19,7 +19,7 @@ interface CampaignCodeScreenProps {
 
 const ALL_TOWERS = Object.keys(TDEFS) as TowerID[];
 
-const AdminCodeForm = ({ onCreateCode }: { onCreateCode: (code: string, reward: CodeReward) => boolean }) => {
+const AdminCodeForm = ({ onCreateCode }: { onCreateCode: (code: string, reward: CodeReward) => boolean | Promise<boolean> }) => {
   const [code, setCode] = useState('');
   const [volts, setVolts] = useState('');
   const [pulls, setPulls] = useState('');
