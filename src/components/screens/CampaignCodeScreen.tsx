@@ -26,19 +26,20 @@ const AdminCodeForm = ({ onCreateCode }: { onCreateCode: (code: string, reward: 
   const [desc, setDesc] = useState('');
   const [msg, setMsg] = useState('');
 
-  const submit = () => {
+  const submit = async () => {
     if (!code.trim() || !desc.trim()) { setMsg('コードと説明は必須です。'); return; }
     const reward: CodeReward = {
       desc,
       ...(volts ? { volts: Number(volts) } : {}),
       ...(pulls ? { pulls: Number(pulls) } : {}),
     };
-    const ok = onCreateCode(code, reward);
+    setMsg('⏳ 同期中…');
+    const ok = await onCreateCode(code, reward);
     if (ok) {
-      setMsg(`✅ コード「${code.toUpperCase()}」を作成しました！`);
+      setMsg(`✅ コード「${code.toUpperCase()}」を全サーバーに公開しました！`);
       setCode(''); setVolts(''); setPulls(''); setDesc('');
     } else {
-      setMsg('❌ そのコードは既に存在します。');
+      setMsg('❌ 作成に失敗しました（重複/通信エラー）。');
     }
   };
 
