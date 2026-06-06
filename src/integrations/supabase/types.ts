@@ -14,7 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      campaign_codes: {
+        Row: {
+          code: string
+          created_at: string
+          reward: Json
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          reward: Json
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          reward?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
