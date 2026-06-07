@@ -207,9 +207,10 @@ const CampaignCodeScreen = ({
                 style={{ background: result.ok ? 'rgba(74,222,128,0.1)' : 'rgba(248,113,113,0.1)', border: `1px solid ${result.ok ? '#4ade8055' : '#f8717155'}`, color: result.ok ? '#4ade80' : '#f87171' }}>
                 {result.msg}
                 {result.ok && result.reward && (
-                  <div className="flex gap-3 justify-center mt-1.5">
+                  <div className="flex gap-3 justify-center mt-1.5 flex-wrap">
                     {result.reward.volts && <span className="text-yellow-300 text-xs">⚡ +{result.reward.volts}V</span>}
                     {result.reward.pulls && <span className="text-blue-300 text-xs">🎰 +{result.reward.pulls}回</span>}
+                    {result.reward.unit && <span className="text-pink-300 text-xs">🎁 {TDEFS[result.reward.unit]?.n ?? result.reward.unit} 入手！</span>}
                   </div>
                 )}
               </motion.div>
