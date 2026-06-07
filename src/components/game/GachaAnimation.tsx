@@ -4,6 +4,7 @@ import type { TowerID, Rarity } from '@/game/types';
 import { RARITY_COLOR, RARITY_LABEL, OX_RAINBOW, OX_RAINBOW_STOPS, PROMO_GRADIENT } from '@/game/types';
 import { TDEFS } from '@/game/constants';
 import ScreenCrackEffect from './ScreenCrackEffect';
+import CharIcon from '@/components/CharIcon';
 
 type Phase = 'idle' | 'truck' | 'unbox' | 'reveal' | 'done';
 
