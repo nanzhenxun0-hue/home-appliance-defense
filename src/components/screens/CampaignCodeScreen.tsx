@@ -23,6 +23,7 @@ const AdminCodeForm = ({ onCreateCode }: { onCreateCode: (code: string, reward: 
   const [code, setCode] = useState('');
   const [volts, setVolts] = useState('');
   const [pulls, setPulls] = useState('');
+  const [unit, setUnit] = useState<TowerID | ''>('');
   const [desc, setDesc] = useState('');
   const [msg, setMsg] = useState('');
 
@@ -32,22 +33,23 @@ const AdminCodeForm = ({ onCreateCode }: { onCreateCode: (code: string, reward: 
       desc,
       ...(volts ? { volts: Number(volts) } : {}),
       ...(pulls ? { pulls: Number(pulls) } : {}),
+      ...(unit ? { unit: unit as TowerID } : {}),
     };
     setMsg('⏳ 同期中…');
     const ok = await onCreateCode(code, reward);
     if (ok) {
       setMsg(`✅ コード「${code.toUpperCase()}」を全サーバーに公開しました！`);
-      setCode(''); setVolts(''); setPulls(''); setDesc('');
+      setCode(''); setVolts(''); setPulls(''); setUnit(''); setDesc('');
     } else {
       setMsg('❌ 作成に失敗しました（重複/通信エラー）。');
     }
   };
 
   return (
-    <div className="glass-panel p-3 rounded-xl flex flex-col gap-2">
-      <div className="text-xs font-bold text-purple-300">新規コード作成</div>
+    <div className="sf-hud-frame p-3 rounded-xl flex flex-col gap-2">
+      <div className="text-xs font-bold sf-chrome-text">▸ NEW CODE TRANSMISSION</div>
       <input
-        className="rounded-lg border border-purple-500/40 bg-background/60 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-purple-400"
+        className="rounded-lg border border-purple-500/40 bg-background/60 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-purple-400 font-mono tracking-widest"
         placeholder="コード名（英数字）" value={code}
         onChange={e => setCode(e.target.value.toUpperCase())}
         maxLength={20}
@@ -62,6 +64,17 @@ const AdminCodeForm = ({ onCreateCode }: { onCreateCode: (code: string, reward: 
         placeholder="ガチャ引き数（例: 10）" type="number" value={pulls}
         onChange={e => setPulls(e.target.value)}
       />
+      <select
+        className="rounded-lg border border-pink-500/40 bg-background/60 px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-pink-400"
+        value={unit}
+        onChange={e => setUnit(e.target.value as TowerID | '')}
+      >
+        <option value="">キャラ報酬（任意）— 選択しない</option>
+        {ALL_TOWERS.map(tid => {
+          const d = TDEFS[tid];
+          return <option key={tid} value={tid}>[{d.r}] {d.n}</option>;
+        })}
+      </select>
       <input
         className="rounded-lg border border-green-500/40 bg-background/60 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-green-400"
         placeholder="報酬説明（例: 夏のキャンペーン特典）" value={desc}
