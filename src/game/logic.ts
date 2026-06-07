@@ -696,8 +696,22 @@ export const tickGame = (s: GameState, dt: number): void => {
       else usbMode = 'bolt';
     }
 
-    const synFx2 = getSynergyEffects(s.team, cell.tid); void synFx2;
-    const synDmg_ = synDmg; // alias for clarity within injected block (existing variable below)
+    const synFx = getSynergyEffects(s.team, cell.tid);
+    const placedTypes = [...new Set(Object.values(s.grid).map(c => c.tid))];
+    const chainFx = getChainComboEffects(placedTypes, cell.tid);
+    let synDmg = Math.ceil(S.dmg * synFx.dmgMult * chainFx.dmgMult);
+    const synSpd = S.spd * synFx.spdMult * chainFx.spdMult;
+
+    // USBコード: モード別に威力補正
+    if (cell.tid === 'usbcord') {
+      if (usbMode === 'fire') synDmg = Math.ceil(synDmg * 1.3);
+      else if (usbMode === 'beam') synDmg = Math.ceil(synDmg * 1.6);
+    }
+
+    s.timers[key] = (s.timers[key] || 0) - dt * towerSpeedMult;
+    if (s.timers[key] > 0) continue;
+    const [c, r] = key.split(',').map(Number);
+    const cx = c * CELL + CELL / 2, cy = r * CELL + CELL / 2, range = S.rng * CELL;
     let rm = 1;
       for (const [k2, c2] of Object.entries(s.grid)) {
         if (c2.tid !== 'router' && c2.tid !== 'theater' && c2.tid !== 'coffeemaker') continue;
