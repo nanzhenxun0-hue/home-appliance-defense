@@ -96,9 +96,10 @@ const AdminCodeList = ({ codes, redeemed, onDelete }: { codes: CampaignCode[]; r
           <div className="flex-1 min-w-0">
             <div className="text-xs font-bold text-yellow-300 font-mono">{c.code}</div>
             <div className="text-[10px] text-muted-foreground truncate">{c.reward.desc}</div>
-            <div className="text-[10px] flex gap-2 mt-0.5">
+            <div className="text-[10px] flex gap-2 mt-0.5 flex-wrap">
               {c.reward.volts && <span className="text-yellow-400">⚡ {c.reward.volts}V</span>}
               {c.reward.pulls && <span className="text-blue-400">🎰 {c.reward.pulls}回</span>}
+              {c.reward.unit && <span className="text-pink-400">🎁 {TDEFS[c.reward.unit]?.n ?? c.reward.unit}</span>}
               <span className={redeemed.includes(c.code) ? 'text-green-400' : 'text-muted-foreground'}>
                 {redeemed.includes(c.code) ? '使用済み(自分)' : '未使用'}
               </span>
