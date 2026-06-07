@@ -19,13 +19,16 @@ export const getEnabled = (grid: GameState['grid']): Set<string> => {
   for (const [k, c] of Object.entries(grid)) {
     if (!TDEFS[c.tid].req) en.add(k);
   }
+  // USBコード is a universal chain bridge — its presence satisfies any req.
+  const hasUsbcord = Object.entries(grid).some(([k, c]) => c.tid === 'usbcord' && en.has(k));
   let changed = true;
   while (changed) {
     changed = false;
     for (const [k, c] of Object.entries(grid)) {
       if (en.has(k)) continue;
       const req = TDEFS[c.tid].req;
-      if (req && Object.entries(grid).some(([k2, c2]) => c2.tid === req && en.has(k2))) {
+      if (!req) continue;
+      if (hasUsbcord || Object.entries(grid).some(([k2, c2]) => c2.tid === req && en.has(k2))) {
         en.add(k); changed = true;
       }
     }
@@ -39,7 +42,7 @@ export const findNearest = (key: string, grid: GameState['grid']): string | null
   if (!req) return null;
   let best: string | null = null, bd = Infinity;
   for (const [k, c] of Object.entries(grid)) {
-    if (c.tid !== req) continue;
+    if (c.tid !== req && c.tid !== 'usbcord') continue;
     const [c2, r2] = k.split(',').map(Number);
     const d = Math.hypot(c2 - c1, r2 - r1);
     if (d < bd) { bd = d; best = k; }
@@ -51,6 +54,7 @@ export const canPlace = (tid: TowerID, grid: GameState['grid']): boolean => {
   const req = TDEFS[tid].req;
   if (!req) return true;
   const en = getEnabled(grid);
+  if (Object.entries(grid).some(([k, c]) => c.tid === 'usbcord' && en.has(k))) return true;
   return Object.entries(grid).some(([k, c]) => c.tid === req && en.has(k));
 };
 

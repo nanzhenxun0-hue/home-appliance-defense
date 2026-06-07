@@ -35,7 +35,7 @@ export type TowerID =
   | 'robotarm'
   | 'quantumchip'
   // ── プロモ限定キャラ（ガチャ非対応） ──
-  | 'promo_starter' | 'promo_endless'
+  | 'promo_starter' | 'promo_endless' | 'usbcord'
   // ── OX レアリティ ──
   | 'tv';
 
