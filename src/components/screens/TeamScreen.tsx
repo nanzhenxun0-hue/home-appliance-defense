@@ -62,7 +62,7 @@ const TeamScreen = ({ owned, counts = {}, team, maxTeam, onToggle, onStart, onBa
                       border: `2px solid ${RARITY_COLOR[def.r]}66`,
                       boxShadow: `0 0 8px ${RARITY_COLOR[def.r]}33`,
                     }}>
-                    <span className="text-xl leading-none">{def.em}</span>
+                    <CharIcon tid={tid} size={26} />
                     <span className="text-[7px] font-black" style={{ color: RARITY_COLOR[def.r] }}>{def.r}</span>
                     <span className="text-[7px] text-foreground/60 leading-none">{def.n.slice(0, 3)}</span>
                   </motion.button>
