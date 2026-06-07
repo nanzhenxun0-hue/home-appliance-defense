@@ -680,16 +680,24 @@ export const tickGame = (s: GameState, dt: number): void => {
 
     if (!S.spd || !S.dmg) continue;
 
-    const synFx = getSynergyEffects(s.team, cell.tid);
-    const placedTypes = [...new Set(Object.values(s.grid).map(c => c.tid))];
-    const chainFx = getChainComboEffects(placedTypes, cell.tid);
-    const synDmg = Math.ceil(S.dmg * synFx.dmgMult * chainFx.dmgMult);
-    const synSpd = S.spd * synFx.spdMult * chainFx.spdMult;
+    // ── USBコード: PC系が場にいる時のみ攻撃。編成で属性が変わる ──
+    let usbMode: 'idle' | 'fire' | 'beam' | 'bolt' = 'idle';
+    if (cell.tid === 'usbcord') {
+      const placed = Object.values(s.grid).map(c => c.tid);
+      const PC_FAMILY: TowerID[] = ['superpc', 'gameconsole', 'robotarm', 'quantumchip'];
+      const KITCHEN: TowerID[] = ['kettle','toaster','microwave','oven','ihcooker','ricecooker','fryer','heater','waffleiron','blender','juicer','coffeemaker'];
+      const hasPC = placed.some(t => PC_FAMILY.includes(t));
+      if (!hasPC) {
+        s.timers[key] = 0.8; // idle: no PC linked, just support power
+        continue;
+      }
+      if (placed.includes('tv')) usbMode = 'beam';
+      else if (placed.filter(t => KITCHEN.includes(t)).length >= 2) usbMode = 'fire';
+      else usbMode = 'bolt';
+    }
 
-    s.timers[key] = (s.timers[key] || 0) - dt * towerSpeedMult;
-    if (s.timers[key] > 0) continue;
-    const [c, r] = key.split(',').map(Number);
-    const cx = c * CELL + CELL / 2, cy = r * CELL + CELL / 2, range = S.rng * CELL;
+    const synFx2 = getSynergyEffects(s.team, cell.tid); void synFx2;
+    const synDmg_ = synDmg; // alias for clarity within injected block (existing variable below)
     let rm = 1;
       for (const [k2, c2] of Object.entries(s.grid)) {
         if (c2.tid !== 'router' && c2.tid !== 'theater' && c2.tid !== 'coffeemaker') continue;
