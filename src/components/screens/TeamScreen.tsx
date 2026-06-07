@@ -147,7 +147,7 @@ const TeamScreen = ({ owned, counts = {}, team, maxTeam, onToggle, onStart, onBa
                       {hasSynergyPotential && (
                         <span className="absolute top-0.5 right-0.5 text-[7px] text-game-gold">🔗</span>
                       )}
-                      <span className="text-lg leading-none">{def.em}</span>
+                      <CharIcon tid={tid} size={24} />
                       <span className="text-[8px] font-bold text-foreground/80 truncate w-full text-center leading-none">{def.n}</span>
                       <div className="flex gap-0.5 text-[6px] mt-0.5 flex-wrap justify-center leading-none">
                         {S.dmg > 0 && <span className="text-yellow-400">⚔{S.dmg}</span>}
