@@ -4,6 +4,7 @@ import type { TowerID, Rarity } from '@/game/types';
 import { RARITY_COLOR, RARITY_LABEL, OX_RAINBOW, OX_RAINBOW_STOPS, PROMO_GRADIENT } from '@/game/types';
 import { TDEFS } from '@/game/constants';
 import ScreenCrackEffect from './ScreenCrackEffect';
+import CharIcon from '@/components/CharIcon';
 
 type Phase = 'idle' | 'truck' | 'unbox' | 'reveal' | 'done';
 
@@ -444,7 +445,7 @@ const GachaAnimation = ({ results, onComplete, playSound, isNew }: GachaAnimatio
                               style={{ background: 'linear-gradient(135deg, rgba(0,229,255,0.15), transparent)' }} />
                           )}
 
-                          <span className="text-xl relative z-10">{def.em}</span>
+                          <CharIcon tid={tid} size={28} className="relative z-10" />
 
                           {/* Rarity label */}
                           {isOXCard ? (

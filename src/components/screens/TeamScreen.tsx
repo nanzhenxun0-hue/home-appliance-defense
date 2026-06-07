@@ -3,6 +3,7 @@ import type { TowerID } from '@/game/types';
 import { RARITY_COLOR, RARITY_ORDER } from '@/game/types';
 import { TDEFS, st } from '@/game/constants';
 import { getActiveSynergies, SYNERGIES } from '@/game/synergy';
+import CharIcon from '@/components/CharIcon';
 
 interface TeamScreenProps {
   owned: TowerID[];
@@ -61,7 +62,7 @@ const TeamScreen = ({ owned, counts = {}, team, maxTeam, onToggle, onStart, onBa
                       border: `2px solid ${RARITY_COLOR[def.r]}66`,
                       boxShadow: `0 0 8px ${RARITY_COLOR[def.r]}33`,
                     }}>
-                    <span className="text-xl leading-none">{def.em}</span>
+                    <CharIcon tid={tid} size={26} />
                     <span className="text-[7px] font-black" style={{ color: RARITY_COLOR[def.r] }}>{def.r}</span>
                     <span className="text-[7px] text-foreground/60 leading-none">{def.n.slice(0, 3)}</span>
                   </motion.button>
@@ -146,7 +147,7 @@ const TeamScreen = ({ owned, counts = {}, team, maxTeam, onToggle, onStart, onBa
                       {hasSynergyPotential && (
                         <span className="absolute top-0.5 right-0.5 text-[7px] text-game-gold">🔗</span>
                       )}
-                      <span className="text-lg leading-none">{def.em}</span>
+                      <CharIcon tid={tid} size={24} />
                       <span className="text-[8px] font-bold text-foreground/80 truncate w-full text-center leading-none">{def.n}</span>
                       <div className="flex gap-0.5 text-[6px] mt-0.5 flex-wrap justify-center leading-none">
                         {S.dmg > 0 && <span className="text-yellow-400">⚔{S.dmg}</span>}

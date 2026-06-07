@@ -23,6 +23,7 @@ const AdminCodeForm = ({ onCreateCode }: { onCreateCode: (code: string, reward: 
   const [code, setCode] = useState('');
   const [volts, setVolts] = useState('');
   const [pulls, setPulls] = useState('');
+  const [unit, setUnit] = useState<TowerID | ''>('');
   const [desc, setDesc] = useState('');
   const [msg, setMsg] = useState('');
 
@@ -32,22 +33,23 @@ const AdminCodeForm = ({ onCreateCode }: { onCreateCode: (code: string, reward: 
       desc,
       ...(volts ? { volts: Number(volts) } : {}),
       ...(pulls ? { pulls: Number(pulls) } : {}),
+      ...(unit ? { unit: unit as TowerID } : {}),
     };
     setMsg('⏳ 同期中…');
     const ok = await onCreateCode(code, reward);
     if (ok) {
       setMsg(`✅ コード「${code.toUpperCase()}」を全サーバーに公開しました！`);
-      setCode(''); setVolts(''); setPulls(''); setDesc('');
+      setCode(''); setVolts(''); setPulls(''); setUnit(''); setDesc('');
     } else {
       setMsg('❌ 作成に失敗しました（重複/通信エラー）。');
     }
   };
 
   return (
-    <div className="glass-panel p-3 rounded-xl flex flex-col gap-2">
-      <div className="text-xs font-bold text-purple-300">新規コード作成</div>
+    <div className="sf-hud-frame p-3 rounded-xl flex flex-col gap-2">
+      <div className="text-xs font-bold sf-chrome-text">▸ NEW CODE TRANSMISSION</div>
       <input
-        className="rounded-lg border border-purple-500/40 bg-background/60 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-purple-400"
+        className="rounded-lg border border-purple-500/40 bg-background/60 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-purple-400 font-mono tracking-widest"
         placeholder="コード名（英数字）" value={code}
         onChange={e => setCode(e.target.value.toUpperCase())}
         maxLength={20}
@@ -62,6 +64,17 @@ const AdminCodeForm = ({ onCreateCode }: { onCreateCode: (code: string, reward: 
         placeholder="ガチャ引き数（例: 10）" type="number" value={pulls}
         onChange={e => setPulls(e.target.value)}
       />
+      <select
+        className="rounded-lg border border-pink-500/40 bg-background/60 px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-pink-400"
+        value={unit}
+        onChange={e => setUnit(e.target.value as TowerID | '')}
+      >
+        <option value="">キャラ報酬（任意）— 選択しない</option>
+        {ALL_TOWERS.map(tid => {
+          const d = TDEFS[tid];
+          return <option key={tid} value={tid}>[{d.r}] {d.n}</option>;
+        })}
+      </select>
       <input
         className="rounded-lg border border-green-500/40 bg-background/60 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-green-400"
         placeholder="報酬説明（例: 夏のキャンペーン特典）" value={desc}
@@ -83,9 +96,10 @@ const AdminCodeList = ({ codes, redeemed, onDelete }: { codes: CampaignCode[]; r
           <div className="flex-1 min-w-0">
             <div className="text-xs font-bold text-yellow-300 font-mono">{c.code}</div>
             <div className="text-[10px] text-muted-foreground truncate">{c.reward.desc}</div>
-            <div className="text-[10px] flex gap-2 mt-0.5">
+            <div className="text-[10px] flex gap-2 mt-0.5 flex-wrap">
               {c.reward.volts && <span className="text-yellow-400">⚡ {c.reward.volts}V</span>}
               {c.reward.pulls && <span className="text-blue-400">🎰 {c.reward.pulls}回</span>}
+              {c.reward.unit && <span className="text-pink-400">🎁 {TDEFS[c.reward.unit]?.n ?? c.reward.unit}</span>}
               <span className={redeemed.includes(c.code) ? 'text-green-400' : 'text-muted-foreground'}>
                 {redeemed.includes(c.code) ? '使用済み(自分)' : '未使用'}
               </span>
@@ -147,11 +161,8 @@ const CampaignCodeScreen = ({
         {/* Header */}
         <div className="flex items-center justify-between pt-1">
           <button onClick={onBack} className="game-btn-ghost text-sm">← 戻る</button>
-          <h1 className="text-base font-black" style={{
-            background: isAdmin ? 'linear-gradient(90deg,#ffd700,#ff4081,#7c4dff)' : 'linear-gradient(90deg,#a855f7,#6366f1)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          }}>
-            {isAdmin ? '🛡️ 管理者パネル' : '🎟️ キャンペーンコード'}
+          <h1 className="text-base font-black sf-chrome-text">
+            {isAdmin ? '◤ ADMIN PANEL ◢' : '◤ CAMPAIGN CODE ◢'}
           </h1>
           <div className="w-12" />
         </div>
@@ -170,8 +181,8 @@ const CampaignCodeScreen = ({
         )}
 
         {/* Code input */}
-        <div className="glass-panel rounded-xl p-4 flex flex-col gap-3">
-          <div className="text-xs font-bold text-muted-foreground">コードを入力してください</div>
+        <div className="sf-hud-frame rounded-xl p-4 flex flex-col gap-3 sf-scanlines">
+          <div className="text-[10px] font-bold sf-chrome-text tracking-[0.2em]">▸ ENTER ACCESS CODE</div>
           <div className="flex gap-2">
             <input
               className="flex-1 rounded-lg border border-purple-500/40 bg-background/60 px-3 py-2 text-sm font-mono text-foreground uppercase placeholder:text-muted-foreground focus:outline-none focus:border-purple-400 tracking-widest"
@@ -193,9 +204,10 @@ const CampaignCodeScreen = ({
                 style={{ background: result.ok ? 'rgba(74,222,128,0.1)' : 'rgba(248,113,113,0.1)', border: `1px solid ${result.ok ? '#4ade8055' : '#f8717155'}`, color: result.ok ? '#4ade80' : '#f87171' }}>
                 {result.msg}
                 {result.ok && result.reward && (
-                  <div className="flex gap-3 justify-center mt-1.5">
+                  <div className="flex gap-3 justify-center mt-1.5 flex-wrap">
                     {result.reward.volts && <span className="text-yellow-300 text-xs">⚡ +{result.reward.volts}V</span>}
                     {result.reward.pulls && <span className="text-blue-300 text-xs">🎰 +{result.reward.pulls}回</span>}
+                    {result.reward.unit && <span className="text-pink-300 text-xs">🎁 {TDEFS[result.reward.unit]?.n ?? result.reward.unit} 入手！</span>}
                   </div>
                 )}
               </motion.div>

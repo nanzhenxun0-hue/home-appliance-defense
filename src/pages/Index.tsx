@@ -72,6 +72,10 @@ const Index = () => {
     if (reward.pulls) {
       for (let i = 0; i < reward.pulls; i++) gacha.addVolts(150);
     }
+    if (reward.unit) {
+      gacha.grantUnit(reward.unit);
+      setPromoReward(reward.unit);
+    }
   }, [gacha]);
 
   if (screen === 'tutorial') {
