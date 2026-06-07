@@ -161,11 +161,8 @@ const CampaignCodeScreen = ({
         {/* Header */}
         <div className="flex items-center justify-between pt-1">
           <button onClick={onBack} className="game-btn-ghost text-sm">← 戻る</button>
-          <h1 className="text-base font-black" style={{
-            background: isAdmin ? 'linear-gradient(90deg,#ffd700,#ff4081,#7c4dff)' : 'linear-gradient(90deg,#a855f7,#6366f1)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          }}>
-            {isAdmin ? '🛡️ 管理者パネル' : '🎟️ キャンペーンコード'}
+          <h1 className="text-base font-black sf-chrome-text">
+            {isAdmin ? '◤ ADMIN PANEL ◢' : '◤ CAMPAIGN CODE ◢'}
           </h1>
           <div className="w-12" />
         </div>
