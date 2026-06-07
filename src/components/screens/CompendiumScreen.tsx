@@ -410,9 +410,11 @@ const CompendiumScreen = ({ owned, onBack }: Props) => {
                         border: `1px solid ${has ? RARITY_COLOR[r] + '66' : '#222'}`,
                         opacity: has ? 1 : 0.55,
                       }}>
-                      <span className="text-2xl mb-0.5" style={{ filter: has ? 'none' : 'grayscale(1) brightness(0.5)' }}>
-                        {has ? def.em : '❓'}
-                      </span>
+                      {has ? (
+                        <CharIcon tid={id} size={30} className="mb-0.5" />
+                      ) : (
+                        <span className="text-2xl mb-0.5" style={{ filter: 'grayscale(1) brightness(0.5)' }}>❓</span>
+                      )}
                       <span className="text-[8px] font-bold text-foreground/80 truncate w-full text-center">
                         {has ? def.n : '???'}
                       </span>
