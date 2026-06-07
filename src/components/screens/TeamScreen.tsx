@@ -3,6 +3,7 @@ import type { TowerID } from '@/game/types';
 import { RARITY_COLOR, RARITY_ORDER } from '@/game/types';
 import { TDEFS, st } from '@/game/constants';
 import { getActiveSynergies, SYNERGIES } from '@/game/synergy';
+import CharIcon from '@/components/CharIcon';
 
 interface TeamScreenProps {
   owned: TowerID[];
