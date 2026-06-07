@@ -181,8 +181,8 @@ const CampaignCodeScreen = ({
         )}
 
         {/* Code input */}
-        <div className="glass-panel rounded-xl p-4 flex flex-col gap-3">
-          <div className="text-xs font-bold text-muted-foreground">コードを入力してください</div>
+        <div className="sf-hud-frame rounded-xl p-4 flex flex-col gap-3 sf-scanlines">
+          <div className="text-[10px] font-bold sf-chrome-text tracking-[0.2em]">▸ ENTER ACCESS CODE</div>
           <div className="flex gap-2">
             <input
               className="flex-1 rounded-lg border border-purple-500/40 bg-background/60 px-3 py-2 text-sm font-mono text-foreground uppercase placeholder:text-muted-foreground focus:outline-none focus:border-purple-400 tracking-widest"
