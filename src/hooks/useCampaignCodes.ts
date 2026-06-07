@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { TowerID } from '@/game/types';
 
 const REDEEMED_KEY = 'kaden-td-redeemed-codes';
 const ADMIN_KEY    = 'kaden-td-admin-mode';
@@ -7,6 +8,7 @@ const ADMIN_KEY    = 'kaden-td-admin-mode';
 export interface CodeReward {
   volts?: number;
   pulls?: number;
+  unit?: TowerID;
   desc: string;
 }
 
