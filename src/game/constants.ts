@@ -103,6 +103,7 @@ export const TDEFS: Record<TowerID, TowerDef> = {
   // ── プロモ限定（チュートリアル/エンドレス報酬）──
   promo_starter:{ n:'プロト家電', em:'🎁', r:'P', rc:'#ff4081', baseCost:50, req:null, personality:'頼れる兄貴', quote:'「初心者を助けるために生まれた、特別な相棒だ。」', role:'限定／オールラウンダー', skillName:'スターターブースト', skillDesc:'設置だけで電力+2／周囲ATK+10%。チュートリアル修了の証。' },
   promo_endless:{ n:'∞マスター', em:'🏆', r:'P', rc:'#ff4081', baseCost:80, req:null, personality:'破壊神', quote:'「終わりなき戦いを制した者にのみ、力は宿る。」', role:'限定／殲滅特化', skillName:'インフィニットウェーブ', skillDesc:'波紋AOEで全方向攻撃。エンドレス100W突破の称号。' },
+  usbcord:      { n:'USBコード', em:'🔌', r:'P', rc:'#ff4081', baseCost:35, req:null, personality:'情報通', quote:'「俺はどんな家電にも繋がる。お前らの可能性、全部引き出してやるよ。」', role:'限定／ワイルドカード支援', skillName:'ユニバーサルリンク', skillDesc:'全家電のチェーン起点になれる支援型コード。PC系が場にいる時のみ攻撃発動。キッチン2体以上で炎弾／TV併設でビーム／その他で雷弾に変化。' },
 
   // ── v1.5 expansion: 20 new appliances ──
   // C
@@ -295,6 +296,11 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     {c:0,pg:0,pc:6,dmg:180,rng:4.2,spd:1.6,lbl:'∞マスター',eff:'全方向波紋AOE'},
     {c:200,pg:0,pc:8,dmg:300,rng:4.8,spd:2.0,lbl:'∞マスター零式',eff:'攻速・範囲UP'},
     {c:600,pg:0,pc:10,dmg:460,rng:5.5,spd:2.6,lbl:'∞マスターΩ',eff:'★無限波紋・全域壊滅',abilityUnlock:true},
+  ],
+  usbcord:[
+    {c:0,  pg:4, pc:0, dmg:18, rng:3.2, spd:1.4, lbl:'USBコード',     eff:'+4W／全家電と接続可'},
+    {c:80, pg:7, pc:0, dmg:30, rng:3.6, spd:1.7, lbl:'USB-C急速',     eff:'+7W／威力UP'},
+    {c:300,pg:12,pc:0, dmg:50, rng:4.0, spd:2.0, lbl:'Thunderbolt',  eff:'★+12W／編成で属性変化',abilityUnlock:true},
   ],
 };
 export const EDEFS: Record<EnemyType, EnemyDef> = {

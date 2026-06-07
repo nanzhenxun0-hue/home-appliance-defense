@@ -19,13 +19,16 @@ export const getEnabled = (grid: GameState['grid']): Set<string> => {
   for (const [k, c] of Object.entries(grid)) {
     if (!TDEFS[c.tid].req) en.add(k);
   }
+  // USBコード is a universal chain bridge — its presence satisfies any req.
+  const hasUsbcord = Object.entries(grid).some(([k, c]) => c.tid === 'usbcord' && en.has(k));
   let changed = true;
   while (changed) {
     changed = false;
     for (const [k, c] of Object.entries(grid)) {
       if (en.has(k)) continue;
       const req = TDEFS[c.tid].req;
-      if (req && Object.entries(grid).some(([k2, c2]) => c2.tid === req && en.has(k2))) {
+      if (!req) continue;
+      if (hasUsbcord || Object.entries(grid).some(([k2, c2]) => c2.tid === req && en.has(k2))) {
         en.add(k); changed = true;
       }
     }
@@ -39,7 +42,7 @@ export const findNearest = (key: string, grid: GameState['grid']): string | null
   if (!req) return null;
   let best: string | null = null, bd = Infinity;
   for (const [k, c] of Object.entries(grid)) {
-    if (c.tid !== req) continue;
+    if (c.tid !== req && c.tid !== 'usbcord') continue;
     const [c2, r2] = k.split(',').map(Number);
     const d = Math.hypot(c2 - c1, r2 - r1);
     if (d < bd) { bd = d; best = k; }
@@ -51,6 +54,7 @@ export const canPlace = (tid: TowerID, grid: GameState['grid']): boolean => {
   const req = TDEFS[tid].req;
   if (!req) return true;
   const en = getEnabled(grid);
+  if (Object.entries(grid).some(([k, c]) => c.tid === 'usbcord' && en.has(k))) return true;
   return Object.entries(grid).some(([k, c]) => c.tid === req && en.has(k));
 };
 
@@ -676,11 +680,33 @@ export const tickGame = (s: GameState, dt: number): void => {
 
     if (!S.spd || !S.dmg) continue;
 
+    // ── USBコード: PC系が場にいる時のみ攻撃。編成で属性が変わる ──
+    let usbMode: 'idle' | 'fire' | 'beam' | 'bolt' = 'idle';
+    if (cell.tid === 'usbcord') {
+      const placed = Object.values(s.grid).map(c => c.tid);
+      const PC_FAMILY: TowerID[] = ['superpc', 'gameconsole', 'robotarm', 'quantumchip'];
+      const KITCHEN: TowerID[] = ['kettle','toaster','microwave','oven','ihcooker','ricecooker','fryer','heater','waffleiron','blender','juicer','coffeemaker'];
+      const hasPC = placed.some(t => PC_FAMILY.includes(t));
+      if (!hasPC) {
+        s.timers[key] = 0.8; // idle: no PC linked, just support power
+        continue;
+      }
+      if (placed.includes('tv')) usbMode = 'beam';
+      else if (placed.filter(t => KITCHEN.includes(t)).length >= 2) usbMode = 'fire';
+      else usbMode = 'bolt';
+    }
+
     const synFx = getSynergyEffects(s.team, cell.tid);
     const placedTypes = [...new Set(Object.values(s.grid).map(c => c.tid))];
     const chainFx = getChainComboEffects(placedTypes, cell.tid);
-    const synDmg = Math.ceil(S.dmg * synFx.dmgMult * chainFx.dmgMult);
+    let synDmg = Math.ceil(S.dmg * synFx.dmgMult * chainFx.dmgMult);
     const synSpd = S.spd * synFx.spdMult * chainFx.spdMult;
+
+    // USBコード: モード別に威力補正
+    if (cell.tid === 'usbcord') {
+      if (usbMode === 'fire') synDmg = Math.ceil(synDmg * 1.3);
+      else if (usbMode === 'beam') synDmg = Math.ceil(synDmg * 1.6);
+    }
 
     s.timers[key] = (s.timers[key] || 0) - dt * towerSpeedMult;
     if (s.timers[key] > 0) continue;
@@ -728,6 +754,7 @@ export const tickGame = (s: GameState, dt: number): void => {
         toaster:'#ff8a65', dryer:'#ef9a9a', speaker:'#ce93d8', projector:'#ba68c8',
         tesla:'#7c4dff', ricecooker:'#f5f5f5', dishwasher:'#4dd0e1', oven:'#ff7043',
         coffeemaker:'#8d6e63', ihcooker:'#ffca28', tv:'#e040fb',
+        usbcord: usbMode === 'fire' ? '#ff5722' : usbMode === 'beam' ? '#e040fb' : '#00e5ff',
       };
       s.projs.push({ id: uid(), sx: cx, sy: cy, ex, ey, life: 0.18, col: projCol[cell.tid] || '#fff' });
       if (cell.tid === 'kettle' || cell.tid === 'microwave' || cell.tid === 'toaster' || cell.tid === 'dryer' || cell.tid === 'ricecooker' || cell.tid === 'oven' || cell.tid === 'ihcooker') {
@@ -735,6 +762,54 @@ export const tickGame = (s: GameState, dt: number): void => {
       }
       if (cell.tid === 'fridge' || cell.tid === 'aircon') tgt.frozen = 1.5;
       if ((cell.tid === 'speaker' && cell.lv >= 2) || cell.tid === 'dishwasher') tgt.frozen = 0.5;
+
+      // ── USBコード: モード別追加挙動 ──
+      if (cell.tid === 'usbcord') {
+        if (usbMode === 'fire') {
+          tgt.burning = 3; tgt.burnT = 0.4;
+          s.effs.push({ id: uid(), x: ex, y: ey - 8, txt: '🔥USB炎弾', life: 0.9, ml: 0.9, col: '#ff5722' });
+        } else if (usbMode === 'beam') {
+          // 貫通ビーム: 自分→ターゲット方向の直線上の敵に追撃
+          const dxB = ex - cx, dyB = ey - cy; const lenB = Math.hypot(dxB, dyB) || 1;
+          const nxB = dxB / lenB, nyB = dyB / lenB;
+          const farX = cx + nxB * range, farY = cy + nyB * range;
+          for (const e2 of s.enemies) {
+            if (dead.has(e2.id) || e2.id === tgt.id) continue;
+            const { x: e2x, y: e2y } = pxy(s.path, e2.pi, e2.pr);
+            // 点と線分の距離
+            const vx = e2x - cx, vy = e2y - cy;
+            const t = Math.max(0, Math.min(1, (vx * nxB + vy * nyB) / range));
+            const proj_x = cx + nxB * range * t, proj_y = cy + nyB * range * t;
+            if (Math.hypot(proj_x - e2x, proj_y - e2y) < CELL * 0.55) {
+              e2.hp -= Math.ceil(synDmg * 0.8);
+              e2.hitFlash = 0.1;
+              s.projs.push({ id: uid(), sx: cx, sy: cy, ex: e2x, ey: e2y, life: 0.18, col: '#e040fb' });
+              if (e2.hp <= 0) dead.add(e2.id);
+            }
+          }
+          s.projs.push({ id: uid(), sx: cx, sy: cy, ex: farX, ey: farY, life: 0.25, col: '#ff80ff' });
+          s.rings.push({ id: uid(), x: cx, y: cy, r: CELL * 0.3, maxR: CELL * 0.9, col: '#e040fb', life: 0.32, ml: 0.32, thick: 2 });
+          s.effs.push({ id: uid(), x: ex, y: ey - 8, txt: '⚡USBビーム', life: 1.0, ml: 1.0, col: '#e040fb' });
+        } else {
+          // bolt: 小範囲チェーン1段
+          let nb: Enemy | null = null; let nbD = Infinity;
+          const { x: tx0, y: ty0 } = pxy(s.path, tgt.pi, tgt.pr);
+          for (const e2 of s.enemies) {
+            if (dead.has(e2.id) || e2.id === tgt.id) continue;
+            const { x: e2x, y: e2y } = pxy(s.path, e2.pi, e2.pr);
+            const d2 = Math.hypot(e2x - tx0, e2y - ty0);
+            if (d2 < nbD && d2 < CELL * 2.2) { nbD = d2; nb = e2; }
+          }
+          if (nb) {
+            nb.hp -= Math.ceil(synDmg * 0.5);
+            nb.hitFlash = 0.1;
+            const { x: nx, y: ny } = pxy(s.path, nb.pi, nb.pr);
+            s.projs.push({ id: uid(), sx: tx0, sy: ty0, ex: nx, ey: ny, life: 0.14, col: '#00e5ff' });
+            if (nb.hp <= 0) dead.add(nb.id);
+          }
+        }
+      }
+
       // TV: brainwash target (and 2nd target at Lv3)
       if (cell.tid === 'tv') {
         const brainDur = cell.lv >= 2 ? 5 : cell.lv >= 1 ? 4 : 3;
