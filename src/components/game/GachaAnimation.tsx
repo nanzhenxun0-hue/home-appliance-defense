@@ -445,7 +445,7 @@ const GachaAnimation = ({ results, onComplete, playSound, isNew }: GachaAnimatio
                               style={{ background: 'linear-gradient(135deg, rgba(0,229,255,0.15), transparent)' }} />
                           )}
 
-                          <span className="text-xl relative z-10">{def.em}</span>
+                          <CharIcon tid={tid} size={28} className="relative z-10" />
 
                           {/* Rarity label */}
                           {isOXCard ? (
