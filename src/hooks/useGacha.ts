@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import type { TowerID, Rarity, GachaInventory, GachaBannerType } from '@/game/types';
 import { GACHA_RATES, RARITY_ORDER, GACHA_BANNERS } from '@/game/types';
 import { TDEFS } from '@/game/constants';
+import { safeGetItem, safeSetItem } from '@/lib/persistence';
 
 const STORAGE_KEY = 'kaden-td-gacha';
 const DEFAULT_OWNED: TowerID[] = ['cord', 'kettle'];
@@ -24,10 +25,13 @@ const CHIP_ON_DUP: Record<string, number> = {
 
 const loadInventory = (): GachaState => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = safeGetItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      const owned = parsed.owned || [...DEFAULT_OWNED];
+      const owned = Array.isArray(parsed.owned)
+        ? parsed.owned.filter((tid: TowerID) => TDEFS[tid])
+        : [...DEFAULT_OWNED];
+      for (const tid of DEFAULT_OWNED) if (!owned.includes(tid)) owned.push(tid);
       const counts: Partial<Record<TowerID, number>> = parsed.counts || {};
       // backfill counts from owned if missing
       for (const t of owned) if (!counts[t]) counts[t] = 1;
@@ -47,7 +51,7 @@ const loadInventory = (): GachaState => {
 };
 
 const saveInventory = (inv: GachaState) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(inv));
+  safeSetItem(STORAGE_KEY, JSON.stringify(inv));
 };
 
 const towersOfRarity = (rarity: Rarity): TowerID[] =>
