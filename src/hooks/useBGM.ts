@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { safeGetItem, safeSetItem } from '@/lib/persistence';
 
 export type BGMType = 'home' | 'tutorial' | 'gacha' | 'battle' | 'boss' | 'victory' | 'none';
 
@@ -211,7 +212,8 @@ let currentTrack: BGMType = 'none';
 let currentNodes: BGMNodes | null = null;
 const bufferCache = new Map<BGMType, AudioBuffer>();
 const ENABLED_KEY = 'kaden-td-bgm-enabled';
-let enabled = typeof localStorage !== 'undefined' ? localStorage.getItem(ENABLED_KEY) !== '0' : true;
+let enabled = safeGetItem(ENABLED_KEY) !== '0';
+let audioUnlocked = false;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
 
@@ -245,7 +247,7 @@ const playTrack = (type: BGMType) => {
   stopCurrent();
   currentTrack = type;
   emit();
-  if (type === 'none' || !enabled) return;
+  if (type === 'none' || !enabled || !audioUnlocked) return;
   const ac = getCtx();
   let buf = bufferCache.get(type);
   if (!buf) { buf = RENDERERS[type](ac); bufferCache.set(type, buf); }
@@ -268,12 +270,22 @@ export const useBGM = () => {
   }, []);
 
   const play = useCallback((type: BGMType) => playTrack(type), []);
+  const init = useCallback(() => {
+    audioUnlocked = true;
+    if (currentTrack !== 'none' && enabled && !currentNodes) {
+      const t = currentTrack;
+      currentTrack = 'none';
+      playTrack(t);
+    } else {
+      try { getCtx(); } catch {}
+    }
+  }, []);
   const stop = useCallback(() => { stopCurrent(); currentTrack = 'none'; emit(); }, []);
   const toggle = useCallback(() => {
     enabled = !enabled;
-    try { localStorage.setItem(ENABLED_KEY, enabled ? '1' : '0'); } catch {}
+    safeSetItem(ENABLED_KEY, enabled ? '1' : '0');
     if (!enabled) stopCurrent();
-    else if (currentTrack !== 'none') { const t = currentTrack; currentTrack = 'none'; playTrack(t); }
+    else if (currentTrack !== 'none') { audioUnlocked = true; const t = currentTrack; currentTrack = 'none'; playTrack(t); }
     emit();
     return enabled;
   }, []);
@@ -281,5 +293,5 @@ export const useBGM = () => {
     if (masterGain) masterGain.gain.setTargetAtTime(Math.max(0, Math.min(1, v)), getCtx().currentTime, 0.1);
   }, []);
 
-  return { play, stop, toggle, setVolume, enabled: isEnabled, current: track };
+  return { play, stop, toggle, setVolume, init, enabled: isEnabled, current: track };
 };
