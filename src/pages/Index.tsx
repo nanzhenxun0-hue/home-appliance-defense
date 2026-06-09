@@ -22,6 +22,7 @@ import { useAreaUnlock } from '@/hooks/useAreaUnlock';
 import { useCampaignCodes } from '@/hooks/useCampaignCodes';
 import type { CodeReward } from '@/hooks/useCampaignCodes';
 import { useEffect } from 'react';
+import { safeGetItem, safeSetItem } from '@/lib/persistence';
 
 const ALL_AREAS: AreaKey[] = ['suburb', 'factory', 'downtown', 'volcano', 'glacier', 'sky'];
 const EXTREME_CLEARS_KEY = 'kaden-td-extreme-clears';
@@ -30,7 +31,7 @@ type Screen = 'home' | 'howto' | 'area' | 'game' | 'scores' | 'gacha' | 'team' |
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>(() => {
-    const seen = localStorage.getItem('kaden-td-tutorial');
+    const seen = safeGetItem('kaden-td-tutorial');
     return seen ? 'home' : 'tutorial';
   });
   const [diff, setDiff] = useState<DifficultyKey>('normal');
@@ -45,8 +46,9 @@ const Index = () => {
 
   const [extremeClears, setExtremeClears] = useState<Set<AreaKey>>(() => {
     try {
-      const raw = localStorage.getItem(EXTREME_CLEARS_KEY);
-      return new Set(raw ? JSON.parse(raw) : []);
+      const raw = safeGetItem(EXTREME_CLEARS_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return new Set(Array.isArray(parsed) ? parsed.filter((a: AreaKey) => ALL_AREAS.includes(a)) : []);
     } catch { return new Set(); }
   });
 
@@ -63,6 +65,7 @@ const Index = () => {
 
   const handleScreenChange = (s: Screen) => {
     initSound();
+    bgm.init();
     play('ui_tap');
     setScreen(s);
   };
@@ -82,7 +85,7 @@ const Index = () => {
     return (
       <>
         <TutorialScreen onComplete={() => {
-          localStorage.setItem('kaden-td-tutorial', '1');
+          safeSetItem('kaden-td-tutorial', '1');
           gacha.grantUnit('promo_starter');
           setPromoReward('promo_starter');
         }} />
@@ -161,7 +164,7 @@ const Index = () => {
           if (diff === 'extreme') {
             const next = new Set([...extremeClears, a]);
             setExtremeClears(next);
-            localStorage.setItem(EXTREME_CLEARS_KEY, JSON.stringify([...next]));
+            safeSetItem(EXTREME_CLEARS_KEY, JSON.stringify([...next]));
             if (ALL_AREAS.every(ar => next.has(ar)) && !gacha.inv.owned.includes('tv')) {
               gacha.grantUnit('tv');
               setPromoReward('tv');
