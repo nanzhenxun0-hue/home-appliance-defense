@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import type { TowerID } from '@/game/types';
+import { safeGetItem, safeSetItem, safeRemoveItem } from '@/lib/persistence';
 
 const REDEEMED_KEY = 'kaden-td-redeemed-codes';
 const ADMIN_KEY    = 'kaden-td-admin-mode';
@@ -19,10 +19,13 @@ export interface CampaignCode {
 }
 
 const loadRedeemed = (): string[] => {
-  try { return JSON.parse(localStorage.getItem(REDEEMED_KEY) || '[]'); } catch { return []; }
+  try {
+    const parsed = JSON.parse(safeGetItem(REDEEMED_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
 };
-const saveRedeemed = (r: string[]) => localStorage.setItem(REDEEMED_KEY, JSON.stringify(r));
-const loadAdmin = () => localStorage.getItem(ADMIN_KEY) === '1';
+const saveRedeemed = (r: string[]) => safeSetItem(REDEEMED_KEY, JSON.stringify(r));
+const loadAdmin = () => safeGetItem(ADMIN_KEY) === '1';
 
 export const useCampaignCodes = () => {
   const [codes, setCodes]       = useState<CampaignCode[]>([]);
@@ -32,25 +35,36 @@ export const useCampaignCodes = () => {
   // Fetch + realtime subscribe
   useEffect(() => {
     let active = true;
+    let channel: any = null;
     const fetchAll = async () => {
-      const { data } = await supabase.from('campaign_codes').select('*').order('created_at', { ascending: false });
-      if (!active || !data) return;
-      setCodes(data.map((r: any) => ({ code: r.code, reward: r.reward, createdAt: new Date(r.created_at).getTime() })));
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data } = await supabase.from('campaign_codes').select('*').order('created_at', { ascending: false });
+        if (!active || !data) return;
+        setCodes(data.map((r: any) => ({ code: r.code, reward: r.reward, createdAt: new Date(r.created_at).getTime() })));
+        if (!channel) {
+          channel = supabase.channel('campaign_codes_sync')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_codes' }, () => fetchAll())
+            .subscribe();
+        }
+      } catch {
+        if (active) setCodes([]);
+      }
     };
     fetchAll();
-    const ch = supabase.channel('campaign_codes_sync')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_codes' }, () => fetchAll())
-      .subscribe();
-    return () => { active = false; supabase.removeChannel(ch); };
+    return () => {
+      active = false;
+      if (channel) import('@/integrations/supabase/client').then(({ supabase }) => supabase.removeChannel(channel)).catch(() => undefined);
+    };
   }, []);
 
   const activateAdmin = useCallback(() => {
-    localStorage.setItem(ADMIN_KEY, '1');
+    safeSetItem(ADMIN_KEY, '1');
     setIsAdmin(true);
   }, []);
 
   const deactivateAdmin = useCallback(() => {
-    localStorage.removeItem(ADMIN_KEY);
+    safeRemoveItem(ADMIN_KEY);
     setIsAdmin(false);
   }, []);
 
@@ -73,6 +87,7 @@ export const useCampaignCodes = () => {
     if (!code.trim()) return false;
     const upper = code.trim().toUpperCase();
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase.functions.invoke('manage-codes', {
         body: { action: 'create', code: upper, reward },
         headers: { 'x-admin-token': 'CEO' },
@@ -84,6 +99,7 @@ export const useCampaignCodes = () => {
 
   const deleteCode = useCallback(async (code: string) => {
     try {
+      const { supabase } = await import('@/integrations/supabase/client');
       await supabase.functions.invoke('manage-codes', {
         body: { action: 'delete', code: code.toUpperCase() },
         headers: { 'x-admin-token': 'CEO' },

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { safeGetItem, safeSetItem } from '@/lib/persistence';
 
 export type SoundName =
   | 'place' | 'sell' | 'upgrade' | 'hit' | 'kill' | 'crit'
@@ -89,7 +90,7 @@ let ctxSingleton: AudioContext | null = null;
 let analyserSingleton: AnalyserNode | null = null;
 let masterGain: GainNode | null = null;
 const ENABLED_KEY = 'kaden-td-sfx-enabled';
-let enabled = typeof localStorage !== 'undefined' ? localStorage.getItem(ENABLED_KEY) !== '0' : true;
+let enabled = safeGetItem(ENABLED_KEY) !== '0';
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
 
@@ -165,7 +166,7 @@ export const useSound = () => {
   const play = useCallback((name: SoundName) => playSound(name), []);
   const toggle = useCallback(() => {
     enabled = !enabled;
-    try { localStorage.setItem(ENABLED_KEY, enabled ? '1' : '0'); } catch {}
+    safeSetItem(ENABLED_KEY, enabled ? '1' : '0');
     emit();
     return enabled;
   }, []);
