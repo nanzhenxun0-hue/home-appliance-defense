@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { TowerID } from '@/game/types';
+import { safeGetItem, safeSetItem, safeRemoveItem } from '@/lib/persistence';
 
 const REDEEMED_KEY = 'kaden-td-redeemed-codes';
 const ADMIN_KEY    = 'kaden-td-admin-mode';
@@ -19,10 +20,13 @@ export interface CampaignCode {
 }
 
 const loadRedeemed = (): string[] => {
-  try { return JSON.parse(localStorage.getItem(REDEEMED_KEY) || '[]'); } catch { return []; }
+  try {
+    const parsed = JSON.parse(safeGetItem(REDEEMED_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
 };
-const saveRedeemed = (r: string[]) => localStorage.setItem(REDEEMED_KEY, JSON.stringify(r));
-const loadAdmin = () => localStorage.getItem(ADMIN_KEY) === '1';
+const saveRedeemed = (r: string[]) => safeSetItem(REDEEMED_KEY, JSON.stringify(r));
+const loadAdmin = () => safeGetItem(ADMIN_KEY) === '1';
 
 export const useCampaignCodes = () => {
   const [codes, setCodes]       = useState<CampaignCode[]>([]);
@@ -45,12 +49,12 @@ export const useCampaignCodes = () => {
   }, []);
 
   const activateAdmin = useCallback(() => {
-    localStorage.setItem(ADMIN_KEY, '1');
+    safeSetItem(ADMIN_KEY, '1');
     setIsAdmin(true);
   }, []);
 
   const deactivateAdmin = useCallback(() => {
-    localStorage.removeItem(ADMIN_KEY);
+    safeRemoveItem(ADMIN_KEY);
     setIsAdmin(false);
   }, []);
 

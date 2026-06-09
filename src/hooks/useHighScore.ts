@@ -1,13 +1,15 @@
 import { useCallback } from 'react';
 import type { HighScoreEntry, DifficultyKey } from '@/game/types';
+import { safeGetItem, safeSetItem } from '@/lib/persistence';
 
 const STORAGE_KEY = 'kaden-td-highscores';
 
 export const useHighScore = () => {
   const getScores = useCallback((): HighScoreEntry[] => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
+      const raw = safeGetItem(STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
     }
@@ -23,7 +25,7 @@ export const useHighScore = () => {
     });
     // Keep top 20
     const trimmed = scores.slice(0, 20);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+    safeSetItem(STORAGE_KEY, JSON.stringify(trimmed));
     return trimmed;
   }, [getScores]);
 

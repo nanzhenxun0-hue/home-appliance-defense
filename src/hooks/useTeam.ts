@@ -1,19 +1,27 @@
 import { useState, useCallback } from 'react';
 import type { TowerID } from '@/game/types';
+import { TDEFS } from '@/game/constants';
+import { safeGetItem, safeSetItem } from '@/lib/persistence';
 
 const STORAGE_KEY = 'kaden-td-team';
 const MAX_TEAM = 7;
 
 const loadTeam = (): TowerID[] => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    const raw = safeGetItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const team = parsed.filter((tid: TowerID) => TDEFS[tid]).slice(0, MAX_TEAM);
+        if (team.length > 0) return team;
+      }
+    }
   } catch {}
   return ['cord', 'kettle'];
 };
 
 const saveTeam = (team: TowerID[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(team));
+  safeSetItem(STORAGE_KEY, JSON.stringify(team));
 };
 
 export const useTeam = () => {

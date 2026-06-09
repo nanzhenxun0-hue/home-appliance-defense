@@ -1,13 +1,15 @@
 import { useCallback, useState } from 'react';
 import type { AreaKey } from '@/game/types';
 import { AREA_ORDER } from '@/game/areas';
+import { safeGetItem, safeSetItem } from '@/lib/persistence';
 
 const STORAGE_KEY = 'kaden-td-unlocked-areas';
 
 const load = (): Set<AreaKey> => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const arr: AreaKey[] = raw ? JSON.parse(raw) : [];
+    const raw = safeGetItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    const arr: AreaKey[] = Array.isArray(parsed) ? parsed.filter((a: AreaKey) => AREA_ORDER.includes(a)) : [];
     return new Set([AREA_ORDER[0], ...arr]);
   } catch {
     return new Set([AREA_ORDER[0]]);
@@ -15,7 +17,7 @@ const load = (): Set<AreaKey> => {
 };
 
 const save = (areas: Set<AreaKey>) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...areas]));
+  safeSetItem(STORAGE_KEY, JSON.stringify([...areas]));
 };
 
 export const useAreaUnlock = () => {
