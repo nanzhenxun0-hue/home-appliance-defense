@@ -85,7 +85,7 @@ export const TDEFS: Record<TowerID, TowerDef> = {
   fridge:    { n:'冷蔵庫',           em:'🧊', r:'E',  rc:'#64b5f6', baseCost:130, req:'vacuum',   personality:'冷静沈着', quote:'「感情は凍らせておけ。冷静さが勝利を呼ぶ。」', role:'CC/凍結', skillName:'アブソリュートフリーズ', skillDesc:'敵を凍結させ停止。Lv3で凍結時間が延長＋ボスにも有効。' },
   aircon:    { n:'エアコン',         em:'❄️', r:'E',  rc:'#4fc3f7', baseCost:140, req:'fan',      personality:'冷静沈着', quote:'「絶対零度の冷気で敵の動きを封じろ！」', role:'範囲CC', skillName:'クライオフィールド', skillDesc:'広範囲を冷気で覆い全敵を低速化。Lv3で凍結チャンスも付与。' },
   speaker:   { n:'スピーカー',       em:'🔊', r:'E',  rc:'#ce93d8', baseCost:120, req:'router',   ability:'slowfield',  personality:'天才型', quote:'「音の波動が世界を変える。聴け、この轟き！」', role:'デバフ/スロー', skillName:'ソニックウェーブ', skillDesc:'音波で敵をスロウ化。Lv3で範囲スロウフィールドを常時展開。' },
-  oven:       { n:'オーブン',         em:'🥧', r:'E',  rc:'#ff7043', baseCost:145, req:'toaster',  ability:'bake',       personality:'職人気質', quote:'「予熱は完了。ここから一気に焼き上げる。」', role:'範囲炎上DPS', skillName:'ベイクゾーン', skillDesc:'範囲内の敵を焼き続ける。Lv3で炎上中の敵へのダメージが増加。' },
+  oven:       { n:'オーブン',         em:'🥧', r:'E',  rc:'#ff7043', baseCost:120, req:'toaster',  ability:'bake',       personality:'職人気質', quote:'「予熱は完了。ここから一気に焼き上げる。」', role:'範囲炎上DPS', skillName:'ベイクゾーン', skillDesc:'範囲内の敵を焼き続ける。Lv3で炎上中の敵へのダメージが増加。' },
   // L - Legend
   microwave: { n:'電子レンジ',       em:'🔥', r:'L',  rc:'#ff7043', baseCost:190, req:'toaster',  personality:'熱血漢', quote:'「マイクロ波で内側から燃やし尽くせ！」', role:'重DPS', skillName:'マイクロインフェルノ', skillDesc:'内側から焼く高火力。Lv3で核熱化し残留炎上ダメージ。' },
   washer:    { n:'洗濯機',           em:'🌊', r:'L',  rc:'#26c6da', baseCost:200, req:'fridge',   personality:'頼れる兄貴', quote:'「汚れも敵も全部ぶん回して洗い流す！」', role:'タンク/AOE', skillName:'スピンドレイン', skillDesc:'渦巻きで敵を巻き込みダメージ。Lv3で渦が拡大し基地HPも回復。' },
@@ -135,7 +135,7 @@ export const TDEFS: Record<TowerID, TowerDef> = {
   // OD
   quantumchip:{ n:'量子チップ',       em:'⚛️', r:'OD', rc:'#00e5ff', baseCost:520, req:'superpc', personality:'破壊神', quote:'「観測した瞬間、敵は消滅する。」', role:'量子殲滅', skillName:'クァンタムイレース', skillDesc:'確率で敵を即時消滅。Lv3で対ボス確率UP。' },
   // OX — オーバークロス（超越レアリティ）
-  tv:          { n:'テレビ',           em:'📺', r:'OX', rc:'#e040fb', baseCost:650, req:null,      ability:'brainwash', personality:'カリスマ', quote:'「全ての波長を支配する。洗脳は始まりにすぎない。」', role:'洗脳AOE', skillName:'マインドコントロール', skillDesc:'敵を洗脳して逆走させ、すれ違う敵に体力分のダメージを与える。Lv3で同時2体洗脳。全ステージ極クリアか限定ガチャ0.2%で入手。' },
+  tv:          { n:'テレビ',           em:'📺', r:'OX', rc:'#e040fb', baseCost:400, req:null,      ability:'brainwash', personality:'カリスマ', quote:'「全ての波長を支配する。洗脳は始まりにすぎない。」', role:'洗脳AOE', skillName:'マインドコントロール', skillDesc:'敵を洗脳して逆走させ、すれ違う敵に体力分のダメージを与える。Lv3で同時2体洗脳。全ステージ極クリアか限定ガチャ0.2%で入手。' },
 };
 
 export const RCOLOR = Object.fromEntries(
