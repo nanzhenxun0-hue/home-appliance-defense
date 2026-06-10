@@ -32,10 +32,11 @@ export const useCampaignCodes = () => {
   const [redeemed, setRedeemed] = useState<string[]>(loadRedeemed);
   const [isAdmin, setIsAdmin]   = useState<boolean>(loadAdmin);
 
-  // Fetch + realtime subscribe
+  // Fetch + realtime subscribe + polling fallback + visibility refresh
   useEffect(() => {
     let active = true;
     let channel: any = null;
+    let pollId: ReturnType<typeof setInterval> | null = null;
     const fetchAll = async () => {
       try {
         const { supabase } = await import('@/integrations/supabase/client');
@@ -52,8 +53,14 @@ export const useCampaignCodes = () => {
       }
     };
     fetchAll();
+    // Polling fallback (every 30s) in case realtime is blocked
+    pollId = setInterval(fetchAll, 30_000);
+    const onVisible = () => { if (document.visibilityState === 'visible') fetchAll(); };
+    document.addEventListener('visibilitychange', onVisible);
     return () => {
       active = false;
+      if (pollId) clearInterval(pollId);
+      document.removeEventListener('visibilitychange', onVisible);
       if (channel) import('@/integrations/supabase/client').then(({ supabase }) => supabase.removeChannel(channel)).catch(() => undefined);
     };
   }, []);
