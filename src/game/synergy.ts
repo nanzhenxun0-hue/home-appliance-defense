@@ -51,8 +51,8 @@ export const SYNERGIES: Synergy[] = [
     name: '⚡ オーバードライブ',
     members: ['plasma', 'superpc', 'tesla', 'microwave'],
     minCount: 2,
-    desc: '超火力ユニットの攻撃力+40%',
-    effect: { dmgMult: 1.40 },
+    desc: '超火力ユニットの攻撃力+20%',
+    effect: { dmgMult: 1.20 },
   },
   {
     id: 'fullhouse',

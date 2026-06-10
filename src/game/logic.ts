@@ -702,10 +702,10 @@ export const tickGame = (s: GameState, dt: number): void => {
     let synDmg = Math.ceil(S.dmg * synFx.dmgMult * chainFx.dmgMult);
     const synSpd = S.spd * synFx.spdMult * chainFx.spdMult;
 
-    // USBコード: モード別に威力補正
+    // USBコード: モード別に威力補正（ビーム/炎は連結ボーナス抑制）
     if (cell.tid === 'usbcord') {
-      if (usbMode === 'fire') synDmg = Math.ceil(synDmg * 1.3);
-      else if (usbMode === 'beam') synDmg = Math.ceil(synDmg * 1.6);
+      if (usbMode === 'fire') synDmg = Math.ceil(synDmg * 1.15);
+      else if (usbMode === 'beam') synDmg = Math.ceil(synDmg * 1.10);
     }
 
     s.timers[key] = (s.timers[key] || 0) - dt * towerSpeedMult;
@@ -720,6 +720,8 @@ export const tickGame = (s: GameState, dt: number): void => {
       const rs = st(c2.tid, c2.lv);
       if (Math.hypot(rc - c, rr - r) <= rs.rng) rm *= (rs.bf || 1.2);
     }
+    // バフ系（ルーター/シアター/コーヒーメーカー）の攻速倍率は最大×2.5でキャップ
+    if (rm > 2.5) rm = 2.5;
     let tgt: Enemy | null = null, best = -1;
     for (const e of s.enemies) {
       if (dead.has(e.id)) continue;
