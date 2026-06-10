@@ -212,9 +212,9 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     { c:300, pg:0, pc:4, dmg:45, rng:4.0, spd:1.8, lbl:'重低音スピーカー',eff:'★スロウフィールド', abilityUnlock:true },
   ],
   oven: [
-    { c:0,   pg:0, pc:3, dmg:32, rng:2.4, spd:0.9, lbl:'オーブン',       eff:'範囲炎上' },
-    { c:80,  pg:0, pc:4, dmg:52, rng:2.8, spd:1.1, lbl:'コンベクション', eff:'炎上強化' },
-    { c:360, pg:0, pc:5, dmg:78, rng:3.2, spd:1.4, lbl:'石窯オーブン',   eff:'★炎上追撃', abilityUnlock:true },
+    { c:0,   pg:0, pc:3, dmg:42, rng:2.4, spd:0.9, lbl:'オーブン',       eff:'範囲炎上' },
+    { c:80,  pg:0, pc:4, dmg:68, rng:2.8, spd:1.1, lbl:'コンベクション', eff:'炎上強化' },
+    { c:360, pg:0, pc:5, dmg:95, rng:3.2, spd:1.4, lbl:'石窯オーブン',   eff:'★炎上追撃', abilityUnlock:true },
   ],
   microwave: [
     { c:0,   pg:0, pc:4, dmg:50, rng:2.0, spd:0.6, lbl:'電子レンジ',     eff:'超高火力' },
@@ -270,7 +270,7 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
   shaver:     [{c:0,pg:0,pc:1,dmg:14,rng:1.6,spd:2.4,lbl:'シェーバー',eff:'高速斬り'},{c:50,pg:0,pc:1,dmg:22,rng:1.8,spd:2.8,lbl:'5枚刃',eff:'攻速UP'},{c:240,pg:0,pc:2,dmg:35,rng:2.0,spd:3.2,lbl:'プロシェーバー',eff:'★出血DoT',abilityUnlock:true}],
   printer:    [{c:0,pg:0,pc:1,dmg:18,rng:2.4,spd:1.0,lbl:'プリンター',eff:'インク妨害'},{c:60,pg:0,pc:1,dmg:28,rng:2.6,spd:1.2,lbl:'レーザー',eff:'攻速UP'},{c:260,pg:0,pc:2,dmg:42,rng:2.8,spd:1.5,lbl:'業務用複合機',eff:'★命中DOWN',abilityUnlock:true}],
   heater:     [{c:0,pg:0,pc:2,dmg:22,rng:2.4,spd:1.1,lbl:'ヒーター',eff:'範囲炎上'},{c:70,pg:0,pc:2,dmg:36,rng:2.7,spd:1.4,lbl:'石油ヒーター',eff:'攻速UP'},{c:280,pg:0,pc:3,dmg:55,rng:3.0,spd:1.7,lbl:'ファンヒーター',eff:'★炎拡散',abilityUnlock:true}],
-  humidifier: [{c:0,pg:0,pc:2,dmg:6,rng:3.0,spd:1.4,lbl:'加湿器',eff:'霧スロー'},{c:70,pg:0,pc:2,dmg:12,rng:3.4,spd:1.7,lbl:'超音波加湿器',eff:'攻速UP'},{c:280,pg:0,pc:3,dmg:20,rng:3.8,spd:2.0,lbl:'蒸気加湿器',eff:'★凍結確率',abilityUnlock:true}],
+  humidifier: [{c:0,pg:0,pc:2,dmg:10,rng:3.2,spd:1.4,lbl:'加湿器',eff:'霧スロー'},{c:70,pg:0,pc:2,dmg:18,rng:3.6,spd:1.7,lbl:'超音波加湿器',eff:'攻速UP'},{c:280,pg:0,pc:3,dmg:28,rng:4.0,spd:2.0,lbl:'蒸気加湿器',eff:'★凍結確率',abilityUnlock:true}],
   iron:       [{c:0,pg:0,pc:2,dmg:30,rng:1.6,spd:0.8,lbl:'アイロン',eff:'重撃'},{c:70,pg:0,pc:2,dmg:50,rng:1.8,spd:1.0,lbl:'スチームアイロン',eff:'攻速UP'},{c:300,pg:0,pc:3,dmg:75,rng:2.0,spd:1.3,lbl:'業務用アイロン',eff:'★スタン',abilityUnlock:true}],
   blender:    [{c:0,pg:0,pc:2,dmg:20,rng:2.0,spd:1.5,lbl:'ミキサー',eff:'回転AOE'},{c:70,pg:0,pc:2,dmg:32,rng:2.2,spd:1.8,lbl:'高速ミキサー',eff:'攻速UP'},{c:300,pg:0,pc:3,dmg:50,rng:2.5,spd:2.1,lbl:'真空ミキサー',eff:'★吸引',abilityUnlock:true}],
   waffleiron: [{c:0,pg:0,pc:2,dmg:24,rng:2.2,spd:1.0,lbl:'ワッフル焼き機',eff:'格子AOE'},{c:70,pg:0,pc:2,dmg:38,rng:2.5,spd:1.3,lbl:'プロ用',eff:'攻速UP'},{c:300,pg:0,pc:3,dmg:58,rng:2.8,spd:1.6,lbl:'業務用ワッフル',eff:'★焼印スタン',abilityUnlock:true}],
