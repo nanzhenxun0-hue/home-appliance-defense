@@ -1,19 +1,19 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, lazy, Suspense } from 'react';
 import type { DifficultyKey, TowerID, AreaKey } from '@/game/types';
 import HomeScreen from '@/components/screens/HomeScreen';
-import HowToScreen from '@/components/screens/HowToScreen';
-import GameScreen from '@/components/screens/GameScreen';
-import ScoreScreen from '@/components/screens/ScoreScreen';
-import GachaScreen from '@/components/screens/GachaScreen';
-import TeamScreen from '@/components/screens/TeamScreen';
-import ComboRecipeScreen from '@/components/screens/ComboRecipeScreen';
-import PatchNotesScreen from '@/components/screens/PatchNotesScreen';
-import AreaSelectScreen from '@/components/screens/AreaSelectScreen';
 import TutorialScreen from '@/components/screens/TutorialScreen';
-import CompendiumScreen from '@/components/screens/CompendiumScreen';
-import EnemyCompendiumScreen from '@/components/screens/EnemyCompendiumScreen';
 import PromoRewardModal from '@/components/screens/PromoRewardModal';
-import CampaignCodeScreen from '@/components/screens/CampaignCodeScreen';
+const HowToScreen = lazy(() => import('@/components/screens/HowToScreen'));
+const GameScreen = lazy(() => import('@/components/screens/GameScreen'));
+const ScoreScreen = lazy(() => import('@/components/screens/ScoreScreen'));
+const GachaScreen = lazy(() => import('@/components/screens/GachaScreen'));
+const TeamScreen = lazy(() => import('@/components/screens/TeamScreen'));
+const ComboRecipeScreen = lazy(() => import('@/components/screens/ComboRecipeScreen'));
+const PatchNotesScreen = lazy(() => import('@/components/screens/PatchNotesScreen'));
+const AreaSelectScreen = lazy(() => import('@/components/screens/AreaSelectScreen'));
+const CompendiumScreen = lazy(() => import('@/components/screens/CompendiumScreen'));
+const EnemyCompendiumScreen = lazy(() => import('@/components/screens/EnemyCompendiumScreen'));
+const CampaignCodeScreen = lazy(() => import('@/components/screens/CampaignCodeScreen'));
 import { useGacha } from '@/hooks/useGacha';
 import { useTeam } from '@/hooks/useTeam';
 import { useSound } from '@/hooks/useSound';
@@ -23,6 +23,10 @@ import { useCampaignCodes } from '@/hooks/useCampaignCodes';
 import type { CodeReward } from '@/hooks/useCampaignCodes';
 import { useEffect } from 'react';
 import { safeGetItem, safeSetItem } from '@/lib/persistence';
+
+const ScreenFallback = () => (
+  <div className="min-h-[100dvh] bg-background flex items-center justify-center text-cyan-300 text-sm">⚡ LOADING…</div>
+);
 
 const ALL_AREAS: AreaKey[] = ['suburb', 'factory', 'downtown', 'volcano', 'glacier', 'sky'];
 const EXTREME_CLEARS_KEY = 'kaden-td-extreme-clears';
@@ -109,77 +113,73 @@ const Index = () => {
       isAdmin={campaign.isAdmin}
     />;
   }
-  if (screen === 'campaign') {
-    return <CampaignCodeScreen
-      isAdmin={campaign.isAdmin}
-      codes={campaign.codes}
-      redeemed={campaign.redeemed}
-      onRedeem={campaign.redeemCode}
-      onCreateCode={campaign.createCode}
-      onDeleteCode={campaign.deleteCode}
-      onDeactivateAdmin={campaign.deactivateAdmin}
-      onRewardApply={handleRewardApply}
-      onBack={() => handleScreenChange('home')}
-    />;
-  }
-  if (screen === 'compendium') {
-    return <CompendiumScreen owned={gacha.inv.owned} onBack={() => handleScreenChange('home')} />;
-  }
-  if (screen === 'enemyCompendium') {
-    return <EnemyCompendiumScreen onBack={() => handleScreenChange('home')} />;
-  }
-  if (screen === 'patch') return <PatchNotesScreen onBack={() => handleScreenChange('home')} />;
-  if (screen === 'howto') return <HowToScreen onBack={() => handleScreenChange('home')} />;
-  if (screen === 'area') {
-    return <AreaSelectScreen
-      unlockedAreas={unlockedAreas}
-      onSelect={(a, d) => { setArea(a); setDiff(d); play('wave_start'); setScreen('game'); }}
-      onBack={() => handleScreenChange('team')}
-    />;
-  }
-  if (screen === 'scores') return <ScoreScreen onBack={() => handleScreenChange('home')} />;
-  if (screen === 'gacha') {
-    return <GachaScreen gacha={gacha} onBack={() => handleScreenChange('home')} playSound={play as any} />;
-  }
-  if (screen === 'team') {
-    return <TeamScreen
-      owned={gacha.inv.owned}
-      counts={gacha.inv.counts}
-      team={team}
-      maxTeam={MAX_TEAM}
-      onToggle={(tid) => { play('ui_tap'); toggle(tid); }}
-      onStart={() => handleScreenChange('area')}
-      onBack={() => handleScreenChange('home')}
-      isAdmin={campaign.isAdmin}
-    />;
-  }
-  if (screen === 'combo') {
-    return <ComboRecipeScreen owned={gacha.inv.owned} onBack={() => handleScreenChange('home')} />;
-  }
-  return (
-    <>
-      <GameScreen key={`${diff}-${area}`} diff={diff} team={team} area={area} onHome={() => handleScreenChange('home')} onVoltEarned={onVoltEarned}
-        onWin={(a) => {
-          unlockNext(a);
-          if (diff === 'extreme') {
-            const next = new Set([...extremeClears, a]);
-            setExtremeClears(next);
-            safeSetItem(EXTREME_CLEARS_KEY, JSON.stringify([...next]));
-            if (ALL_AREAS.every(ar => next.has(ar)) && !gacha.inv.owned.includes('tv')) {
-              gacha.grantUnit('tv');
-              setPromoReward('tv');
+  const view = (() => {
+    if (screen === 'campaign') {
+      return <CampaignCodeScreen
+        isAdmin={campaign.isAdmin}
+        codes={campaign.codes}
+        redeemed={campaign.redeemed}
+        onRedeem={campaign.redeemCode}
+        onCreateCode={campaign.createCode}
+        onDeleteCode={campaign.deleteCode}
+        onDeactivateAdmin={campaign.deactivateAdmin}
+        onRewardApply={handleRewardApply}
+        onBack={() => handleScreenChange('home')}
+      />;
+    }
+    if (screen === 'compendium') return <CompendiumScreen owned={gacha.inv.owned} onBack={() => handleScreenChange('home')} />;
+    if (screen === 'enemyCompendium') return <EnemyCompendiumScreen onBack={() => handleScreenChange('home')} />;
+    if (screen === 'patch') return <PatchNotesScreen onBack={() => handleScreenChange('home')} />;
+    if (screen === 'howto') return <HowToScreen onBack={() => handleScreenChange('home')} />;
+    if (screen === 'area') {
+      return <AreaSelectScreen
+        unlockedAreas={unlockedAreas}
+        onSelect={(a, d) => { setArea(a); setDiff(d); play('wave_start'); setScreen('game'); }}
+        onBack={() => handleScreenChange('team')}
+      />;
+    }
+    if (screen === 'scores') return <ScoreScreen onBack={() => handleScreenChange('home')} />;
+    if (screen === 'gacha') return <GachaScreen gacha={gacha} onBack={() => handleScreenChange('home')} playSound={play as any} />;
+    if (screen === 'team') {
+      return <TeamScreen
+        owned={gacha.inv.owned}
+        counts={gacha.inv.counts}
+        team={team}
+        maxTeam={MAX_TEAM}
+        onToggle={(tid) => { play('ui_tap'); toggle(tid); }}
+        onStart={() => handleScreenChange('area')}
+        onBack={() => handleScreenChange('home')}
+        isAdmin={campaign.isAdmin}
+      />;
+    }
+    if (screen === 'combo') return <ComboRecipeScreen owned={gacha.inv.owned} onBack={() => handleScreenChange('home')} />;
+    return (
+      <>
+        <GameScreen key={`${diff}-${area}`} diff={diff} team={team} area={area} onHome={() => handleScreenChange('home')} onVoltEarned={onVoltEarned}
+          onWin={(a) => {
+            unlockNext(a);
+            if (diff === 'extreme') {
+              const next = new Set([...extremeClears, a]);
+              setExtremeClears(next);
+              safeSetItem(EXTREME_CLEARS_KEY, JSON.stringify([...next]));
+              if (ALL_AREAS.every(ar => next.has(ar)) && !gacha.inv.owned.includes('tv')) {
+                gacha.grantUnit('tv');
+                setPromoReward('tv');
+              }
             }
-          }
-        }}
-        onEndlessMilestone={(w) => {
-        if (w >= 100 && w % 100 === 0) {
-          gacha.grantUnit('promo_endless');
-          setPromoReward('promo_endless');
-        }
-      }} />
-      <PromoRewardModal tid={promoReward} onClose={() => setPromoReward(null)} />
-    </>
-  );
+          }}
+          onEndlessMilestone={(w) => {
+            if (w >= 100 && w % 100 === 0) {
+              gacha.grantUnit('promo_endless');
+              setPromoReward('promo_endless');
+            }
+          }} />
+        <PromoRewardModal tid={promoReward} onClose={() => setPromoReward(null)} />
+      </>
+    );
+  })();
+
+  return <Suspense fallback={<ScreenFallback />}>{view}</Suspense>;
 };
 
 export default Index;
