@@ -252,9 +252,9 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     { c:300, pg:0, pc:8, dmg:160,rng:4.5, spd:2.5, lbl:'超量子PC',       eff:'★次元崩壊！', abilityUnlock:true },
   ],
   tesla: [
-    { c:0,   pg:0, pc:5, dmg:45, rng:3.0, spd:1.0, lbl:'テスラコイル',   eff:'電撃' },
-    { c:60,  pg:0, pc:6, dmg:75, rng:3.5, spd:1.3, lbl:'高圧テスラ',     eff:'攻速UP' },
-    { c:300, pg:0, pc:8, dmg:105,rng:4.0, spd:1.8, lbl:'超電磁テスラ',   eff:'★チェーンライトニング', abilityUnlock:true },
+    { c:0,   pg:0, pc:5, dmg:65, rng:3.0, spd:1.0, lbl:'テスラコイル',   eff:'電撃' },
+    { c:60,  pg:0, pc:6, dmg:100,rng:3.5, spd:1.3, lbl:'高圧テスラ',     eff:'攻速UP' },
+    { c:300, pg:0, pc:8, dmg:140,rng:4.0, spd:1.8, lbl:'超電磁テスラ',   eff:'★チェーンライトニング', abilityUnlock:true },
   ],
   plasma: [
     { c:0,   pg:0, pc:8, dmg:120,rng:4.0, spd:0.8, lbl:'プラズマキャノン', eff:'全体貫通' },
@@ -262,13 +262,13 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     { c:300, pg:0, pc:12,dmg:300,rng:6.0, spd:1.8, lbl:'ギガプラズマ',     eff:'★世界を焼く！', abilityUnlock:true },
   ],
   tv: [
-    { c:0,   pg:0, pc:12, dmg:80,  rng:3.5, spd:0.6, lbl:'テレビ',           eff:'洗脳(3秒)' },
-    { c:200, pg:0, pc:15, dmg:130, rng:4.0, spd:0.8, lbl:'薄型テレビ',       eff:'洗脳(4秒)' },
-    { c:600, pg:0, pc:18, dmg:200, rng:4.5, spd:1.0, lbl:'8K有機ELテレビ',   eff:'★同時2体洗脳(5秒)', abilityUnlock:true },
+    { c:0,   pg:0, pc:8,  dmg:90,  rng:3.5, spd:0.7, lbl:'テレビ',           eff:'洗脳(3秒)' },
+    { c:100, pg:0, pc:10, dmg:140, rng:4.0, spd:0.9, lbl:'薄型テレビ',       eff:'洗脳(4秒)' },
+    { c:300, pg:0, pc:12, dmg:210, rng:4.5, spd:1.1, lbl:'8K有機ELテレビ',   eff:'★同時2体洗脳(5秒)', abilityUnlock:true },
   ],
   // ── v1.5 expansion upgrades ──
   shaver:     [{c:0,pg:0,pc:1,dmg:14,rng:1.6,spd:2.4,lbl:'シェーバー',eff:'高速斬り'},{c:50,pg:0,pc:1,dmg:22,rng:1.8,spd:2.8,lbl:'5枚刃',eff:'攻速UP'},{c:240,pg:0,pc:2,dmg:35,rng:2.0,spd:3.2,lbl:'プロシェーバー',eff:'★出血DoT',abilityUnlock:true}],
-  printer:    [{c:0,pg:0,pc:1,dmg:8,rng:2.4,spd:1.0,lbl:'プリンター',eff:'インク妨害'},{c:60,pg:0,pc:1,dmg:14,rng:2.6,spd:1.2,lbl:'レーザー',eff:'攻速UP'},{c:260,pg:0,pc:2,dmg:24,rng:2.8,spd:1.5,lbl:'業務用複合機',eff:'★命中DOWN',abilityUnlock:true}],
+  printer:    [{c:0,pg:0,pc:1,dmg:18,rng:2.4,spd:1.0,lbl:'プリンター',eff:'インク妨害'},{c:60,pg:0,pc:1,dmg:28,rng:2.6,spd:1.2,lbl:'レーザー',eff:'攻速UP'},{c:260,pg:0,pc:2,dmg:42,rng:2.8,spd:1.5,lbl:'業務用複合機',eff:'★命中DOWN',abilityUnlock:true}],
   heater:     [{c:0,pg:0,pc:2,dmg:22,rng:2.4,spd:1.1,lbl:'ヒーター',eff:'範囲炎上'},{c:70,pg:0,pc:2,dmg:36,rng:2.7,spd:1.4,lbl:'石油ヒーター',eff:'攻速UP'},{c:280,pg:0,pc:3,dmg:55,rng:3.0,spd:1.7,lbl:'ファンヒーター',eff:'★炎拡散',abilityUnlock:true}],
   humidifier: [{c:0,pg:0,pc:2,dmg:6,rng:3.0,spd:1.4,lbl:'加湿器',eff:'霧スロー'},{c:70,pg:0,pc:2,dmg:12,rng:3.4,spd:1.7,lbl:'超音波加湿器',eff:'攻速UP'},{c:280,pg:0,pc:3,dmg:20,rng:3.8,spd:2.0,lbl:'蒸気加湿器',eff:'★凍結確率',abilityUnlock:true}],
   iron:       [{c:0,pg:0,pc:2,dmg:30,rng:1.6,spd:0.8,lbl:'アイロン',eff:'重撃'},{c:70,pg:0,pc:2,dmg:50,rng:1.8,spd:1.0,lbl:'スチームアイロン',eff:'攻速UP'},{c:300,pg:0,pc:3,dmg:75,rng:2.0,spd:1.3,lbl:'業務用アイロン',eff:'★スタン',abilityUnlock:true}],
@@ -293,14 +293,14 @@ export const UPS: Record<TowerID, UpgradeLevel[]> = {
     {c:200,pg:5,pc:0,dmg:65,rng:3.2,spd:1.9,lbl:'プロトEX',eff:'★スターターブースト',abilityUnlock:true},
   ],
   promo_endless:[
-    {c:0,pg:0,pc:6,dmg:180,rng:4.2,spd:1.6,lbl:'∞マスター',eff:'全方向波紋AOE'},
-    {c:200,pg:0,pc:8,dmg:300,rng:4.8,spd:2.0,lbl:'∞マスター零式',eff:'攻速・範囲UP'},
-    {c:600,pg:0,pc:10,dmg:460,rng:5.5,spd:2.6,lbl:'∞マスターΩ',eff:'★無限波紋・全域壊滅',abilityUnlock:true},
+    {c:0,pg:0,pc:6,dmg:90,rng:4.0,spd:1.4,lbl:'∞マスター',eff:'全方向波紋AOE'},
+    {c:200,pg:0,pc:8,dmg:150,rng:4.5,spd:1.7,lbl:'∞マスター零式',eff:'攻速・範囲UP'},
+    {c:600,pg:0,pc:10,dmg:230,rng:5.0,spd:2.0,lbl:'∞マスターΩ',eff:'★無限波紋・全域壊滅',abilityUnlock:true},
   ],
   usbcord:[
-    {c:0,  pg:4, pc:0, dmg:18, rng:3.2, spd:1.4, lbl:'USBコード',     eff:'+4W／全家電と接続可'},
-    {c:80, pg:7, pc:0, dmg:30, rng:3.6, spd:1.7, lbl:'USB-C急速',     eff:'+7W／威力UP'},
-    {c:300,pg:12,pc:0, dmg:50, rng:4.0, spd:2.0, lbl:'Thunderbolt',  eff:'★+12W／編成で属性変化',abilityUnlock:true},
+    {c:0,  pg:3, pc:0, dmg:14, rng:3.0, spd:1.2, lbl:'USBコード',     eff:'+3W／全家電と接続可'},
+    {c:80, pg:5, pc:0, dmg:22, rng:3.4, spd:1.4, lbl:'USB-C急速',     eff:'+5W／威力UP'},
+    {c:300,pg:8, pc:0, dmg:34, rng:3.8, spd:1.7, lbl:'Thunderbolt',  eff:'★+8W／編成で属性変化',abilityUnlock:true},
   ],
 };
 export const EDEFS: Record<EnemyType, EnemyDef> = {
