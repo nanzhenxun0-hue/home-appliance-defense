@@ -1,90 +1,93 @@
-## 目的
+## 概要
 
-「アップデート実行チェックリスト」の最優先4項目を一気に反映：
-1. データ完成（全キャラ・敵を網羅したCSV）
-2. ゲームに反映（数値統一・微調整）
-3. 通しプレイで詰まり確認 → バランス微調整
-4. パッチノート v1.2.0 を作成しゲーム内に表示
+3つのオンライン機能を追加します。すべて Lovable Cloud (Supabase) 上で構築し、既存のオフラインプレイも維持します（未ログイン時はローカル保存のまま）。
 
-オンライントレード等の大型新規機能は別タスクとし、今回は「データ整備＋バランス＋パッチノート公開」に集中します。
+## 1. 認証システム
 
-## 実装内容
+- メール+パスワード & Google サインイン
+- ホーム画面右上に「ログイン」ボタン追加
+- `/auth` ページ（サインアップ/ログイン/パスワードリセット）
+- `/reset-password` ページ
+- ログイン後、`profiles` テーブルに `display_name`（初期値: メール前半）を自動作成
+- ログイン時のみオンライン機能を有効化
 
-### 1. データ整備（CSV）
+## 2. 所持キャラを「個数管理」に移行
 
-`/mnt/documents/` に2本のCSVを生成し、ダウンロードできるようにします（プロジェクト内 `src/game/constants.ts` を真実の元として書き出し）。
+現状 `owned: TowerID[]` （有無のみ）→ `inventory: Record<TowerID, number>` に変更。
+- 既存プレイヤーのローカルデータは自動マイグレーション（各1個所持として変換）
+- ガチャで被り時は個数+1
+- 編成画面では所持数バッジ表示（1個以上あれば使用可能）
+- 交換で0個になったキャラは編成から自動除外
 
-**towers.csv 列**:
-`id, 名前, レアリティ, Tier, 性格, 解放条件(req), baseCost, Lv1コスト, Lv1電力供給(pg), Lv1消費電力(pc), Lv1ダメージ, Lv1射程, Lv1攻速, Lv1DPS, Lv2同上…, Lv3同上…, ability, 説明`
+## 3. プレイヤー間トレード（1対1申請制）
 
-**enemies.csv 列**:
-`id, 名前, 絵文字, HP, 速度, 報酬(volts), 接触ダメージ, 特殊能力, ボス能力, ピクセル描画`
+**プレイヤーID**: プロフィール作成時に短いフレンドコード（例: `KADEN-A3F7X`）を自動発行、コピー可能。
 
-抜けているフィールドは constants.ts を補完して必ず埋めます（説明文・性格・abilityの欄など）。
+**フロー**:
+1. 「トレード」画面で相手のフレンドコードを入力
+2. 自分の出すキャラ・相手に要求するキャラを選択して送信
+3. 相手に通知（受信箱にリアルタイム表示）
+4. 相手が「承認」または「拒否」
+5. 承認時: サーバー側 Edge Function で両者の inventory を原子的に更新（両者所持確認・二重実行防止）
 
-### 2. ゲーム本体の調整（src/game/constants.ts）
+**画面**: 送信中／受信中／履歴 の3タブ
 
-通しプレイでの「強すぎる/弱すぎる」を是正。
+## 4. オンラインランキング（総合スコア）
 
-- **電気ケトル(C)**: Lv1 dmg 18→20（序盤の詰まり緩和）
-- **テスラLv3**: dmg 120→105（チェーン込みで突出のため微ナーフ）
-- **プラズマLv3**: dmg 350→300（OD唯一性は維持しつつ過剰DPS抑制）
-- **電子レンジLv3**: dmg 120→110、spd 1.0→0.95
-- **冷蔵庫**: 凍結効果は据え置き、Lv2 dmg 46→50（中盤の選択肢として強化）
-- **ゴキブリ(cockroach)**: spd 110→95（序盤事故防止）
-- **過電流(surge)**: hp 200→230, rew 35→40
-- **ホコリ大王(dust_lord)**: hp 700→850, rew 80→100
-- **boss_ice / boss_fire**: HPは据え置き、報酬を +50 上方修正（撃破リターン強化）
-- **GACHA_RATES**: OD 0.003→0.004（極小UP、引いた時の演出価値担保）
+- ゲームクリア時に自動送信（ログイン中のみ）
+- `leaderboard` テーブル: user_id, display_name, best_score, best_wave, diff, updated_at
+- 総合スコア = wave * 10000 + power（既存ロジック流用）
+- スコア画面に「オンライン Top 100」タブを追加
+- 自分の順位ハイライト、リアルタイム更新
 
-### 3. パッチノート v1.2.0
+## 5. 管理者コード全サーバー同期
 
-**新規ファイル** `src/game/patchNotes.ts`
-```ts
-export const APP_VERSION = 'v1.2.0';
-export const PATCH_NOTES = [{
-  version: 'v1.2.0', date: '2026-05-01',
-  highlights: ['データ整備とバランス調整', 'パッチノート機能追加'],
-  changes: {
-    balance: ['電気ケトル ATK +2', 'テスラLv3 ATK -15', 'プラズマLv3 ATK -50', '冷蔵庫Lv2 ATK +4', 'ゴキブリ速度 -15'],
-    enemies: ['過電流HP +30 / 報酬+5', 'ホコリ大王HP +150 / 報酬+20', 'ボス報酬 +50'],
-    gacha:   ['OD排出率 0.3% → 0.4%'],
-    fixes:   ['データの整合性を全面チェック'],
-  },
-}, /* 過去版のプレースホルダ v1.1.0, v1.0.0 */];
+現状 `campaign_codes` テーブル + polling は動作中。追加で:
+- 管理者判定を **サーバー側の `user_roles` テーブル**（app_role enum: admin/user）に移行 — セキュリティ向上、`localStorage` の `CEO` 判定を廃止
+- 「CEO」コード入力時: `has_role(auth.uid(), 'admin')` が true のユーザーのみ管理者モード有効化。初回のみ、パスコード `CEO` 一致でサーバー側に admin ロール付与（既存挙動を維持しつつサーバー化）
+- 作成/削除は既存の `manage-codes` Edge Function を `x-admin-token` から JWT + `has_role` チェックに変更
+
+## 技術詳細
+
+### データベース
+
+```text
+profiles           id(=auth.users.id) / display_name / friend_code(unique)
+user_roles         user_id / role(app_role enum)   +has_role() SECURITY DEFINER
+inventories        user_id / tower_id / count       PK(user_id, tower_id)
+trades             id / from_user / to_user / offer(jsonb) / request(jsonb)
+                   / status(pending|accepted|declined|cancelled) / created_at
+leaderboard        user_id / display_name / score / wave / diff / updated_at
+                   UNIQUE(user_id, diff)
 ```
 
-**新規画面** `src/components/screens/PatchNotesScreen.tsx`
-- バージョンごとに折り畳み表示（最新を展開）
-- カテゴリ別バッジ（バランス/敵/ガチャ/修正/新機能）
+すべてのテーブルに RLS + `GRANT SELECT,INSERT,UPDATE,DELETE ... TO authenticated;` を付与。leaderboard のみ全ユーザーに SELECT 可、他は本人スコープ。
 
-**HomeScreen** にボタン追加：「📋 パッチノート」、右上に `APP_VERSION` をチップ表示。
-**Index.tsx** に `'patch'` ルート追加。
+### Edge Functions
 
-### 4. データ反映の自動化スクリプト（リポジトリには残さない）
+- `execute-trade` — 承認時に両者 inventory を原子的に更新
+- `submit-score` — スコア送信（サーバー側でユーザー確認）
+- `manage-codes` — 既存を JWT + `has_role` にリファクタ
 
-`/tmp/export_csv.ts` を bun で実行 → `constants.ts` を読み込んで `/mnt/documents/towers.csv` と `/mnt/documents/enemies.csv` を出力。
-出力後、`<lov-artifact>` で2ファイル提示。
+### フロントエンド
 
-### 5. 通しプレイの確認
+- `src/hooks/useAuth.ts` (新規): セッション管理
+- `src/hooks/useInventory.ts` (新規): ログイン時サーバー同期／未ログイン時ローカル
+- `src/hooks/useTrades.ts` (新規): 送受信＋リアルタイム
+- `src/hooks/useLeaderboard.ts` (新規)
+- `src/pages/Auth.tsx`, `src/pages/ResetPassword.tsx`
+- `src/components/screens/TradeScreen.tsx` (新規)
+- `src/components/screens/LeaderboardScreen.tsx` (新規)
+- `src/hooks/useGacha.ts`, `useTeam.ts` を inventory ベースに改修
 
-- suburb / normal で wave10 まで自動シミュレーションは行わず、ブラウザで起動確認＋HUD・アップグレードウィンドウのスモークチェック（runtime errors と console を確認）。
-- 既存の `vitest` は触らず、追加テストは作りません（範囲外）。
+## ホーム画面への追加ボタン
 
-## やらないこと（次回以降）
+- 🔐 ログイン / 👤 プロフィール
+- 🔄 トレード（要ログイン）
+- 🏆 オンラインランキング
 
-- オンライントレード機能
-- 新キャラ/新ステージの追加（バランス変更のみ）
-- 新タワー描画アセット
-- レイドや図鑑などの大型システム
+## スコープ外
 
-## ファイル変更一覧
-
-- 編集: `src/game/constants.ts`（数値調整のみ）
-- 新規: `src/game/patchNotes.ts`
-- 新規: `src/components/screens/PatchNotesScreen.tsx`
-- 編集: `src/components/screens/HomeScreen.tsx`（ボタン＋バージョンチップ）
-- 編集: `src/pages/Index.tsx`（ルート追加）
-- 生成物: `/mnt/documents/towers.csv`, `/mnt/documents/enemies.csv`, `/mnt/documents/patch_notes_v1.2.0.md`
-
-承認いただければこの内容で実装します。
+- チャット / フレンドリスト / ギルド
+- リアルタイム対戦
+- 課金
