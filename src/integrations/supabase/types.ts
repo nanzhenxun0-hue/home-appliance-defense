@@ -32,15 +32,158 @@ export type Database = {
         }
         Relationships: []
       }
+      inventories: {
+        Row: {
+          count: number
+          tower_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          tower_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          tower_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      leaderboard: {
+        Row: {
+          diff: string
+          display_name: string
+          id: string
+          score: number
+          updated_at: string
+          user_id: string
+          wave: number
+        }
+        Insert: {
+          diff: string
+          display_name: string
+          id?: string
+          score: number
+          updated_at?: string
+          user_id: string
+          wave: number
+        }
+        Update: {
+          diff?: string
+          display_name?: string
+          id?: string
+          score?: number
+          updated_at?: string
+          user_id?: string
+          wave?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string
+          friend_code: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          friend_code: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          friend_code?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      trades: {
+        Row: {
+          created_at: string
+          from_user: string
+          id: string
+          offer: Json
+          request: Json
+          status: Database["public"]["Enums"]["trade_status"]
+          to_user: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          from_user: string
+          id?: string
+          offer: Json
+          request: Json
+          status?: Database["public"]["Enums"]["trade_status"]
+          to_user: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          from_user?: string
+          id?: string
+          offer?: Json
+          request?: Json
+          status?: Database["public"]["Enums"]["trade_status"]
+          to_user?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_admin: { Args: { _passcode: string }; Returns: Json }
+      execute_trade: { Args: { _trade_id: string }; Returns: Json }
+      gen_friend_code: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      submit_score: {
+        Args: { _diff: string; _score: number; _wave: number }
+        Returns: Json
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      trade_status: "pending" | "accepted" | "declined" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -167,6 +310,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      trade_status: ["pending", "accepted", "declined", "cancelled"],
+    },
   },
 } as const

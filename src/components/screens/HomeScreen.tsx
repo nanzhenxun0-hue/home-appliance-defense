@@ -15,14 +15,31 @@ interface HomeScreenProps {
   onCompendium: () => void;
   onEnemyCompendium: () => void;
   onCampaignCode: () => void;
+  onAuth: () => void;
+  onTrade: () => void;
+  onLeaderboard: () => void;
+  onSignOut: () => void;
   volts: number;
   isAdmin?: boolean;
+  isLoggedIn?: boolean;
+  displayName?: string;
 }
 
-const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, onPatch, onCompendium, onEnemyCompendium, onCampaignCode, volts, isAdmin }: HomeScreenProps) => (
+const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, onPatch, onCompendium, onEnemyCompendium, onCampaignCode, onAuth, onTrade, onLeaderboard, onSignOut, volts, isAdmin, isLoggedIn, displayName }: HomeScreenProps) => (
   <div className="min-h-[100dvh] flex flex-col items-center justify-center p-5 relative overflow-hidden bg-background">
-    <div className="absolute top-2 right-3 z-20 text-[10px] font-bold text-purple-300/80 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30">
-      {APP_VERSION}
+    <div className="absolute top-2 right-3 z-20 flex items-center gap-2">
+      <div className="text-[10px] font-bold text-purple-300/80 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30">
+        {APP_VERSION}
+      </div>
+      {isLoggedIn ? (
+        <button onClick={onSignOut} className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/40 text-cyan-200">
+          👤 {displayName?.slice(0, 10) ?? 'You'}
+        </button>
+      ) : (
+        <button onClick={onAuth} className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/50 text-cyan-100 font-bold">
+          🔐 ログイン
+        </button>
+      )}
     </div>
     <AudioSettings className="absolute top-2 left-3 z-20" />
     <div className="absolute inset-0 z-0">
@@ -91,6 +108,17 @@ const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, o
         }}>
         {isAdmin ? '🛡️ 管理者パネル' : '🎟️ キャンペーンコード'}
       </button>
+      <div className="grid grid-cols-2 gap-2 w-full">
+        <button onClick={onTrade} disabled={!isLoggedIn}
+          className="game-btn-secondary text-xs px-2 disabled:opacity-40"
+          style={{ background: isLoggedIn ? 'linear-gradient(135deg,#0ea5e9aa,#22d3eeaa)' : undefined }}>
+          🔄 トレード
+        </button>
+        <button onClick={onLeaderboard} className="game-btn-secondary text-xs px-2"
+          style={{ background: 'linear-gradient(135deg,#f59e0baa,#fbbf24aa)' }}>
+          🌐 ランキング
+        </button>
+      </div>
       <div className="flex gap-2 w-full">
         <button onClick={onScores} className="game-btn-ghost flex-1 text-xs">🏆 スコア</button>
         <button onClick={onTutorial} className="game-btn-ghost flex-1 text-xs">📚 チュートリアル</button>

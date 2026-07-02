@@ -14,14 +14,18 @@ const AreaSelectScreen = lazy(() => import('@/components/screens/AreaSelectScree
 const CompendiumScreen = lazy(() => import('@/components/screens/CompendiumScreen'));
 const EnemyCompendiumScreen = lazy(() => import('@/components/screens/EnemyCompendiumScreen'));
 const CampaignCodeScreen = lazy(() => import('@/components/screens/CampaignCodeScreen'));
+const LeaderboardScreen = lazy(() => import('@/components/screens/LeaderboardScreen'));
+const TradeScreen = lazy(() => import('@/components/screens/TradeScreen'));
 import { useGacha } from '@/hooks/useGacha';
 import { useTeam } from '@/hooks/useTeam';
 import { useSound } from '@/hooks/useSound';
 import { useBGM } from '@/hooks/useBGM';
 import { useAreaUnlock } from '@/hooks/useAreaUnlock';
 import { useCampaignCodes } from '@/hooks/useCampaignCodes';
+import { useAuth } from '@/hooks/useAuth';
 import type { CodeReward } from '@/hooks/useCampaignCodes';
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { safeGetItem, safeSetItem } from '@/lib/persistence';
 
 const ScreenFallback = () => (
@@ -31,7 +35,7 @@ const ScreenFallback = () => (
 const ALL_AREAS: AreaKey[] = ['suburb', 'factory', 'downtown', 'volcano', 'glacier', 'sky'];
 const EXTREME_CLEARS_KEY = 'kaden-td-extreme-clears';
 
-type Screen = 'home' | 'howto' | 'area' | 'game' | 'scores' | 'gacha' | 'team' | 'combo' | 'tutorial' | 'patch' | 'compendium' | 'enemyCompendium' | 'campaign';
+type Screen = 'home' | 'howto' | 'area' | 'game' | 'scores' | 'gacha' | 'team' | 'combo' | 'tutorial' | 'patch' | 'compendium' | 'enemyCompendium' | 'campaign' | 'leaderboard' | 'trade';
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>(() => {
@@ -47,6 +51,8 @@ const Index = () => {
   const bgm = useBGM();
   const { unlockedAreas, unlockNext } = useAreaUnlock();
   const campaign = useCampaignCodes();
+  const auth = useAuth();
+  const nav = useNavigate();
 
   const [extremeClears, setExtremeClears] = useState<Set<AreaKey>>(() => {
     try {
@@ -109,11 +115,32 @@ const Index = () => {
       onCompendium={() => handleScreenChange('compendium')}
       onEnemyCompendium={() => handleScreenChange('enemyCompendium')}
       onCampaignCode={() => handleScreenChange('campaign')}
+      onAuth={() => nav('/auth')}
+      onTrade={() => handleScreenChange('trade')}
+      onLeaderboard={() => handleScreenChange('leaderboard')}
+      onSignOut={() => { auth.signOut(); }}
       volts={gacha.inv.volts}
-      isAdmin={campaign.isAdmin}
+      isAdmin={campaign.isAdmin || auth.isAdmin}
+      isLoggedIn={!!auth.user}
+      displayName={auth.profile?.display_name}
     />;
   }
   const view = (() => {
+    if (screen === 'leaderboard') return <LeaderboardScreen onBack={() => handleScreenChange('home')} />;
+    if (screen === 'trade') return <TradeScreen
+      onBack={() => handleScreenChange('home')}
+      counts={gacha.inv.counts}
+      onServerInventory={(serverInv) => {
+        // Sync server -> local: use max of local/server for each unit.
+        const merged = { ...gacha.inv.counts };
+        for (const [tid, c] of Object.entries(serverInv)) {
+          merged[tid as any] = Math.max(merged[tid as any] ?? 0, c ?? 0);
+          if ((merged[tid as any] ?? 0) > 0 && !gacha.inv.owned.includes(tid as any)) {
+            gacha.grantUnit(tid as any);
+          }
+        }
+      }}
+    />;
     if (screen === 'campaign') {
       return <CampaignCodeScreen
         isAdmin={campaign.isAdmin}
