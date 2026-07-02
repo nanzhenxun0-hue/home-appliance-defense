@@ -83,7 +83,7 @@ const TradeScreen = ({ onBack, counts, onServerInventory }: Props) => {
       {items.map(it => {
         const d = TDEFS[it.tower_id];
         return <span key={it.tower_id} className="flex items-center gap-1 bg-white/5 rounded px-1.5 py-0.5 text-[10px]">
-          <CharIcon tid={it.tower_id} size={14} /> {d?.name ?? it.tower_id} ×{it.count}
+          <CharIcon tid={it.tower_id} size={14} /> {d?.n ?? it.tower_id} ×{it.count}
         </span>;
       })}
     </div>
@@ -131,7 +131,7 @@ const TradeScreen = ({ onBack, counts, onServerInventory }: Props) => {
               {Object.entries(offer).map(([tid, c]) => (
                 <div key={tid} className="flex items-center gap-2 text-[11px]">
                   <CharIcon tid={tid as TowerID} size={16} />
-                  <span className="flex-1">{TDEFS[tid as TowerID]?.name}</span>
+                  <span className="flex-1">{TDEFS[tid as TowerID]?.n}</span>
                   <button onClick={() => bump('offer', tid as TowerID, -1)} className="w-5 h-5 rounded bg-white/10">-</button>
                   <span className="w-8 text-center">{c}/{counts[tid as TowerID] ?? 0}</span>
                   <button onClick={() => bump('offer', tid as TowerID, +1)} className="w-5 h-5 rounded bg-white/10">+</button>
@@ -146,7 +146,7 @@ const TradeScreen = ({ onBack, counts, onServerInventory }: Props) => {
               {Object.entries(request).map(([tid, c]) => (
                 <div key={tid} className="flex items-center gap-2 text-[11px]">
                   <CharIcon tid={tid as TowerID} size={16} />
-                  <span className="flex-1">{TDEFS[tid as TowerID]?.name}</span>
+                  <span className="flex-1">{TDEFS[tid as TowerID]?.n}</span>
                   <button onClick={() => bump('request', tid as TowerID, -1)} className="w-5 h-5 rounded bg-white/10">-</button>
                   <span className="w-8 text-center">{c}</span>
                   <button onClick={() => bump('request', tid as TowerID, +1)} className="w-5 h-5 rounded bg-white/10">+</button>
@@ -211,7 +211,7 @@ const TradeScreen = ({ onBack, counts, onServerInventory }: Props) => {
               <button key={tid} onClick={() => { bump(picker, tid, +1); setPicker(null); }}
                 className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/5 text-[11px]">
                 <CharIcon tid={tid} size={20} />
-                <span className="flex-1 text-left">{TDEFS[tid]?.name}</span>
+                <span className="flex-1 text-left">{TDEFS[tid]?.n}</span>
                 <span className="text-muted-foreground">×{c}</span>
               </button>
             ))}
