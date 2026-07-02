@@ -108,6 +108,17 @@ const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, o
         }}>
         {isAdmin ? '🛡️ 管理者パネル' : '🎟️ キャンペーンコード'}
       </button>
+      <div className="grid grid-cols-2 gap-2 w-full">
+        <button onClick={onTrade} disabled={!isLoggedIn}
+          className="game-btn-secondary text-xs px-2 disabled:opacity-40"
+          style={{ background: isLoggedIn ? 'linear-gradient(135deg,#0ea5e9aa,#22d3eeaa)' : undefined }}>
+          🔄 トレード
+        </button>
+        <button onClick={onLeaderboard} className="game-btn-secondary text-xs px-2"
+          style={{ background: 'linear-gradient(135deg,#f59e0baa,#fbbf24aa)' }}>
+          🌐 ランキング
+        </button>
+      </div>
       <div className="flex gap-2 w-full">
         <button onClick={onScores} className="game-btn-ghost flex-1 text-xs">🏆 スコア</button>
         <button onClick={onTutorial} className="game-btn-ghost flex-1 text-xs">📚 チュートリアル</button>
