@@ -8,6 +8,7 @@ import { WAVE_VOLT_REWARD, RARITY_COLOR } from '@/game/types';
 import { useSound } from '@/hooks/useSound';
 import { useBGM } from '@/hooks/useBGM';
 import { useHighScore } from '@/hooks/useHighScore';
+import { submitScore } from '@/hooks/useLeaderboard';
 import HUD from '@/components/game/HUD';
 import UpgradeWindow from '@/components/game/UpgradeWindow';
 
@@ -179,6 +180,8 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
     if ((ui.over || ui.win) && !scoreSaved.current) {
       scoreSaved.current = true;
       addScore({ diff, wave: ui.wave, won: ui.win, date: new Date().toLocaleDateString('ja-JP'), power: ui.power, area });
+      // Send to online leaderboard (no-op if logged out).
+      submitScore(diff, ui.wave * 10000 + ui.power, ui.wave).catch(() => undefined);
       playSound(ui.win ? 'victory' : 'game_over');
       if (ui.win) { bgm.play('victory'); onWin?.(area); }
     }

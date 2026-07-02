@@ -75,9 +75,17 @@ export const useCampaignCodes = () => {
     setIsAdmin(false);
   }, []);
 
-  const redeemCode = useCallback((input: string): { ok: true; reward: CodeReward } | { ok: false; error: string } => {
+  const redeemCode = useCallback(async (input: string): Promise<{ ok: true; reward: CodeReward } | { ok: false; error: string }> => {
     const upper = input.trim().toUpperCase();
     if (upper === 'CEO') {
+      // Try server-side admin claim if logged in.
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data: sess } = await supabase.auth.getSession();
+        if (sess.session) {
+          await supabase.rpc('claim_admin' as any, { _passcode: 'CEO' });
+        }
+      } catch { /* offline fallback */ }
       activateAdmin();
       return { ok: true, reward: { desc: '管理者モード有効化' } };
     }
