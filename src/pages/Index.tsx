@@ -115,11 +115,32 @@ const Index = () => {
       onCompendium={() => handleScreenChange('compendium')}
       onEnemyCompendium={() => handleScreenChange('enemyCompendium')}
       onCampaignCode={() => handleScreenChange('campaign')}
+      onAuth={() => nav('/auth')}
+      onTrade={() => handleScreenChange('trade')}
+      onLeaderboard={() => handleScreenChange('leaderboard')}
+      onSignOut={() => { auth.signOut(); }}
       volts={gacha.inv.volts}
-      isAdmin={campaign.isAdmin}
+      isAdmin={campaign.isAdmin || auth.isAdmin}
+      isLoggedIn={!!auth.user}
+      displayName={auth.profile?.display_name}
     />;
   }
   const view = (() => {
+    if (screen === 'leaderboard') return <LeaderboardScreen onBack={() => handleScreenChange('home')} />;
+    if (screen === 'trade') return <TradeScreen
+      onBack={() => handleScreenChange('home')}
+      counts={gacha.inv.counts}
+      onServerInventory={(serverInv) => {
+        // Sync server -> local: use max of local/server for each unit.
+        const merged = { ...gacha.inv.counts };
+        for (const [tid, c] of Object.entries(serverInv)) {
+          merged[tid as any] = Math.max(merged[tid as any] ?? 0, c ?? 0);
+          if ((merged[tid as any] ?? 0) > 0 && !gacha.inv.owned.includes(tid as any)) {
+            gacha.grantUnit(tid as any);
+          }
+        }
+      }}
+    />;
     if (screen === 'campaign') {
       return <CampaignCodeScreen
         isAdmin={campaign.isAdmin}
