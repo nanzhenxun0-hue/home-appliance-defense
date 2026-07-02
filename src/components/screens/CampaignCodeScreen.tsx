@@ -9,7 +9,7 @@ interface CampaignCodeScreenProps {
   isAdmin: boolean;
   codes: CampaignCode[];
   redeemed: string[];
-  onRedeem: (code: string) => { ok: true; reward: CodeReward } | { ok: false; error: string };
+  onRedeem: (code: string) => Promise<{ ok: true; reward: CodeReward } | { ok: false; error: string }> | { ok: true; reward: CodeReward } | { ok: false; error: string };
   onCreateCode: (code: string, reward: CodeReward) => boolean | Promise<boolean>;
   onDeleteCode: (code: string) => void;
   onDeactivateAdmin: () => void;
@@ -142,7 +142,7 @@ const CampaignCodeScreen = ({
   const [adminTab, setAdminTab] = useState<'codes' | 'units' | 'create'>('codes');
 
   const handleSubmit = () => {
-    const res = onRedeem(input.trim());
+    const res = await onRedeem(input.trim());
     if (res.ok) {
       onRewardApply(res.reward);
       setResult({ ok: true, msg: res.reward.desc === '管理者モード有効化' ? '🛡️ 管理者モードを有効化しました' : `✅ コード「${input.trim().toUpperCase()}」を使用しました！`, reward: res.reward });
