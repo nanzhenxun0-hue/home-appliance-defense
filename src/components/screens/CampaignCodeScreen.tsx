@@ -141,7 +141,7 @@ const CampaignCodeScreen = ({
   const [result, setResult] = useState<{ ok: boolean; msg: string; reward?: CodeReward } | null>(null);
   const [adminTab, setAdminTab] = useState<'codes' | 'units' | 'create'>('codes');
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const res = await onRedeem(input.trim());
     if (res.ok) {
       onRewardApply(res.reward);
