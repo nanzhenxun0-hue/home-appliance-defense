@@ -1,4 +1,4 @@
-export const APP_VERSION = 'v1.5.0';
+export const APP_VERSION = 'v1.6.0';
 
 export type PatchCategory = 'feature' | 'balance' | 'enemy' | 'gacha' | 'fix';
 
@@ -18,6 +18,21 @@ export const PATCH_CATEGORY_META: Record<PatchCategory, { label: string; color: 
 };
 
 export const PATCH_NOTES: PatchNote[] = [
+  {
+    version: 'v1.6.0',
+    date: '2026-07-02',
+    highlights: ['オンライン機能実装', 'プレイヤー間トレード', '世界ランキング Top100', 'Google / メール認証'],
+    changes: {
+      feature: [
+        'ログイン（メール + Google）を追加。未ログインでもオフラインで全機能プレイ可',
+        'プロフィール自動作成、6文字のフレンドコード発行',
+        'プレイヤー同士のキャラ交換：申請→承認で原子的に交換',
+        'オンライン Top100 ランキング（難易度別）',
+        '管理者判定をサーバー側 user_roles へ移行しセキュリティ強化',
+      ],
+      fix: ['所持キャラの個数をサーバーで管理（ログイン時のみ）'],
+    },
+  },
   {
     version: 'v1.5.0',
     date: '2026-05-07',

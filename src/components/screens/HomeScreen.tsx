@@ -15,11 +15,17 @@ interface HomeScreenProps {
   onCompendium: () => void;
   onEnemyCompendium: () => void;
   onCampaignCode: () => void;
+  onAuth: () => void;
+  onTrade: () => void;
+  onLeaderboard: () => void;
+  onSignOut: () => void;
   volts: number;
   isAdmin?: boolean;
+  isLoggedIn?: boolean;
+  displayName?: string;
 }
 
-const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, onPatch, onCompendium, onEnemyCompendium, onCampaignCode, volts, isAdmin }: HomeScreenProps) => (
+const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, onPatch, onCompendium, onEnemyCompendium, onCampaignCode, onAuth, onTrade, onLeaderboard, onSignOut, volts, isAdmin, isLoggedIn, displayName }: HomeScreenProps) => (
   <div className="min-h-[100dvh] flex flex-col items-center justify-center p-5 relative overflow-hidden bg-background">
     <div className="absolute top-2 right-3 z-20 text-[10px] font-bold text-purple-300/80 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30">
       {APP_VERSION}
