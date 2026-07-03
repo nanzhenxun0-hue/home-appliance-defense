@@ -309,9 +309,10 @@ export const tickGame = (s: GameState, dt: number): void => {
       const it = s.spawnQ.shift()!;
       const d = EDEFS[it.type];
       const scale = s.endless ? (1 + 0.05 * Math.max(0, s.wave - 1)) : 1;
+      const chalMul = s.enemyHpMul ?? 1;
       s.enemies.push({
         id: uid(), type: it.type, em: d.em,
-        hp: Math.ceil(d.hp * dc.hpM * scale), mhp: Math.ceil(d.hp * dc.hpM * scale),
+        hp: Math.ceil(d.hp * dc.hpM * scale * chalMul), mhp: Math.ceil(d.hp * dc.hpM * scale * chalMul),
         spd: d.spd * dc.spdM * scale, rew: d.rew, dmg: d.dmg,
         pi: 0, pr: 0, frozen: 0, burning: 0, burnT: 0, hitFlash: 0,
       });

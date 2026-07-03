@@ -1,4 +1,4 @@
-import { useState, useCallback, lazy, Suspense } from 'react';
+import { useState, useCallback, lazy, Suspense, useRef } from 'react';
 import type { DifficultyKey, TowerID, AreaKey } from '@/game/types';
 import HomeScreen from '@/components/screens/HomeScreen';
 import TutorialScreen from '@/components/screens/TutorialScreen';
@@ -16,6 +16,7 @@ const EnemyCompendiumScreen = lazy(() => import('@/components/screens/EnemyCompe
 const CampaignCodeScreen = lazy(() => import('@/components/screens/CampaignCodeScreen'));
 const LeaderboardScreen = lazy(() => import('@/components/screens/LeaderboardScreen'));
 const TradeScreen = lazy(() => import('@/components/screens/TradeScreen'));
+const YarikomiScreen = lazy(() => import('@/components/screens/YarikomiScreen'));
 import { useGacha } from '@/hooks/useGacha';
 import { useTeam } from '@/hooks/useTeam';
 import { useSound } from '@/hooks/useSound';
@@ -23,6 +24,9 @@ import { useBGM } from '@/hooks/useBGM';
 import { useAreaUnlock } from '@/hooks/useAreaUnlock';
 import { useCampaignCodes } from '@/hooks/useCampaignCodes';
 import { useAuth } from '@/hooks/useAuth';
+import { useMeta } from '@/hooks/useMeta';
+import { useToast } from '@/hooks/use-toast';
+import type { ChallengeMod } from '@/game/meta';
 import type { CodeReward } from '@/hooks/useCampaignCodes';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -35,7 +39,7 @@ const ScreenFallback = () => (
 const ALL_AREAS: AreaKey[] = ['suburb', 'factory', 'downtown', 'volcano', 'glacier', 'sky'];
 const EXTREME_CLEARS_KEY = 'kaden-td-extreme-clears';
 
-type Screen = 'home' | 'howto' | 'area' | 'game' | 'scores' | 'gacha' | 'team' | 'combo' | 'tutorial' | 'patch' | 'compendium' | 'enemyCompendium' | 'campaign' | 'leaderboard' | 'trade';
+type Screen = 'home' | 'howto' | 'area' | 'game' | 'scores' | 'gacha' | 'team' | 'combo' | 'tutorial' | 'patch' | 'compendium' | 'enemyCompendium' | 'campaign' | 'leaderboard' | 'trade' | 'yarikomi';
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>(() => {
@@ -45,6 +49,7 @@ const Index = () => {
   const [diff, setDiff] = useState<DifficultyKey>('normal');
   const [area, setArea] = useState<AreaKey>('suburb');
   const [promoReward, setPromoReward] = useState<TowerID | null>(null);
+  const [challenge, setChallenge] = useState<ChallengeMod | null>(null);
   const gacha = useGacha();
   const { team, toggle, MAX_TEAM } = useTeam();
   const { play, toggle: toggleSound, init: initSound } = useSound();
@@ -53,6 +58,11 @@ const Index = () => {
   const campaign = useCampaignCodes();
   const auth = useAuth();
   const nav = useNavigate();
+  const { toast } = useToast();
+  const meta = useMeta((v, label) => {
+    gacha.addVolts(v);
+    toast({ title: `🎁 ${label}`, description: `+${v} ボルト獲得！` });
+  });
 
   const [extremeClears, setExtremeClears] = useState<Set<AreaKey>>(() => {
     try {
@@ -64,7 +74,21 @@ const Index = () => {
 
   const onVoltEarned = useCallback((amount: number) => {
     gacha.addVolts(amount);
-  }, [gacha]);
+    meta.track({ type: 'volts_earned', amount });
+  }, [gacha, meta]);
+
+  // Track gacha pulls whenever totalPulls increases
+  const lastPullsRef = React.useRef(gacha.inv.totalPulls);
+  useEffect(() => {
+    const diff = gacha.inv.totalPulls - lastPullsRef.current;
+    if (diff > 0) meta.track({ type: 'gacha_pull', count: diff });
+    lastPullsRef.current = gacha.inv.totalPulls;
+  }, [gacha.inv.totalPulls, meta]);
+
+  // Wrap gacha pulls so we track them
+  const trackGachaPull = useCallback((count: number) => {
+    meta.track({ type: 'gacha_pull', count });
+  }, [meta]);
 
   useEffect(() => {
     if (screen === 'game') bgm.play('battle');
@@ -90,6 +114,13 @@ const Index = () => {
       setPromoReward(reward.unit);
     }
   }, [gacha]);
+
+  const launchChallenge = useCallback((c: ChallengeMod) => {
+    setChallenge(c);
+    setDiff(c.diff);
+    setArea(c.area);
+    handleScreenChange('game');
+  }, []);
 
   if (screen === 'tutorial') {
     return (
@@ -118,6 +149,7 @@ const Index = () => {
       onAuth={() => nav('/auth')}
       onTrade={() => handleScreenChange('trade')}
       onLeaderboard={() => handleScreenChange('leaderboard')}
+      onYarikomi={() => handleScreenChange('yarikomi')}
       onSignOut={() => { auth.signOut(); }}
       volts={gacha.inv.volts}
       isAdmin={campaign.isAdmin || auth.isAdmin}
@@ -126,6 +158,7 @@ const Index = () => {
     />;
   }
   const view = (() => {
+    if (screen === 'yarikomi') return <YarikomiScreen meta={meta} onBack={() => handleScreenChange('home')} onLaunchChallenge={launchChallenge} />;
     if (screen === 'leaderboard') return <LeaderboardScreen onBack={() => handleScreenChange('home')} />;
     if (screen === 'trade') return <TradeScreen
       onBack={() => handleScreenChange('home')}
@@ -182,13 +215,22 @@ const Index = () => {
     if (screen === 'combo') return <ComboRecipeScreen owned={gacha.inv.owned} onBack={() => handleScreenChange('home')} />;
     return (
       <>
-        <GameScreen key={`${diff}-${area}`} diff={diff} team={team} area={area} onHome={() => handleScreenChange('home')} onVoltEarned={onVoltEarned}
+        <GameScreen key={`${diff}-${area}-${challenge?.id ?? ''}`} diff={diff} team={team} area={area} challenge={challenge}
+          onHome={() => { setChallenge(null); handleScreenChange('home'); }} onVoltEarned={onVoltEarned}
+          onWaveCleared={(w, d) => meta.track({ type: 'wave_clear', wave: w, diff: d })}
           onWin={(a) => {
             unlockNext(a);
+            meta.track({ type: 'game_win', diff, area: a });
+            if (challenge && !meta.progress.challengeClears.includes(challenge.id)) {
+              meta.track({ type: 'challenge_win', id: challenge.id });
+              gacha.addVolts(challenge.volts);
+              toast({ title: `🔥 チャレンジ制覇: ${challenge.name}`, description: `+${challenge.volts} ボルト獲得！` });
+            }
             if (diff === 'extreme') {
               const next = new Set([...extremeClears, a]);
               setExtremeClears(next);
               safeSetItem(EXTREME_CLEARS_KEY, JSON.stringify([...next]));
+              meta.track({ type: 'extreme_clear', area: a });
               if (ALL_AREAS.every(ar => next.has(ar)) && !gacha.inv.owned.includes('tv')) {
                 gacha.grantUnit('tv');
                 setPromoReward('tv');
@@ -196,6 +238,7 @@ const Index = () => {
             }
           }}
           onEndlessMilestone={(w) => {
+            meta.track({ type: 'endless_milestone', wave: w });
             if (w >= 100 && w % 100 === 0) {
               gacha.grantUnit('promo_endless');
               setPromoReward('promo_endless');

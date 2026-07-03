@@ -18,6 +18,7 @@ interface HomeScreenProps {
   onAuth: () => void;
   onTrade: () => void;
   onLeaderboard: () => void;
+  onYarikomi: () => void;
   onSignOut: () => void;
   volts: number;
   isAdmin?: boolean;
@@ -25,7 +26,7 @@ interface HomeScreenProps {
   displayName?: string;
 }
 
-const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, onPatch, onCompendium, onEnemyCompendium, onCampaignCode, onAuth, onTrade, onLeaderboard, onSignOut, volts, isAdmin, isLoggedIn, displayName }: HomeScreenProps) => (
+const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, onPatch, onCompendium, onEnemyCompendium, onCampaignCode, onAuth, onTrade, onLeaderboard, onYarikomi, onSignOut, volts, isAdmin, isLoggedIn, displayName }: HomeScreenProps) => (
   <div className="min-h-[100dvh] flex flex-col items-center justify-center p-5 relative overflow-hidden bg-background">
     <div className="absolute top-2 right-3 z-20 flex items-center gap-2">
       <div className="text-[10px] font-bold text-purple-300/80 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30">
@@ -93,6 +94,10 @@ const HomeScreen = ({ onPlay, onHowTo, onScores, onGacha, onCombo, onTutorial, o
         🎰 ガチャ（3種）
       </button>
       <button onClick={onCombo} className="game-btn-secondary w-full text-sm">⛓️ コンボレシピ</button>
+      <button onClick={onYarikomi} className="w-full py-2 text-sm font-black rounded-lg"
+        style={{ background: 'linear-gradient(135deg,#f59e0b,#eab308)', color: '#1a0f00', border: '1px solid #eab30880' }}>
+        🏅 やり込み（実績・ミッション・チャレンジ）
+      </button>
       <div className="grid grid-cols-2 gap-2 w-full">
         <button onClick={onCompendium} className="game-btn-secondary text-sm px-2">📚 家電</button>
         <button onClick={onEnemyCompendium} className="game-btn-secondary text-sm px-2">👹 敵図鑑</button>
