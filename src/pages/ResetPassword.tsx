@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { cloudUnavailableError, getSupabaseClient } from '@/lib/cloud';
 import { toast } from 'sonner';
 
 const ResetPassword = () => {
@@ -11,7 +11,10 @@ const ResetPassword = () => {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const { error } = await supabase.auth.updateUser({ password: pass });
+    const supabase = await getSupabaseClient();
+    const { error } = supabase
+      ? await supabase.auth.updateUser({ password: pass })
+      : { error: cloudUnavailableError() };
     setBusy(false);
     if (error) toast.error(error.message);
     else { toast.success('パスワードを更新しました'); nav('/'); }
