@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { cloudUnavailableError, getSupabaseClient } from '@/lib/cloud';
 
 export interface Profile {
   id: string;
@@ -17,14 +17,17 @@ const notify = () => listeners.forEach(l => l());
 const init = () => {
   if (initialized) return;
   initialized = true;
-  supabase.auth.onAuthStateChange((_ev, session) => {
-    cached = { session, user: session?.user ?? null };
-    notify();
-  });
-  supabase.auth.getSession().then(({ data }) => {
-    cached = { session: data.session, user: data.session?.user ?? null };
-    notify();
-  });
+  getSupabaseClient().then(supabase => {
+    if (!supabase) { notify(); return; }
+    supabase.auth.onAuthStateChange((_ev: string, session: Session | null) => {
+      cached = { session, user: session?.user ?? null };
+      notify();
+    });
+    supabase.auth.getSession().then(({ data }: any) => {
+      cached = { session: data.session, user: data.session?.user ?? null };
+      notify();
+    }).catch(() => notify());
+  }).catch(() => notify());
 };
 
 export const useAuth = () => {
@@ -44,6 +47,8 @@ export const useAuth = () => {
     if (!uid) { setProfile(null); setIsAdmin(false); return; }
     let cancel = false;
     (async () => {
+      const supabase = await getSupabaseClient();
+      if (!supabase || cancel) return;
       const { data: p } = await supabase.from('profiles').select('*').eq('id', uid).maybeSingle();
       if (cancel) return;
       if (p) setProfile(p as Profile);
@@ -55,10 +60,14 @@ export const useAuth = () => {
   }, [cached.user?.id]);
 
   const signIn = useCallback(async (email: string, password: string) => {
+    const supabase = await getSupabaseClient();
+    if (!supabase) return { data: null, error: cloudUnavailableError() } as any;
     return supabase.auth.signInWithPassword({ email, password });
   }, []);
 
   const signUp = useCallback(async (email: string, password: string, displayName?: string) => {
+    const supabase = await getSupabaseClient();
+    if (!supabase) return { data: null, error: cloudUnavailableError() } as any;
     return supabase.auth.signUp({
       email, password,
       options: {
@@ -68,15 +77,22 @@ export const useAuth = () => {
     });
   }, []);
 
-  const signOut = useCallback(async () => supabase.auth.signOut(), []);
+  const signOut = useCallback(async () => {
+    const supabase = await getSupabaseClient();
+    return supabase?.auth.signOut();
+  }, []);
 
   const resetPassword = useCallback(async (email: string) => {
+    const supabase = await getSupabaseClient();
+    if (!supabase) return { data: null, error: cloudUnavailableError() } as any;
     return supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
   }, []);
 
   const claimAdmin = useCallback(async (passcode: string) => {
+    const supabase = await getSupabaseClient();
+    if (!supabase) return { ok: false, error: cloudUnavailableError().message };
     const { data, error } = await supabase.rpc('claim_admin' as any, { _passcode: passcode });
     if (error) return { ok: false, error: error.message };
     if (data && (data as any).ok) { setIsAdmin(true); return { ok: true }; }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { lovable } from '@/integrations/lovable/index';
+import { isCloudConfigured } from '@/lib/cloud';
 import { toast } from 'sonner';
 
 const Auth = () => {
@@ -33,8 +33,13 @@ const Auth = () => {
   };
 
   const google = async () => {
+    if (!isCloudConfigured()) {
+      toast.error('このビルドではオンライン認証が未設定です');
+      return;
+    }
     setBusy(true);
     try {
+      const { lovable } = await import('@/integrations/lovable/index');
       const r = await lovable.auth.signInWithOAuth('google', { redirect_uri: window.location.origin });
       if (r.error) toast.error(String((r.error as any).message ?? r.error));
     } finally { setBusy(false); }

@@ -1,6 +1,6 @@
 import { Component, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, HashRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +11,8 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import SoundVisualizer from "@/components/SoundVisualizer";
 
 const queryClient = new QueryClient();
+
+const Router = window.location.hostname.endsWith('.github.io') ? HashRouter : BrowserRouter;
 
 class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -60,7 +62,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <Router>
           <main>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -71,7 +73,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
-        </BrowserRouter>
+        </Router>
         <SoundVisualizer />
       </TooltipProvider>
     </QueryClientProvider>
