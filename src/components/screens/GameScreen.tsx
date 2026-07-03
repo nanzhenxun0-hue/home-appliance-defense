@@ -20,11 +20,25 @@ interface GameScreenProps {
   onVoltEarned?: (amount: number) => void;
   onWin?: (area: AreaKey) => void;
   onEndlessMilestone?: (wave: number) => void;
+  onWaveCleared?: (wave: number, diff: DifficultyKey) => void;
+  challenge?: {
+    id: string;
+    startPowerMul?: number;
+    noUpgrade?: boolean;
+    noUltimate?: boolean;
+    enemyHpMul?: number;
+  } | null;
 }
 
-const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMilestone }: GameScreenProps) => {
+const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMilestone, onWaveCleared, challenge }: GameScreenProps) => {
   const cvs = useRef<HTMLCanvasElement>(null);
-  const gs = useRef<GameState>(mkState(diff, team, area));
+  const initState = () => {
+    const st = mkState(diff, team, area);
+    if (challenge?.startPowerMul) st.power = Math.floor(st.power * challenge.startPowerMul);
+    if (challenge?.enemyHpMul) st.enemyHpMul = challenge.enemyHpMul;
+    return st;
+  };
+  const gs = useRef<GameState>(initState());
   const raf = useRef<number>(0);
   const pmRef = useRef<TowerID | null>(null);
   const hcRef = useRef({ c: -1, r: -1 });
@@ -36,7 +50,8 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
   const d = DIFF[diff];
   const waves = getWaves(area);
   const [ui, setUi] = useState<UIState>(() => ({
-    power: d.sp, wave: 0, baseHP: d.shp, maxHP: d.shp,
+    power: challenge?.startPowerMul ? Math.floor(d.sp * challenge.startPowerMul) : d.sp,
+    wave: 0, baseHP: d.shp, maxHP: d.shp,
     wActive: false, over: false, win: false, area,
     ultGauge: 0, ultActive: false,
     freezeTileHP: 0, freezeTileMaxHP: 0, freezeTileMode: null, absoluteZeroTimer: 0,
@@ -99,6 +114,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
   };
 
   const doUpgrade = () => {
+    if (challenge?.noUpgrade) return;
     const s = gs.current, key = pinRef.current; if (!key) return;
     const cell = s.grid[key]; if (!cell) return;
     const { tid, lv } = cell;
@@ -139,10 +155,10 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
 
   const doRestart = () => {
     resetUid();
-    gs.current = mkState(diff, team, area);
+    gs.current = initState();
     scoreSaved.current = false;
     const d2 = DIFF[diff];
-    setUi({ power: d2.sp, wave: 0, baseHP: d2.shp, maxHP: d2.shp, wActive: false, over: false, win: false, area, ultGauge: 0, ultActive: false, freezeTileHP: 0, freezeTileMaxHP: 0, freezeTileMode: null, absoluteZeroTimer: 0 });
+    setUi({ power: challenge?.startPowerMul ? Math.floor(d2.sp * challenge.startPowerMul) : d2.sp, wave: 0, baseHP: d2.shp, maxHP: d2.shp, wActive: false, over: false, win: false, area, ultGauge: 0, ultActive: false, freezeTileHP: 0, freezeTileMaxHP: 0, freezeTileMode: null, absoluteZeroTimer: 0 });
     setPlaceMode(null); setPinKey(null);
     hcRef.current = { c: -1, r: -1 };
   };
@@ -152,6 +168,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
     if (prevWaveActive.current && !ui.wActive && !ui.over && !ui.win && ui.wave > 0) {
       const reward = WAVE_VOLT_REWARD(ui.wave);
       onVoltEarned?.(reward);
+      onWaveCleared?.(ui.wave, diff);
       playSound('wave_clear');
       playSound('coin');
       if (diff === 'endless') onEndlessMilestone?.(ui.wave);
@@ -162,7 +179,7 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
       }
     }
     prevWaveActive.current = ui.wActive;
-  }, [ui.wActive, ui.wave, ui.over, ui.win, onVoltEarned, onEndlessMilestone, diff]);
+  }, [ui.wActive, ui.wave, ui.over, ui.win, onVoltEarned, onEndlessMilestone, onWaveCleared, diff]);
 
   // Low HP danger heartbeat
   const lastDangerT = useRef(0);
@@ -279,8 +296,8 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
         <div className="flex gap-1 items-end justify-center overflow-x-auto">
           {/* Ult button */}
           <button
-            onClick={() => { fireUlt(gs.current); playSound('ult_fire'); }}
-            disabled={ui.ultGauge < 100}
+            onClick={() => { if (challenge?.noUltimate) return; fireUlt(gs.current); playSound('ult_fire'); }}
+            disabled={ui.ultGauge < 100 || !!challenge?.noUltimate}
             className="flex flex-col items-center px-1.5 py-1 rounded-lg transition-all min-w-[48px] relative"
             style={{
               background: ui.ultGauge >= 100 ? 'rgba(0,229,255,0.15)' : 'rgba(255,255,255,0.03)',

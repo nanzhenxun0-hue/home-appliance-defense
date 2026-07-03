@@ -293,6 +293,8 @@ export interface GameState {
   pathSet: Set<string>;
   endless: boolean;
   totalWaves: number; // 0 = unlimited
+  // Optional challenge modifier
+  enemyHpMul?: number;
 }
 
 export interface UIState {
