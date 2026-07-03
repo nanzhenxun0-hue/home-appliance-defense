@@ -78,7 +78,7 @@ const Index = () => {
   }, [gacha, meta]);
 
   // Track gacha pulls whenever totalPulls increases
-  const lastPullsRef = React.useRef(gacha.inv.totalPulls);
+  const lastPullsRef = useRef(gacha.inv.totalPulls);
   useEffect(() => {
     const diff = gacha.inv.totalPulls - lastPullsRef.current;
     if (diff > 0) meta.track({ type: 'gacha_pull', count: diff });
