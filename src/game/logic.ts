@@ -222,7 +222,8 @@ const executeBossAbility = (s: GameState, e: Enemy) => {
       break;
     }
     case 'regen': {
-      // 自己回復: restore 8% of max HP
+      // 自己回復: restore 8% of max HP (disabled while the anti-stall watchdog is active)
+      if ((s.stallT ?? 0) > 20) break;
       const healAmt = Math.ceil(e.mhp * 0.08);
       e.hp = Math.min(e.mhp, e.hp + healAmt);
       const { x, y } = pxy(s.path, e.pi, e.pr);
