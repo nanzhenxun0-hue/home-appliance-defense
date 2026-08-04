@@ -520,8 +520,8 @@ export const tickGame = (s: GameState, dt: number): void => {
             if (jump > 0) { e.pi += jump; e.pr = 0; }
             const { x, y } = pxy(s.path, e.pi, e.pr);
             s.effs.push({ id: uid(), x, y, txt: '⚡ワープ！', life: 1.5, ml: 1.5, col: '#00bcd4' });
-          } else {
-            // regen
+          } else if ((s.stallT ?? 0) <= 20) {
+            // regen (disabled while the anti-stall watchdog is active)
             const healAmt = Math.ceil(e.mhp * 0.08);
             e.hp = Math.min(e.mhp, e.hp + healAmt);
             const { x, y } = pxy(s.path, e.pi, e.pr);
