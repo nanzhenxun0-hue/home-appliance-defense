@@ -174,6 +174,7 @@ export interface Enemy {
   pi: number;
   pr: number;
   frozen: number;
+  frozenTotal?: number;
   burning: number;
   burnT: number;
   hitFlash: number;
@@ -295,6 +296,9 @@ export interface GameState {
   totalWaves: number; // 0 = unlimited
   // Optional challenge modifier
   enemyHpMul?: number;
+  // Anti-stall watchdog
+  stallT?: number;
+  lastHpSum?: number;
 }
 
 export interface UIState {

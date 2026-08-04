@@ -222,7 +222,8 @@ const executeBossAbility = (s: GameState, e: Enemy) => {
       break;
     }
     case 'regen': {
-      // 自己回復: restore 8% of max HP
+      // 自己回復: restore 8% of max HP (disabled while the anti-stall watchdog is active)
+      if ((s.stallT ?? 0) > 20) break;
       const healAmt = Math.ceil(e.mhp * 0.08);
       e.hp = Math.min(e.mhp, e.hp + healAmt);
       const { x, y } = pxy(s.path, e.pi, e.pr);
@@ -325,7 +326,13 @@ export const tickGame = (s: GameState, dt: number): void => {
   const dead = new Set<number>();
   for (const e of s.enemies) {
     if (e.hitFlash > 0) e.hitFlash -= dt;
-    if (e.frozen > 0) { e.frozen -= dt; continue; }
+    // Anti perma-freeze: after 6s of cumulative freeze, enemies crawl instead of fully stopping
+    if (e.frozen > 0) {
+      e.frozen -= dt;
+      e.frozenTotal = (e.frozenTotal ?? 0) + dt;
+      if ((e.frozenTotal ?? 0) < 6) continue;
+    }
+
     if (e.speedBuff && e.speedBuff > 0) {
       e.speedBuff -= dt;
       if (e.speedBuff <= 0) {
@@ -366,7 +373,7 @@ export const tickGame = (s: GameState, dt: number): void => {
       }
       if (e.brainwashed <= 0) e.frozen = 1.5;
     } else {
-      let rem = e.spd * dt;
+      let rem = e.spd * dt * (e.frozen > 0 ? 0.3 : 1);
       while (rem > 0 && e.pi < s.path.length - 1) {
         const [c1, r1] = s.path[e.pi];
         const [c2, r2] = s.path[e.pi + 1];
@@ -513,8 +520,8 @@ export const tickGame = (s: GameState, dt: number): void => {
             if (jump > 0) { e.pi += jump; e.pr = 0; }
             const { x, y } = pxy(s.path, e.pi, e.pr);
             s.effs.push({ id: uid(), x, y, txt: '⚡ワープ！', life: 1.5, ml: 1.5, col: '#00bcd4' });
-          } else {
-            // regen
+          } else if ((s.stallT ?? 0) <= 20) {
+            // regen (disabled while the anti-stall watchdog is active)
             const healAmt = Math.ceil(e.mhp * 0.08);
             e.hp = Math.min(e.mhp, e.hp + healAmt);
             const { x, y } = pxy(s.path, e.pi, e.pr);
@@ -1102,8 +1109,48 @@ export const tickGame = (s: GameState, dt: number): void => {
   s.rings.forEach(r => { const grow = (r.maxR - r.r) * Math.min(1, dt * 6); r.r += grow; r.life -= dt; });
   s.rings = s.rings.filter(r => r.life > 0);
 
+  // ── Anti-stall watchdog ──
+  // If a wave makes no progress (no enemy HP lost, nothing spawning) the run can hang
+  // forever right before the clear. Detect it and force the fight to resolve.
+  if (s.waveActive && s.enemies.length > 0) {
+    let hpSum = 0;
+    for (const e of s.enemies) {
+      if (!Number.isFinite(e.hp)) e.hp = 0;
+      hpSum += Math.max(0, e.hp);
+    }
+    const prev = s.lastHpSum ?? hpSum;
+    if (hpSum < prev - 0.5 || s.spawnQ.length > 0) {
+      s.stallT = 0;
+    } else {
+      s.stallT = (s.stallT ?? 0) + dt;
+    }
+    s.lastHpSum = hpSum;
+
+    if ((s.stallT ?? 0) > 20) {
+      // Overload burn: ramping damage so the last enemies always die out
+      const ramp = Math.min(6, 1 + ((s.stallT ?? 0) - 20) * 0.25);
+      const dead2 = new Set<number>();
+      for (const e of s.enemies) {
+        e.hp -= e.mhp * 0.05 * ramp * dt;
+        if (e.hp <= 0) {
+          dead2.add(e.id);
+          s.power = Math.min(s.power + e.rew, 999);
+        }
+      }
+      if (dead2.size) s.enemies = s.enemies.filter(e => !dead2.has(e.id));
+      if (Math.floor((s.stallT ?? 0)) % 3 === 0 && s.effs.length < 20) {
+        s.effs.push({ id: uid(), x: 168, y: 150, txt: '⚡過負荷放電！', life: 1.2, ml: 1.2, col: '#ffd700' });
+      }
+    }
+  } else {
+    s.stallT = 0;
+    s.lastHpSum = undefined;
+  }
+
   if (s.waveActive && s.spawnQ.length === 0 && s.enemies.length === 0) {
     s.waveActive = false;
+    s.stallT = 0;
+    s.lastHpSum = undefined;
     if (!s.endless && s.wave >= waves.length) s.win = true;
   }
 };
