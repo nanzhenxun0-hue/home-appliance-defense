@@ -29,6 +29,8 @@ const Auth = () => {
         const { error } = await resetPassword(email);
         if (error) toast.error(error.message); else toast.success('パスワード再設定メールを送信しました');
       }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '認証サーバーに接続できませんでした');
     } finally { setBusy(false); }
   };
 
@@ -42,6 +44,8 @@ const Auth = () => {
       const { lovable } = await import('@/integrations/lovable/index');
       const r = await lovable.auth.signInWithOAuth('google', { redirect_uri: window.location.origin });
       if (r.error) toast.error(String((r.error as any).message ?? r.error));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Google認証を開始できませんでした');
     } finally { setBusy(false); }
   };
 
