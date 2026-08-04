@@ -325,7 +325,13 @@ export const tickGame = (s: GameState, dt: number): void => {
   const dead = new Set<number>();
   for (const e of s.enemies) {
     if (e.hitFlash > 0) e.hitFlash -= dt;
-    if (e.frozen > 0) { e.frozen -= dt; continue; }
+    // Anti perma-freeze: after 6s of cumulative freeze, enemies crawl instead of fully stopping
+    if (e.frozen > 0) {
+      e.frozen -= dt;
+      e.frozenTotal = (e.frozenTotal ?? 0) + dt;
+      if ((e.frozenTotal ?? 0) < 6) continue;
+    }
+
     if (e.speedBuff && e.speedBuff > 0) {
       e.speedBuff -= dt;
       if (e.speedBuff <= 0) {
