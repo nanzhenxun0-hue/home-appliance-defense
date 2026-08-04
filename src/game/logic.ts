@@ -372,7 +372,7 @@ export const tickGame = (s: GameState, dt: number): void => {
       }
       if (e.brainwashed <= 0) e.frozen = 1.5;
     } else {
-      let rem = e.spd * dt;
+      let rem = e.spd * dt * (e.frozen > 0 ? 0.3 : 1);
       while (rem > 0 && e.pi < s.path.length - 1) {
         const [c1, r1] = s.path[e.pi];
         const [c2, r2] = s.path[e.pi + 1];
