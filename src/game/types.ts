@@ -174,6 +174,7 @@ export interface Enemy {
   pi: number;
   pr: number;
   frozen: number;
+  frozenTotal?: number;
   burning: number;
   burnT: number;
   hitFlash: number;
