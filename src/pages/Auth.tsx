@@ -41,13 +41,30 @@ const Auth = () => {
     }
     setBusy(true);
     try {
-      const { lovable } = await import('@/integrations/lovable/index');
-      const r = await lovable.auth.signInWithOAuth('google', { redirect_uri: window.location.origin });
-      if (r.error) toast.error(String((r.error as any).message ?? r.error));
+      const host = window.location.hostname;
+      const isLovableHost = host.endsWith('lovable.app') || host === 'localhost' || host === '127.0.0.1';
+
+      if (isLovableHost) {
+        const { lovable } = await import('@/integrations/lovable/index');
+        const r = await lovable.auth.signInWithOAuth('google', { redirect_uri: window.location.origin });
+        if (r.error) toast.error(String((r.error as any).message ?? r.error));
+      } else {
+        // 外部ホスト（Vercel/GitHub Pages 等）では Lovable の OAuth プロキシが無いため
+        // バックエンド直結のリダイレクトフローを使う
+        const { getSupabaseClient } = await import('@/lib/cloud');
+        const supabase = await getSupabaseClient();
+        if (!supabase) { toast.error('認証サーバーに接続できませんでした'); return; }
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: `${window.location.origin}/auth` },
+        });
+        if (error) toast.error(error.message);
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Google認証を開始できませんでした');
     } finally { setBusy(false); }
   };
+
 
   return (
     <div className="min-h-[100dvh] flex items-center justify-center p-4 bg-background text-foreground">
