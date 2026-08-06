@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { isCloudConfigured } from '@/lib/cloud';
+import { getOAuthRedirectUrl, rememberReturnPath } from '@/lib/authRedirect';
 import { toast } from 'sonner';
 
 const Auth = () => {
