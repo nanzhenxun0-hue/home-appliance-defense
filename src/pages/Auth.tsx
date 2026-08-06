@@ -44,31 +44,13 @@ const Auth = () => {
     try {
       rememberReturnPath('/');
       const redirectUrl = getOAuthRedirectUrl();
-      const isLovableHost = window.location.hostname.endsWith('.lovable.app')
-        || window.location.hostname === 'localhost';
-
-      if (isLovableHost) {
-        const { lovable } = await import('@/integrations/lovable/index');
-        const result = await lovable.auth.signInWithOAuth('google', {
-          redirect_uri: redirectUrl,
-          extraParams: { prompt: 'select_account' },
-        });
-        if (result.error) {
-          toast.error(result.error instanceof Error ? result.error.message : String(result.error));
-        }
-        return;
-      }
-
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: { prompt: 'select_account' },
-        },
+      const { lovable } = await import('@/integrations/lovable/index');
+      const result = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: redirectUrl,
+        extraParams: { prompt: 'select_account' },
       });
-      if (error) {
-        toast.error(error.message);
+      if (result.error) {
+        toast.error(result.error instanceof Error ? result.error.message : String(result.error));
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Google認証を開始できませんでした');
