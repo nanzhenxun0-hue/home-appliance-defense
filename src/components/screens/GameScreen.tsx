@@ -27,6 +27,9 @@ interface GameScreenProps {
     noUpgrade?: boolean;
     noUltimate?: boolean;
     enemyHpMul?: number;
+    bossHpMul?: number;
+    bossSpdMul?: number;
+    bossHaste?: number;
   } | null;
 }
 
@@ -36,6 +39,9 @@ const GameScreen = ({ diff, team, area, onHome, onVoltEarned, onWin, onEndlessMi
     const st = mkState(diff, team, area);
     if (challenge?.startPowerMul) st.power = Math.floor(st.power * challenge.startPowerMul);
     if (challenge?.enemyHpMul) st.enemyHpMul = challenge.enemyHpMul;
+    if (challenge?.bossHpMul) st.bossHpMul = challenge.bossHpMul;
+    if (challenge?.bossSpdMul) st.bossSpdMul = challenge.bossSpdMul;
+    if (challenge?.bossHaste) st.bossHaste = challenge.bossHaste;
     return st;
   };
   const gs = useRef<GameState>(initState());

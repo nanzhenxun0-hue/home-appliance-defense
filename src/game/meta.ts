@@ -42,6 +42,10 @@ export interface ChallengeMod {
   noUpgrade?: boolean;
   noUltimate?: boolean;
   enemyHpMul?: number;      // 1.5 = tougher
+  bossHpMul?: number;       // boss-only HP multiplier
+  bossSpdMul?: number;      // boss-only speed multiplier
+  bossHaste?: number;       // <1 = boss skills fire more often
+  ox?: boolean;             // 超高難度（OX所持でも苦戦する）
 }
 
 export interface ProgressSnapshot {
@@ -180,6 +184,11 @@ export const CHALLENGES: ChallengeMod[] = [
   { id: 'iron_will',    name: '鉄の意志',             desc: '強化禁止+敵HP1.5倍',                       icon: '🗡️', diff: 'hard',    area: 'glacier',  volts: 1500, noUpgrade: true, enemyHpMul: 1.5 },
   { id: 'blackout',     name: 'ブラックアウト',       desc: '開始電力半減+ウルト封印',                  icon: '🌑', diff: 'hard',    area: 'sky',      volts: 1600, startPowerMul: 0.5, noUltimate: true },
   { id: 'nightmare',    name: '悪夢の一戦',           desc: '全制限+敵HP1.5倍',                         icon: '👹', diff: 'vhard',   area: 'sky',      volts: 2500, startPowerMul: 0.5, noUpgrade: true, noUltimate: true, enemyHpMul: 1.5 },
+  // ── 極域チャレンジ（OX所持でも難しい超高難度） ──
+  { id: 'ox_awaken',    name: '覚醒ボス：起',         desc: 'ボスHP3倍・技発動1.5倍速。OX頼みでは押し切れない',   icon: '🌀', diff: 'vhard',   area: 'volcano', volts: 3000, bossHpMul: 3, bossHaste: 0.65, ox: true },
+  { id: 'ox_tyrant',    name: '覇王形態',             desc: 'ボスHP4倍・移動1.3倍・敵HP1.5倍',                    icon: '👑', diff: 'extreme', area: 'glacier', volts: 4500, bossHpMul: 4, bossSpdMul: 1.3, enemyHpMul: 1.5, bossHaste: 0.7, ox: true },
+  { id: 'ox_sealed',    name: '封印大魔王',           desc: 'ボスHP5倍・強化禁止・ウルト封印',                    icon: '⛓️', diff: 'extreme', area: 'sky',     volts: 6000, bossHpMul: 5, bossHaste: 0.6, noUpgrade: true, noUltimate: true, ox: true },
+  { id: 'ox_ragnarok',  name: '終焉の彼方',           desc: 'ボスHP7倍・技2倍速・全制限・敵HP2倍。最難関',        icon: '🌌', diff: 'extreme', area: 'sky',     volts: 12000, bossHpMul: 7, bossSpdMul: 1.4, bossHaste: 0.5, enemyHpMul: 2.0, startPowerMul: 0.5, noUpgrade: true, noUltimate: true, ox: true },
   { id: 'apocalypse',   name: '終焉',                 desc: '極難度・全制限+敵HP2倍',                   icon: '☠️', diff: 'extreme', area: 'volcano',  volts: 4000, startPowerMul: 0.5, noUpgrade: true, noUltimate: true, enemyHpMul: 2.0 },
 ];
 
