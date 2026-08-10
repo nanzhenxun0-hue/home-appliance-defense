@@ -313,8 +313,9 @@ export const tickGame = (s: GameState, dt: number): void => {
       const chalMul = s.enemyHpMul ?? 1;
       s.enemies.push({
         id: uid(), type: it.type, em: d.em,
-        hp: Math.ceil(d.hp * dc.hpM * scale * chalMul), mhp: Math.ceil(d.hp * dc.hpM * scale * chalMul),
-        spd: d.spd * dc.spdM * scale, rew: d.rew, dmg: d.dmg,
+        hp: Math.ceil(d.hp * dc.hpM * scale * chalMul * (isBossType(it.type) ? (s.bossHpMul ?? 1) : 1)),
+        mhp: Math.ceil(d.hp * dc.hpM * scale * chalMul * (isBossType(it.type) ? (s.bossHpMul ?? 1) : 1)),
+        spd: d.spd * dc.spdM * scale * (isBossType(it.type) ? (s.bossSpdMul ?? 1) : 1), rew: d.rew, dmg: d.dmg,
         pi: 0, pr: 0, frozen: 0, burning: 0, burnT: 0, hitFlash: 0,
       });
     }
@@ -506,14 +507,15 @@ export const tickGame = (s: GameState, dt: number): void => {
     // Boss abilities (random trigger every ~8 seconds)
     if (EDEFS[e.type].bossAbility) {
       const abilityKey = `boss_${e.id}`;
-      s.abilityTimers[abilityKey] = (s.abilityTimers[abilityKey] || (5 + Math.random() * 5)) - dt;
+      const bHaste = s.bossHaste ?? 1;
+      s.abilityTimers[abilityKey] = (s.abilityTimers[abilityKey] || ((5 + Math.random() * 5) * bHaste)) - dt;
       if (s.abilityTimers[abilityKey] <= 0) {
         // boss_ice: rotate between warp and regen
         if (e.type === 'boss_ice') {
           const phaseKey = `boss_ice_phase_${e.id}`;
           const phase = (s.abilityTimers[phaseKey] || 0) % 2;
           s.abilityTimers[phaseKey] = phase + 1;
-          s.abilityTimers[abilityKey] = 7 + Math.random() * 4;
+          s.abilityTimers[abilityKey] = (7 + Math.random() * 4) * bHaste;
           if (phase < 1) {
             // warp
             const jump = Math.min(3, s.path.length - 1 - e.pi);
@@ -532,7 +534,7 @@ export const tickGame = (s: GameState, dt: number): void => {
           const phaseKey = `boss_fire_phase_${e.id}`;
           const phase = (s.abilityTimers[phaseKey] || 0) % 2;
           s.abilityTimers[phaseKey] = phase + 1;
-          s.abilityTimers[abilityKey] = 7 + Math.random() * 4;
+          s.abilityTimers[abilityKey] = (7 + Math.random() * 4) * bHaste;
           if (phase < 1) {
             // wall
             s.bossWallActive = true; s.bossWallTimer = 3;
@@ -549,7 +551,7 @@ export const tickGame = (s: GameState, dt: number): void => {
           const phaseKey = `final_boss_phase_${e.id}`;
           const phase = (s.abilityTimers[phaseKey] || 0) % 2;
           s.abilityTimers[phaseKey] = phase + 1;
-          s.abilityTimers[abilityKey] = 8 + Math.random() * 4;
+          s.abilityTimers[abilityKey] = (8 + Math.random() * 4) * bHaste;
           if (phase < 1) {
             // unit_disable
             const keys = Object.keys(s.grid);
@@ -575,7 +577,7 @@ export const tickGame = (s: GameState, dt: number): void => {
           const abilities: Array<typeof EDEFS[typeof e.type]['bossAbility']> = ['ice_wall', 'blizzard', 'ice_curse', 'absolute_zero'];
           const chosenAbility = abilities[Math.floor(phase)];
           const fakeDef = { ...EDEFS[e.type], bossAbility: chosenAbility };
-          s.abilityTimers[abilityKey] = phase === 3 ? 12 : 7 + Math.random() * 4;
+          s.abilityTimers[abilityKey] = (phase === (3 ? 12 : 7 + Math.random() * 4) * bHaste;
           executeBossAbility(s, { ...e } as any);
           // directly call the chosen ability
           if (chosenAbility === 'ice_wall') {
@@ -602,7 +604,7 @@ export const tickGame = (s: GameState, dt: number): void => {
           }
           void fakeDef; // suppress unused warning
         } else {
-          s.abilityTimers[abilityKey] = 6 + Math.random() * 6;
+          s.abilityTimers[abilityKey] = (6 + Math.random() * 6) * bHaste;
           executeBossAbility(s, e);
         }
       }
