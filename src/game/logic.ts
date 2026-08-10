@@ -3,6 +3,8 @@ import { DIFF, TDEFS, UPS, EDEFS, CELL, st, AREA_WAVES, getAreaPath, getAreaPath
 import { getSynergyEffects } from './synergy';
 import { getChainComboEffects } from './chainCombo';
 
+export const isBossType = (t: string): boolean => t.startsWith('boss') || t === 'final_boss';
+
 let _eid = 1;
 export const uid = (): number => _eid++;
 export const resetUid = () => { _eid = 1; };
@@ -577,7 +579,7 @@ export const tickGame = (s: GameState, dt: number): void => {
           const abilities: Array<typeof EDEFS[typeof e.type]['bossAbility']> = ['ice_wall', 'blizzard', 'ice_curse', 'absolute_zero'];
           const chosenAbility = abilities[Math.floor(phase)];
           const fakeDef = { ...EDEFS[e.type], bossAbility: chosenAbility };
-          s.abilityTimers[abilityKey] = (phase === (3 ? 12 : 7 + Math.random() * 4) * bHaste;
+          s.abilityTimers[abilityKey] = (phase === 3 ? 12 : 7 + Math.random() * 4) * bHaste;
           executeBossAbility(s, { ...e } as any);
           // directly call the chosen ability
           if (chosenAbility === 'ice_wall') {
