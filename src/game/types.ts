@@ -296,6 +296,10 @@ export interface GameState {
   totalWaves: number; // 0 = unlimited
   // Optional challenge modifier
   enemyHpMul?: number;
+  bossHpMul?: number;   // boss-only HP multiplier
+  bossSpdMul?: number;  // boss-only speed multiplier
+  bossHaste?: number;   // <1 = boss abilities fire more often
+
   // Anti-stall watchdog
   stallT?: number;
   lastHpSum?: number;

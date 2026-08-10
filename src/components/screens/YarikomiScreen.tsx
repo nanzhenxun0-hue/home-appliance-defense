@@ -83,14 +83,19 @@ const YarikomiScreen = ({ meta, onBack, onLaunchChallenge }: Props) => {
             {CHALLENGES.map(c => {
               const cleared = isChallengeCleared(c.id);
               return (
-                <div key={c.id} className={`glass-panel p-3 ${cleared ? 'border-emerald-500/50' : ''}`}>
-                  <div className="flex items-center gap-2 mb-1">
+                <div key={c.id} className={`glass-panel p-3 ${cleared ? 'border-emerald-500/50' : c.ox ? 'border-fuchsia-500/60' : ''}`}>
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="text-xl">{c.icon}</span>
                     <span className="font-bold text-sm text-yellow-200">{c.name}</span>
+                    {c.ox && (
+                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded"
+                        style={{ background: 'linear-gradient(90deg,#e040fb,#ff8c00)', color: '#000' }}>極域</span>
+                    )}
                     {cleared && <span className="text-[10px] text-emerald-400 font-bold">✓ CLEAR</span>}
                     <span className="ml-auto text-[10px] text-yellow-400 font-bold">+{c.volts}⚡</span>
                   </div>
                   <div className="text-[11px] text-muted-foreground mb-2">{c.desc}</div>
+
                   <div className="text-[10px] text-cyan-300 mb-2">
                     難易度: {c.diff.toUpperCase()} / エリア: {c.area}
                   </div>
